@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json.schemastore.org/prettierrc",
+  "printWidth": 102,
+  "tabWidth": 2,
+  "useTabs": false,
+  "semi": true,
+  "singleQuote": true,
+  "trailingComma": "es5",
+  "bracketSpacing": true,
+  "arrowParens": "always",
+  "plugins": ["prettier-plugin-tailwindcss"],
+  "overrides": [
+    {
+      "files": ["*.md", "**/*.md"],
+      "options": {
+        "semi": false
+      }
+    },
+    {
+      "files": ["*.yml", "*.yaml", "**/*.yml", "**/*.yaml"],
+      "options": {
+        "semi": false
+      }
+    }
+  ]
+}
