@@ -2,7 +2,7 @@ import type { Entity } from 'koota';
 import { useActions, useHas, useQuery, useTrait } from 'koota/react';
 import { useCallback, type CSSProperties, type KeyboardEvent } from 'react';
 import { actions } from '../actions.js';
-import { DeskItem, Dragging, Position, Ref, Velocity } from '../traits.js';
+import { DeskItem, Dragging, Position, Ref, Rotation, Velocity } from '../traits.js';
 import type { DeskStageItem } from '../desk.js';
 import { ArticleRenderer } from './article-renderer.js';
 
@@ -20,7 +20,7 @@ type DeskItemRendererProps = {
 };
 
 export function DeskItemRenderer({ itemConfigById, onOpen }: DeskItemRendererProps) {
-  const entities = useQuery(DeskItem);
+  const entities = useQuery(DeskItem, Position, Rotation);
 
   return (
     <>

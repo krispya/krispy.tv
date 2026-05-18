@@ -6,7 +6,6 @@ import {
   updateDragging,
   updateTime,
   updateTransform,
-  updateZOrder,
 } from './systems/index.js';
 import { Pointer, Viewport } from './traits.js';
 import { useAnimationFrame } from '../../utils/use-animation-frame.js';
@@ -19,7 +18,6 @@ export function Frameloop() {
     updateDragging(world);
     dampVelocity(world);
     updateTransform(world);
-    updateZOrder(world);
     syncToDOM(world);
   });
 

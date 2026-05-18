@@ -2,15 +2,15 @@ import { lazy, Suspense } from 'react';
 import { Route, Switch } from 'wouter';
 import { routes } from './routes.js';
 
-const DeskRoot = lazy(() =>
+const Desk = lazy(() =>
   import('./features/desk/desk.js').then((module) => ({ default: module.Desk }))
 );
 
-const AboutPage = lazy(() =>
+const About = lazy(() =>
   import('./features/about/about.js').then((module) => ({ default: module.About }))
 );
 
-const ArticlePage = lazy(() =>
+const Article = lazy(() =>
   import('./features/article/article.js').then((module) => ({ default: module.Article }))
 );
 
@@ -25,9 +25,9 @@ export function App() {
     <main className="min-h-screen">
       <Suspense fallback={<RoutePending />}>
         <Switch>
-          <Route path={routes.home.path} component={DeskRoot} />
-          <Route path={routes.about.path} component={AboutPage} />
-          <Route path={routes.article.path}>{(params) => <ArticlePage slug={params.slug} />}</Route>
+          <Route path={routes.home.path} component={Desk} />
+          <Route path={routes.about.path} component={About} />
+          <Route path={routes.article.path}>{(params) => <Article slug={params.slug} />}</Route>
           <Route component={ArticleNotFound} />
         </Switch>
       </Suspense>

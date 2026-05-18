@@ -1,12 +1,12 @@
 import { createWorld } from 'koota';
 import { WorldProvider } from 'koota/react';
-import { useCallback, useMemo, type CSSProperties } from 'react';
+import { useMemo, type CSSProperties } from 'react';
 import { useLocation } from 'wouter';
-import { articles as articlesCatalog } from '../article/index.js';
 import { routes } from '../../routes.js';
+import { articles as articlesCatalog } from '../article/index.js';
 import { Frameloop } from './frameloop.js';
-import { DeskItemRenderer } from './renderers/desk-item-renderer.js';
 import { getArticleSheetStyle } from './renderers/article-renderer.js';
+import { DeskItemRenderer } from './renderers/desk-item-renderer.js';
 import { Startup } from './startup.js';
 import { Pointer, Time, Viewport } from './traits.js';
 
@@ -25,6 +25,7 @@ const emptySheets = [
 ];
 
 export function Desk() {
+  // All your data
   const world = createWorld(Time, Pointer, Viewport);
   const [, navigate] = useLocation();
 

@@ -1,7 +1,7 @@
 import { createActions, type Entity } from 'koota';
 import { createSeededLayout } from './utils/create-seeded-layout.js';
-import { getDeskItemZIndex } from './utils/desk-item-z-index.js';
-import { DeskItem, Position, Rotation, Scale, Velocity, Viewport, ZIndex } from './traits.js';
+import { getDeskItemStackIndex } from './utils/desk-item-stack-index.js';
+import { DeskItem, Position, Rotation, Scale, StackIndex, Velocity, Viewport } from './traits.js';
 
 export type DeskItemConfig = {
   id: string;
@@ -15,7 +15,7 @@ export type DeskItemConfig = {
     y?: number;
     z?: number;
   };
-  zIndex?: number;
+  stackIndex?: number;
   centered?: boolean;
 };
 
@@ -23,7 +23,7 @@ export const actions = createActions((world) => ({
   spawnDeskItem: (config: DeskItemConfig) => {
     let position = config.position;
     let rotationZ = config.rotation?.z;
-    let zIndex = config.zIndex;
+    let stackIndex = config.stackIndex;
 
     if (position === undefined || rotationZ === undefined) {
       const viewport = world.get(Viewport);
@@ -45,7 +45,7 @@ export const actions = createActions((world) => ({
       rotationZ ??= layout.rotation;
     }
 
-    zIndex ??= getDeskItemZIndex(config.id);
+    stackIndex ??= getDeskItemStackIndex(config.id);
 
     return world.spawn(
       DeskItem({ id: config.id }),
@@ -57,17 +57,17 @@ export const actions = createActions((world) => ({
       }),
       Scale,
       Velocity,
-      ZIndex({ value: zIndex ?? 0 })
+      StackIndex({ value: stackIndex ?? 0 })
     );
   },
   raiseDeskItem: (entity: Entity) => {
     let top = 0;
 
-    world.query(ZIndex).forEach((item) => {
-      top = Math.max(top, item.get(ZIndex)?.value ?? 0);
+    world.query(StackIndex).forEach((item) => {
+      top = Math.max(top, item.get(StackIndex)?.value ?? 0);
     });
 
-    entity.set(ZIndex, { value: top + 1 });
+    entity.set(StackIndex, { value: top + 1 });
   },
   resetDeskItems: () => {
     world.query(DeskItem).forEach((entity) => entity.destroy());
