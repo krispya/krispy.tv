@@ -1,34 +1,34 @@
 import { lazy, Suspense } from 'react';
 import { Route, Switch } from 'wouter';
-import { Frameloop } from './frameloop.js';
 import { routes } from './routes.js';
 
-const DeskScene = lazy(() =>
-  import('./features/desk/desk-scene.js').then((module) => ({ default: module.DeskScene }))
+const DeskRoot = lazy(() =>
+  import('./features/desk/desk.js').then((module) => ({ default: module.Desk }))
 );
 
 const AboutPage = lazy(() =>
-  import('./features/about/about-page.js').then((module) => ({ default: module.AboutPage }))
+  import('./features/about/about.js').then((module) => ({ default: module.About }))
 );
 
-const BlogPost = lazy(() =>
-  import('./features/blog/blog-post.js').then((module) => ({ default: module.BlogPost }))
+const ArticlePage = lazy(() =>
+  import('./features/article/article.js').then((module) => ({ default: module.Article }))
 );
 
-const BlogPostNotFound = lazy(() =>
-  import('./features/blog/blog-post.js').then((module) => ({ default: module.BlogPostNotFound }))
+const ArticleNotFound = lazy(() =>
+  import('./features/article/article.js').then((module) => ({
+    default: module.ArticleNotFound,
+  }))
 );
 
 export function App() {
   return (
     <main className="min-h-screen">
-      <Frameloop />
       <Suspense fallback={<RoutePending />}>
         <Switch>
-          <Route path={routes.home.path} component={DeskScene} />
+          <Route path={routes.home.path} component={DeskRoot} />
           <Route path={routes.about.path} component={AboutPage} />
-          <Route path={routes.blogPost.path}>{(params) => <BlogPost slug={params.slug} />}</Route>
-          <Route component={BlogPostNotFound} />
+          <Route path={routes.article.path}>{(params) => <ArticlePage slug={params.slug} />}</Route>
+          <Route component={ArticleNotFound} />
         </Switch>
       </Suspense>
     </main>

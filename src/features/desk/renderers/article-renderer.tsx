@@ -1,7 +1,10 @@
+import type { Entity } from 'koota';
+import { useTrait } from 'koota/react';
 import type { CSSProperties } from 'react';
-import { formatPostDate, type Post } from '../../core/posts/index.js';
+import { formatArticleDate, getArticle, type Article } from '../../article/index.js';
+import { DeskItem } from '../traits.js';
 
-type PaperTheme = {
+type ArticleTheme = {
   backgroundColor: string;
   borderColor: string;
   accentColor: string;
@@ -9,7 +12,7 @@ type PaperTheme = {
   tagColor: string;
 };
 
-const defaultTheme: PaperTheme = {
+const defaultTheme: ArticleTheme = {
   backgroundColor: '#fffdf7',
   borderColor: '#d8d1c4',
   accentColor: '#78716c',
@@ -17,7 +20,7 @@ const defaultTheme: PaperTheme = {
   tagColor: '#57534e',
 };
 
-const tagThemes: Record<string, PaperTheme> = {
+const tagThemes: Record<string, ArticleTheme> = {
   mdx: {
     backgroundColor: '#fff7d6',
     borderColor: '#e8c86a',
@@ -48,8 +51,8 @@ const tagThemes: Record<string, PaperTheme> = {
   },
 };
 
-export function getPostPaperStyle(post: Post): CSSProperties {
-  const theme = getPostPaperTheme(post);
+export function getArticleSheetStyle(article: Article): CSSProperties {
+  const theme = getArticleTheme(article);
 
   return {
     backgroundColor: theme.backgroundColor,
@@ -57,20 +60,29 @@ export function getPostPaperStyle(post: Post): CSSProperties {
   };
 }
 
-export function PostPaper({ post }: { post: Post }) {
-  const theme = getPostPaperTheme(post);
-  const primaryTag = getPrimaryTag(post);
+export function ArticleRenderer({ entity }: { entity: Entity }) {
+  const item = useTrait(entity, DeskItem);
+  const article = item ? getArticle(item.id) : undefined;
+
+  if (!article) return <BlankSheet />;
+
+  return <ArticleView article={article} />;
+}
+
+function ArticleView({ article }: { article: Article }) {
+  const theme = getArticleTheme(article);
+  const primaryTag = getPrimaryTag(article);
 
   return (
     <article className="flex h-full flex-col">
       <header className="border-b border-stone-200 pb-4">
         <time
           className="mb-2 block text-xs font-medium tracking-[0.12em] text-stone-500 uppercase"
-          dateTime={post.date}
+          dateTime={article.date}
         >
-          {formatPostDate(post.date)}
+          {formatArticleDate(article.date)}
         </time>
-        <h2 className="text-2xl leading-tight font-bold text-stone-950">{post.title}</h2>
+        <h2 className="text-2xl leading-tight font-bold text-stone-950">{article.title}</h2>
         <p
           className="mt-3 inline-flex rounded-sm border px-2 py-1 text-xs font-bold tracking-[0.12em] uppercase"
           style={{
@@ -90,11 +102,11 @@ export function PostPaper({ post }: { post: Post }) {
           aria-hidden="true"
         >
           <div
-            className="h-full w-full bg-[linear-gradient(135deg,transparent_44%,var(--paper-accent)_45%,var(--paper-accent)_55%,transparent_56%)]"
-            style={{ '--paper-accent': theme.accentColor } as CSSProperties}
+            className="h-full w-full bg-[linear-gradient(135deg,transparent_44%,var(--article-accent)_45%,var(--article-accent)_55%,transparent_56%)]"
+            style={{ '--article-accent': theme.accentColor } as CSSProperties}
           />
         </div>
-        <p className="text-sm leading-6 text-stone-700">{post.summary}</p>
+        <p className="text-sm leading-6 text-stone-700">{article.summary}</p>
       </div>
 
       <div className="mt-6 flex-1 space-y-3" aria-hidden="true">
@@ -111,10 +123,25 @@ export function PostPaper({ post }: { post: Post }) {
   );
 }
 
-function getPostPaperTheme(post: Post) {
-  return tagThemes[getPrimaryTag(post)] ?? defaultTheme;
+function BlankSheet() {
+  return (
+    <div className="flex h-full flex-col opacity-70" aria-hidden="true">
+      <div className="h-8 border-b border-stone-300/70" />
+      <div className="mt-8 space-y-4">
+        <div className="h-px bg-stone-300/70" />
+        <div className="h-px bg-stone-300/70" />
+        <div className="h-px bg-stone-300/70" />
+        <div className="h-px w-3/5 bg-stone-300/70" />
+      </div>
+      <div className="mt-auto h-20 border border-dashed border-stone-300/70" />
+    </div>
+  );
 }
 
-function getPrimaryTag(post: Post) {
-  return post.tags[0] ?? 'notes';
+function getArticleTheme(article: Article) {
+  return tagThemes[getPrimaryTag(article)] ?? defaultTheme;
+}
+
+function getPrimaryTag(article: Article) {
+  return article.tags[0] ?? 'notes';
 }

@@ -1,6 +1,6 @@
 import about from '@content/about.json';
 
-export function AboutPage() {
+export function About() {
   return (
     <article className="mx-auto flex min-h-screen max-w-3xl flex-col justify-center px-4 py-16 sm:py-20">
       <p className="text-primary-700 mb-3 text-xs font-bold tracking-[0.12em] uppercase">

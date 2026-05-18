@@ -1,26 +1,50 @@
 import type { Entity } from 'koota';
-import { useActions, useHas, useTrait } from 'koota/react';
-import { useCallback, type CSSProperties, type KeyboardEvent, type ReactNode } from 'react';
-import { actions } from '../../core/actions.js';
-import { DeskItem, Dragging, Position, Ref, Velocity } from '../../core/traits.js';
-import type { DeskStageItem } from './desk-stage.js';
+import { useActions, useHas, useQuery, useTrait } from 'koota/react';
+import { useCallback, type CSSProperties, type KeyboardEvent } from 'react';
+import { actions } from '../actions.js';
+import { DeskItem, Dragging, Position, Ref, Velocity } from '../traits.js';
+import type { DeskStageItem } from '../desk.js';
+import { ArticleRenderer } from './article-renderer.js';
 
-type Page = {
-  entity: Entity;
-  itemConfig?: DeskStageItem;
-  children: (id: string, entity: Entity) => ReactNode;
+const deskItemStyle = {
+  '--desk-item-width': 'clamp(220px, 32vw, 380px)',
+  width: 'var(--desk-item-width)',
+  aspectRatio: '8.5 / 11',
+  marginLeft: 'calc(var(--desk-item-width) / -2)',
+  marginTop: 'calc((var(--desk-item-width) * 11 / 8.5) / -2)',
+} as CSSProperties;
+
+type DeskItemRendererProps = {
+  itemConfigById: Map<string, DeskStageItem>;
   onOpen?: (id: string) => void;
 };
 
-const paperStyle = {
-  '--paper-width': 'clamp(220px, 32vw, 380px)',
-  width: 'var(--paper-width)',
-  aspectRatio: '8.5 / 11',
-  marginLeft: 'calc(var(--paper-width) / -2)',
-  marginTop: 'calc((var(--paper-width) * 11 / 8.5) / -2)',
-} as CSSProperties;
+export function DeskItemRenderer({ itemConfigById, onOpen }: DeskItemRendererProps) {
+  const entities = useQuery(DeskItem);
 
-export function Page({ entity, itemConfig, children, onOpen }: Page) {
+  return (
+    <>
+      {entities.map((entity) => (
+        <DeskItemView
+          key={entity.id()}
+          entity={entity}
+          itemConfig={itemConfigById.get(entity.get(DeskItem)?.id ?? '')}
+          onOpen={onOpen}
+        />
+      ))}
+    </>
+  );
+}
+
+function DeskItemView({
+  entity,
+  itemConfig,
+  onOpen,
+}: {
+  entity: Entity;
+  itemConfig?: DeskStageItem;
+  onOpen?: (id: string) => void;
+}) {
   const item = useTrait(entity, DeskItem);
   const isDragging = useHas(entity, Dragging);
   const { raiseDeskItem } = useActions(actions);
@@ -98,7 +122,7 @@ export function Page({ entity, itemConfig, children, onOpen }: Page) {
       ref={handleInit}
       role={isOpenable ? 'button' : undefined}
       tabIndex={isOpenable ? 0 : undefined}
-      aria-label={itemConfig?.ariaLabel ?? (isOpenable ? 'Open paper' : 'Blank paper')}
+      aria-label={itemConfig?.ariaLabel ?? (isOpenable ? 'Open article' : 'Blank sheet')}
       onDoubleClick={handleDoubleClick}
       onKeyDown={handleKeyDown}
       onPointerDown={handlePointerDown}
@@ -108,9 +132,9 @@ export function Page({ entity, itemConfig, children, onOpen }: Page) {
       className={`fixed top-0 left-0 flex cursor-grab touch-none flex-col overflow-hidden rounded-[3px] border border-stone-200 bg-[#fffdf7] p-6 text-left text-gray-950 shadow-[0_20px_45px_rgba(42,38,30,0.24)] outline-offset-4 will-change-transform select-none ${itemConfig?.className ?? ''} ${
         isDragging ? 'cursor-grabbing shadow-[0_28px_70px_rgba(42,38,30,0.34)]' : ''
       }`}
-      style={{ ...paperStyle, ...itemConfig?.style }}
+      style={{ ...deskItemStyle, ...itemConfig?.style }}
     >
-      {children(item.id, entity)}
+      <ArticleRenderer entity={entity} />
     </div>
   );
 }

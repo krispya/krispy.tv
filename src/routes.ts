@@ -7,16 +7,16 @@ export const routes = {
     path: '/about',
     href: () => '/about',
   },
-  blogPost: {
-    path: '/blog/:slug',
-    href: ({ slug }: { slug: string }) => `/blog/${encodeURIComponent(slug)}`,
+  article: {
+    path: '/article/:slug',
+    href: ({ slug }: { slug: string }) => `/article/${encodeURIComponent(slug)}`,
   },
 } as const;
 
 export type RouteSnapshot =
   | { name: 'home'; path: string; slug: '' }
   | { name: 'about'; path: string; slug: '' }
-  | { name: 'blogPost'; path: string; slug: string }
+  | { name: 'article'; path: string; slug: string }
   | { name: 'notFound'; path: string; slug: '' };
 
 export function parseRoute(path: string): RouteSnapshot {
@@ -28,10 +28,10 @@ export function parseRoute(path: string): RouteSnapshot {
     return { name: 'about', path, slug: '' };
   }
 
-  const blogMatch = /^\/blog\/([^/]+)$/.exec(path);
+  const articleMatch = /^\/article\/([^/]+)$/.exec(path);
 
-  if (blogMatch) {
-    return { name: 'blogPost', path, slug: decodeURIComponent(blogMatch[1]) };
+  if (articleMatch) {
+    return { name: 'article', path, slug: decodeURIComponent(articleMatch[1]) };
   }
 
   return { name: 'notFound', path, slug: '' };
