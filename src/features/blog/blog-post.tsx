@@ -1,6 +1,6 @@
 import { createElement, Suspense, use, type ComponentType } from 'react';
 import { Link } from 'wouter';
-import author from '../../../content/author.json';
+import author from '@content/author.json';
 import { formatPostDate, getPost, type Post } from '../../core/posts/index.js';
 import { routes } from '../../routes.js';
 

@@ -1,16 +1,22 @@
 import type { Post, PostFrontmatter } from './types.js';
 
-const postFrontmatterModules = import.meta.glob<PostFrontmatter>('../../../content/posts/*.mdx', {
+const postFrontmatterModules = import.meta.glob<PostFrontmatter>('@content/posts/*.mdx', {
   eager: true,
   import: 'frontmatter',
 });
 
-const postComponentModules = import.meta.glob<unknown>('../../../content/posts/*.mdx', {
+const postComponentModules = import.meta.glob<unknown>('@content/posts/*.mdx', {
   import: 'default',
 });
 
 function slugFromPath(path: string) {
-  return path.replace(/^..\/..\/..\/content\/posts\//, '').replace(/\.mdx$/, '');
+  const filename = path.split('/').pop();
+
+  if (!filename) {
+    throw new Error(`Could not parse slug from post path: ${path}`);
+  }
+
+  return filename.replace(/\.mdx$/, '');
 }
 
 export const posts: Post[] = Object.entries(postFrontmatterModules)

@@ -1,6 +1,9 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
+    "paths": {
+      "@content/*": ["../content/*"]
+    },
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "bundler",

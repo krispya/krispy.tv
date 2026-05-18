@@ -1,4 +1,4 @@
-import about from '../../../content/about.json';
+import about from '@content/about.json';
 
 export function AboutPage() {
   return (
