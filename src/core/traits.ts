@@ -3,6 +3,7 @@ import { trait } from 'koota';
 export const Time = trait({ last: 0, delta: 0 });
 export const Pointer = trait({ x: 0, y: 0 });
 export const Viewport = trait({ width: 0, height: 0 });
+export const RouteState = trait({ name: 'home', path: '/', slug: '' });
 
 export const DeskItem = trait({ id: '' });
 

@@ -1,6 +1,4 @@
 import { createWorld } from 'koota';
-import { Pointer, Time, Viewport } from './traits.js';
+import { Pointer, RouteState, Time, Viewport } from './traits.js';
 
-export function createDeskWorld() {
-  return createWorld(Time, Pointer, Viewport);
-}
+export const world = createWorld(Time, Pointer, Viewport, RouteState);

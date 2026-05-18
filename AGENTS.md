@@ -45,4 +45,4 @@ Headless data and behavior are defined in `src/core/`. Keep this layer free of R
 
 Client code is defined in `src/`. It is broken up into domain level features in `src/features` and an `app.tsx` entry point. Routers for the router are defined statically in `routes.ts`.
 
-Features project React views over the headless core. Shared interactive surfaces, such as the desk, should stay reusable and blog-agnostic; blog-specific routing and post presentation belong in `src/features/blog`.
+Features project React views over the headless core. Shared interactive surfaces, such as the desk, should stay reusable and blog-agnostic; blog-specific routing and post presentation belong in `src/features/blog`, and about-specific presentation belongs in `src/features/about`.

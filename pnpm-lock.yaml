@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       koota:
-        specifier: ^0.6.6
-        version: 0.6.6(@types/react@19.2.14)(react@19.2.6)
+        specifier: 0.6.6-canary.0531fe1
+        version: 0.6.6-canary.0531fe1(@types/react@19.2.14)(react@19.2.6)
       react:
         specifier: ^19.2.6
         version: 19.2.6
@@ -1198,8 +1198,8 @@ packages:
   keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
 
-  koota@0.6.6:
-    resolution: {integrity: sha512-Fn8lSooH3u9TIP+eAMugFrOju40Ec70+sB7x1eZBB3H0Lki2hyIbFAodk3NDB/RIRzoMs54O4422BVN6SbtWfw==}
+  koota@0.6.6-canary.0531fe1:
+    resolution: {integrity: sha512-2CLiPUqXkSrDurXe+aKDjWQmgVbUxmRckhbDmBSsfk1UAp9zeHbxNshpix+cieiAaAwieqLIiUWhBWGWnvEfBQ==}
     peerDependencies:
       '@types/react': '>=18.0.0'
       react: '>=18.0.0'
@@ -2798,7 +2798,7 @@ snapshots:
     dependencies:
       json-buffer: 3.0.1
 
-  koota@0.6.6(@types/react@19.2.14)(react@19.2.6):
+  koota@0.6.6-canary.0531fe1(@types/react@19.2.14)(react@19.2.6):
     optionalDependencies:
       '@types/react': 19.2.14
       react: 19.2.6

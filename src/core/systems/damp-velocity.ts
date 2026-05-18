@@ -6,7 +6,6 @@ const VELOCITY_DAMPING = 1 - Math.pow(0.0001, 1 / 60);
 
 export function dampVelocity(world: World) {
   const time = world.get(Time);
-
   if (!time) return;
 
   world.query(Velocity, Not(Dragging)).updateEach(([velocity]) => {

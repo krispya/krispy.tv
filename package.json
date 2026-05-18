@@ -11,7 +11,7 @@
     "format": "prettier --config .config/prettier.json --ignore-path .config/prettierignore --write ."
   },
   "dependencies": {
-    "koota": "^0.6.6",
+    "koota": "0.6.6-canary.0531fe1",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "wouter": "^3.9.0"

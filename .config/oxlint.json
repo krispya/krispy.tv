@@ -1,11 +1,6 @@
 {
   "$schema": "../node_modules/oxlint/configuration_schema.json",
-  "plugins": [
-    "unicorn",
-    "typescript",
-    "oxc",
-    "react"
-  ],
+  "plugins": ["unicorn", "typescript", "oxc", "react"],
   "jsPlugins": [
     {
       "name": "react-hooks-js",
@@ -47,7 +42,5 @@
     "react-hooks-js/unsupported-syntax": "warn",
     "react-hooks-js/use-memo": "error"
   },
-  "ignorePatterns": [
-    "dist"
-  ]
+  "ignorePatterns": ["dist"]
 }

@@ -1,9 +1,14 @@
 import { lazy, Suspense } from 'react';
 import { Route, Switch } from 'wouter';
+import { Frameloop } from './frameloop.js';
 import { routes } from './routes.js';
 
 const DeskScene = lazy(() =>
   import('./features/desk/desk-scene.js').then((module) => ({ default: module.DeskScene }))
+);
+
+const AboutPage = lazy(() =>
+  import('./features/about/about-page.js').then((module) => ({ default: module.AboutPage }))
 );
 
 const BlogPost = lazy(() =>
@@ -17,9 +22,11 @@ const BlogPostNotFound = lazy(() =>
 export function App() {
   return (
     <main className="min-h-screen">
+      <Frameloop />
       <Suspense fallback={<RoutePending />}>
         <Switch>
           <Route path={routes.home.path} component={DeskScene} />
+          <Route path={routes.about.path} component={AboutPage} />
           <Route path={routes.blogPost.path}>{(params) => <BlogPost slug={params.slug} />}</Route>
           <Route component={BlogPostNotFound} />
         </Switch>

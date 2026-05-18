@@ -1,10 +1,14 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import { App } from './app.js'
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import './index.css';
+import { App } from './app.js';
+import { WorldProvider } from 'koota/react';
+import { world } from './core/world.js';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
-  </StrictMode>,
-)
+    <WorldProvider world={world}>
+      <App />
+    </WorldProvider>
+  </StrictMode>
+);

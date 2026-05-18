@@ -1,0 +1,9 @@
+{
+  "eyebrow": "About",
+  "title": "Kris Baumgartner",
+  "intro": "I build small, expressive things for the web, with a bias toward systems that feel good to use and easy to keep changing.",
+  "body": [
+    "This site is part blog, part workbench: a place for notes on code, interfaces, tools, and the odd little decisions that make software feel alive.",
+    "I like calm design, playful interaction, and codebases that make their shape clear without needing a map."
+  ]
+}

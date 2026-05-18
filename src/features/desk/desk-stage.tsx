@@ -1,11 +1,9 @@
 import type { Entity } from 'koota';
-import { WorldProvider, useActions, useQuery } from 'koota/react';
+import { useActions, useQuery } from 'koota/react';
 import { useEffect, useMemo, type CSSProperties, type ReactNode } from 'react';
 import { actions } from '../../core/actions.js';
-import { createDeskWorld } from '../../core/world.js';
-import { DeskItem as DeskItemTrait } from '../../core/traits.js';
+import { DeskItem } from '../../core/traits.js';
 import { createSeededLayout } from '../../core/utils/create-seeded-layout.js';
-import { Frameloop } from '../../frameloop.js';
 import { Page } from './page.js';
 
 export type DeskStageItem = {
@@ -24,21 +22,17 @@ type DeskStageProps = {
 };
 
 export function DeskStage({ items, renderItem, onItemOpen, className = '' }: DeskStageProps) {
-  const world = useMemo(() => createDeskWorld(), []);
   const itemConfigById = useMemo(() => new Map(items.map((item) => [item.id, item])), [items]);
 
   return (
-    <WorldProvider world={world}>
-      <section className={`relative h-screen min-h-[560px] overflow-hidden ${className}`}>
-        <Frameloop />
-        <DeskItemSpawner items={items} />
-        <DeskItemRenderer
-          itemConfigById={itemConfigById}
-          renderItem={renderItem}
-          onItemOpen={onItemOpen}
-        />
-      </section>
-    </WorldProvider>
+    <section className={`relative h-screen min-h-[560px] overflow-hidden ${className}`}>
+      <DeskItemSpawner items={items} />
+      <DeskItemRenderer
+        itemConfigById={itemConfigById}
+        renderItem={renderItem}
+        onItemOpen={onItemOpen}
+      />
+    </section>
   );
 }
 
@@ -88,7 +82,7 @@ function DeskItemRenderer({
   renderItem: (id: string, entity: Entity) => ReactNode;
   onItemOpen?: (id: string) => void;
 }) {
-  const entities = useQuery(DeskItemTrait);
+  const entities = useQuery(DeskItem);
 
   return (
     <>
@@ -96,7 +90,7 @@ function DeskItemRenderer({
         <Page
           key={entity.id()}
           entity={entity}
-          itemConfig={itemConfigById.get(entity.get(DeskItemTrait)?.id ?? '')}
+          itemConfig={itemConfigById.get(entity.get(DeskItem)?.id ?? '')}
           onOpen={onItemOpen}
         >
           {renderItem}
