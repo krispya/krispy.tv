@@ -10,15 +10,17 @@ type StartupProps = {
 };
 
 export function Startup({ items }: StartupProps) {
-  const { destroyPapers, spawnDesk, spawnPaper } = useActions(actions);
+  const { destroyPapers, spawnDesk, spawnPaper, throwPaperOntoDesk } = useActions(actions);
 
   useEffect(() => {
-    const featuredItem = items.find((item) => item.openable !== false);
-
     const desk = spawnDesk();
 
-    items.forEach(({ id }) => {
-      spawnPaper({ id, centered: id === featuredItem?.id });
+    items.forEach(({ id }, index) => {
+      const centered = index === 0;
+      const stackIndex = items.length - index - 1;
+      const paper = spawnPaper({ id, stackIndex, centered });
+
+      throwPaperOntoDesk(paper, { centered });
     });
 
     return () => {

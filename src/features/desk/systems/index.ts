@@ -1,3 +1,4 @@
+export { activateWallBarrier } from './activate-wall-barrier.js';
 export { applyAngularVelocity } from './apply-angular-velocity.js';
 export { applyBreeze } from './apply-breeze.js';
 export { applyGravity } from './apply-gravity.js';

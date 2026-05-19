@@ -1,6 +1,7 @@
 import { useWorld } from 'koota/react';
 import { useEffect } from 'react';
 import {
+  activateWallBarrier,
   applyAngularVelocity,
   applyBreeze,
   applyGravity,
@@ -27,6 +28,7 @@ export function Frameloop() {
     applyVelocity(world);
     applyAngularVelocity(world);
     resolvePaperSupports(world);
+    activateWallBarrier(world);
     bounceWithinViewport(world);
     dampVelocity(world);
     updateTransform(world);
