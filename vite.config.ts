@@ -9,6 +9,7 @@ import remarkFrontmatter from 'remark-frontmatter';
 import remarkMdxFrontmatter from 'remark-mdx-frontmatter';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
+const deskTraitsPath = path.resolve(root, 'src/features/desk/traits.ts');
 
 export default defineConfig({
   base: '/',
@@ -18,6 +19,17 @@ export default defineConfig({
     },
   },
   plugins: [
+    {
+      name: 'desk-traits-full-reload',
+      handleHotUpdate({ file, server }) {
+        if (file !== deskTraitsPath) {
+          return;
+        }
+
+        server.ws.send({ type: 'full-reload', path: '*' });
+        return [];
+      },
+    },
     tailwindcss(),
     mdx({
       remarkPlugins: [remarkFrontmatter, [remarkMdxFrontmatter, { name: 'frontmatter' }]],

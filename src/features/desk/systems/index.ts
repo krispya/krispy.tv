@@ -1,3 +1,5 @@
+export { applyAngularVelocity } from './apply-angular-velocity.js';
+export { applyBreeze } from './apply-breeze.js';
 export { applyGravity } from './apply-gravity.js';
 export { applyVelocity } from './apply-velocity.js';
 export { bounceWithinViewport } from './bounce-within-viewport.js';

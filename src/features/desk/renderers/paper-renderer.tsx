@@ -2,7 +2,7 @@ import type { Entity } from 'koota';
 import { useActions, useHas, useQuery, useTrait } from 'koota/react';
 import { useCallback, type CSSProperties, type KeyboardEvent } from 'react';
 import { actions } from '../actions.js';
-import { Dragging, Paper, Position, Ref, Rotation, Velocity } from '../traits.js';
+import { AngularVelocity, Dragging, Paper, Position, Ref, Rotation, Velocity } from '../traits.js';
 import type { DeskStageItem } from '../desk.js';
 import { ArticleRenderer } from './article-renderer.js';
 
@@ -72,10 +72,21 @@ function PaperView({
         x: event.clientX - centerX,
         y: event.clientY - centerY,
       };
+      const rotation = entity.get(Rotation) ?? { x: 0, y: 0, z: 0 };
 
       entity.set(Position, { x: centerX, y: centerY, z: 0 });
       entity.set(Velocity, { x: 0, y: 0, z: 0 });
-      entity.add(Dragging({ offset }));
+      entity.set(AngularVelocity, { x: 0, y: 0, z: 0 });
+      entity.add(
+        Dragging({
+          offset,
+          rotation: {
+            x: rotation.x,
+            y: rotation.y,
+            z: rotation.z,
+          },
+        })
+      );
       raisePaper(entity);
       event.currentTarget.setPointerCapture(event.pointerId);
     },

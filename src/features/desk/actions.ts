@@ -2,6 +2,7 @@ import { createActions, type Entity } from 'koota';
 import { createSeededLayout } from './utils/create-seeded-layout.js';
 import { getPaperStackIndex } from './utils/paper-stack-index.js';
 import {
+  AngularVelocity,
   Desk,
   Paper,
   PaperPhysics,
@@ -13,8 +14,9 @@ import {
 } from './traits.js';
 
 type DeskConfig = Partial<{
-  viewportWallBuffer: number;
-  viewportWallBounce: number;
+  wallBuffer: number;
+  wallBounce: number;
+  wallFriction: number;
 }>;
 
 type PaperPhysicsConfig = Partial<{
@@ -55,7 +57,7 @@ export type PaperConfig = {
 
 export const actions = createActions((world) => ({
   spawnDesk: (config: DeskConfig = {}) => {
-    return world.spawn(Desk({ wallBuffer: 200, wallBounce: 0.58, ...config }));
+    return world.spawn(Desk({ wallBuffer: 200, wallBounce: 0.85, wallFriction: 0.68, ...config }));
   },
   spawnPaper: (config: PaperConfig) => {
     let position = config.position;
@@ -98,6 +100,7 @@ export const actions = createActions((world) => ({
         z: rotationZ ?? 0,
       }),
       Velocity,
+      AngularVelocity,
       PaperPhysics(physics),
       StackIndex({ value: stackIndex ?? 0 })
     );

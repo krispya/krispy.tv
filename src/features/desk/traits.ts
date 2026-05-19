@@ -6,12 +6,14 @@ export const Viewport = trait({ width: 0, height: 0 });
 
 export const Desk = trait({
   wallBuffer: 96,
-  wallBounce: 0.58,
+  wallBounce: 0.45,
+  wallFriction: 0.68,
 });
 
 export const Position = trait({ x: 0, y: 0, z: 0 });
 export const Rotation = trait({ x: 0, y: 0, z: 0 });
 export const Velocity = trait({ x: 0, y: 0, z: 0 });
+export const AngularVelocity = trait({ x: 0, y: 0, z: 0 });
 export const Paper = trait({
   id: '',
   /** Meters. */
@@ -29,6 +31,7 @@ export const PaperPhysics = trait({
 
 export const Dragging = trait({
   offset: () => ({ x: 0, y: 0 }),
+  rotation: () => ({ x: 0, y: 0, z: 0 }),
 });
 
 export const StackIndex = trait({ value: 0 });
