@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import babel from '@rolldown/plugin-babel';
@@ -11,8 +12,8 @@ import remarkMdxFrontmatter from 'remark-mdx-frontmatter';
 const root = path.dirname(fileURLToPath(import.meta.url));
 const deskTraitsPath = path.resolve(root, 'src/features/desk/traits.ts');
 
-export default defineConfig({
-  base: '/',
+export default defineConfig(({ command }) => ({
+  base: command === 'build' ? '/krispy.tv/' : '/',
   resolve: {
     alias: {
       '@content': path.resolve(root, 'content'),
@@ -30,6 +31,15 @@ export default defineConfig({
         return [];
       },
     },
+    {
+      name: 'github-pages-spa-fallback',
+      apply: 'build',
+      writeBundle({ dir }) {
+        const outputDir = path.resolve(root, dir ?? 'dist');
+
+        fs.copyFileSync(path.join(outputDir, 'index.html'), path.join(outputDir, '404.html'));
+      },
+    },
     tailwindcss(),
     mdx({
       remarkPlugins: [remarkFrontmatter, [remarkMdxFrontmatter, { name: 'frontmatter' }]],
@@ -37,4 +47,4 @@ export default defineConfig({
     react(),
     babel({ presets: [reactCompilerPreset()] }),
   ],
-});
+}));

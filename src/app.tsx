@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { Route, Switch } from 'wouter';
+import { Route, Router, Switch } from 'wouter';
 import { routes } from './routes.js';
 
 const Desk = lazy(() =>
@@ -20,18 +20,22 @@ const ArticleNotFound = lazy(() =>
   }))
 );
 
+const routerBase = import.meta.env.BASE_URL.replace(/\/$/, '');
+
 export function App() {
   return (
-    <main className="min-h-screen">
-      <Suspense fallback={<RoutePending />}>
-        <Switch>
-          <Route path={routes.home.path} component={Desk} />
-          <Route path={routes.about.path} component={About} />
-          <Route path={routes.article.path}>{(params) => <Article slug={params.slug} />}</Route>
-          <Route component={ArticleNotFound} />
-        </Switch>
-      </Suspense>
-    </main>
+    <Router base={routerBase}>
+      <main className="min-h-screen">
+        <Suspense fallback={<RoutePending />}>
+          <Switch>
+            <Route path={routes.home.path} component={Desk} />
+            <Route path={routes.about.path} component={About} />
+            <Route path={routes.article.path}>{(params) => <Article slug={params.slug} />}</Route>
+            <Route component={ArticleNotFound} />
+          </Switch>
+        </Suspense>
+      </main>
+    </Router>
   );
 }
 
