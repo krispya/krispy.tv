@@ -1,7 +1,11 @@
 import { useWorld } from 'koota/react';
 import { useEffect } from 'react';
 import {
+  applyGravity,
+  applyVelocity,
+  bounceWithinViewport,
   dampVelocity,
+  resolvePaperSupports,
   syncToDOM,
   updateDragging,
   updateTime,
@@ -16,6 +20,10 @@ export function Frameloop() {
   useAnimationFrame(() => {
     updateTime(world);
     updateDragging(world);
+    applyGravity(world);
+    applyVelocity(world);
+    resolvePaperSupports(world);
+    bounceWithinViewport(world);
     dampVelocity(world);
     updateTransform(world);
     syncToDOM(world);

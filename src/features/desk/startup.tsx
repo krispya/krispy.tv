@@ -10,16 +10,21 @@ type StartupProps = {
 };
 
 export function Startup({ items }: StartupProps) {
-  const { resetDeskItems, spawnDeskItem } = useActions(actions);
+  const { destroyPapers, spawnDesk, spawnPaper } = useActions(actions);
 
   useEffect(() => {
     const featuredItem = items.find((item) => item.openable !== false);
 
+    const desk = spawnDesk();
+
     items.forEach(({ id }) => {
-      spawnDeskItem({ id, centered: id === featuredItem?.id });
+      spawnPaper({ id, centered: id === featuredItem?.id });
     });
 
-    return () => resetDeskItems();
+    return () => {
+      destroyPapers();
+      desk.destroy();
+    };
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- mount-only initial spawn
   }, []);
 

@@ -6,7 +6,7 @@ import { routes } from '../../routes.js';
 import { articles as articlesCatalog } from '../article/index.js';
 import { Frameloop } from './frameloop.js';
 import { getArticleSheetStyle } from './renderers/article-renderer.js';
-import { DeskItemRenderer } from './renderers/desk-item-renderer.js';
+import { PaperRenderer } from './renderers/paper-renderer.js';
 import { Startup } from './startup.js';
 import { Pointer, Time, Viewport } from './traits.js';
 
@@ -71,7 +71,7 @@ function DeskScene({
 
   return (
     <section className="relative h-screen min-h-[560px] overflow-hidden bg-[radial-gradient(circle_at_18%_20%,rgba(244,244,239,0.42),transparent_28%),linear-gradient(135deg,#879080,#b8b2a5_58%,#6f7b75)]">
-      <DeskItemRenderer itemConfigById={itemConfigById} onOpen={onItemOpen} />
+      <PaperRenderer itemConfigById={itemConfigById} onOpen={onItemOpen} />
     </section>
   );
 }

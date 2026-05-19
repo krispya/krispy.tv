@@ -2,7 +2,7 @@ import { articles } from '../../article/index.js';
 
 export const EMPTY_SHEET_IDS = ['empty-page-1', 'empty-page-2', 'empty-page-3'] as const;
 
-export function getDeskItemStackIndex(id: string) {
+export function getPaperStackIndex(id: string) {
   const emptyIndex = EMPTY_SHEET_IDS.indexOf(id as (typeof EMPTY_SHEET_IDS)[number]);
   if (emptyIndex >= 0) return emptyIndex;
 

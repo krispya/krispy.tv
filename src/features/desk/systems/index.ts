@@ -1,4 +1,8 @@
+export { applyGravity } from './apply-gravity.js';
+export { applyVelocity } from './apply-velocity.js';
+export { bounceWithinViewport } from './bounce-within-viewport.js';
 export { dampVelocity } from './damp-velocity.js';
+export { resolvePaperSupports } from './resolve-paper-supports.js';
 export { syncToDOM } from './sync-to-dom.js';
 export { updateDragging } from './update-dragging.js';
 export { updateTime } from './update-time.js';

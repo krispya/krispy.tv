@@ -2,7 +2,7 @@ import type { Entity } from 'koota';
 import { useTrait } from 'koota/react';
 import type { CSSProperties } from 'react';
 import { formatArticleDate, getArticle, type Article } from '../../article/index.js';
-import { DeskItem } from '../traits.js';
+import { Paper } from '../traits.js';
 
 type ArticleTheme = {
   backgroundColor: string;
@@ -61,8 +61,8 @@ export function getArticleSheetStyle(article: Article): CSSProperties {
 }
 
 export function ArticleRenderer({ entity }: { entity: Entity }) {
-  const item = useTrait(entity, DeskItem);
-  const article = item ? getArticle(item.id) : undefined;
+  const paper = useTrait(entity, Paper);
+  const article = paper ? getArticle(paper.id) : undefined;
 
   if (!article) return <BlankSheet />;
 
