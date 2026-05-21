@@ -1,5 +1,5 @@
 import { Not, type World } from 'koota';
-import { Dragging, Time, Velocity } from '../traits.js';
+import { Dragging, Time, Velocity } from '../traits/index.js';
 import { GRAVITY_METERS_PER_SECOND_SQUARED, metersToCssPixels } from '../utils/physics-units.js';
 
 export function applyGravity(world: World) {

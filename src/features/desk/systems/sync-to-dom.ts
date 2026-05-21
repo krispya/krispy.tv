@@ -1,5 +1,5 @@
 import type { World } from 'koota';
-import { Dragging, Paper, Position, Ref, Rotation, StackIndex } from '../traits.js';
+import { Dragging, Paper, Position, Ref, Rotation, StackIndex } from '../traits/index.js';
 
 const DRAGGING_STACK_BOOST = 1000;
 const MAX_SHADOW_HEIGHT = 96;

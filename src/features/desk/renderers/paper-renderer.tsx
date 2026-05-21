@@ -1,10 +1,16 @@
 import type { Entity } from 'koota';
 import { useActions, useHas, useQuery, useTrait } from 'koota/react';
-import { useCallback, type CSSProperties, type KeyboardEvent } from 'react';
+import { useCallback, type CSSProperties } from 'react';
 import { actions } from '../actions.js';
-import { AngularVelocity, Dragging, Paper, Position, Ref, Rotation, Velocity } from '../traits.js';
-import type { DeskStageItem } from '../desk.js';
-import { ArticleRenderer } from './article-renderer.js';
+import {
+  AngularVelocity,
+  Dragging,
+  Paper,
+  Position,
+  Ref,
+  Rotation,
+  Velocity,
+} from '../traits/index.js';
 
 const paperStyle = {
   '--paper-width': 'clamp(220px, 32vw, 380px)',
@@ -14,41 +20,16 @@ const paperStyle = {
   marginTop: 'calc((var(--paper-width) * 11 / 8.5) / -2)',
 } as CSSProperties;
 
-type PaperRendererProps = {
-  itemConfigById: Map<string, DeskStageItem>;
-  onOpen?: (id: string) => void;
-};
-
-export function PaperRenderer({ itemConfigById, onOpen }: PaperRendererProps) {
+export function PaperRenderer() {
   const entities = useQuery(Paper, Position, Rotation);
-
-  return (
-    <>
-      {entities.map((entity) => (
-        <PaperView
-          key={entity.id()}
-          entity={entity}
-          itemConfig={itemConfigById.get(entity.get(Paper)?.id ?? '')}
-          onOpen={onOpen}
-        />
-      ))}
-    </>
-  );
+  return entities.map((entity) => <PaperView key={entity.id()} entity={entity} />);
 }
 
-function PaperView({
-  entity,
-  itemConfig,
-  onOpen,
-}: {
-  entity: Entity;
-  itemConfig?: DeskStageItem;
-  onOpen?: (id: string) => void;
-}) {
+function PaperView({ entity }: { entity: Entity }) {
   const paper = useTrait(entity, Paper);
   const isDragging = useHas(entity, Dragging);
   const { raisePaper } = useActions(actions);
-  const isOpenable = itemConfig?.openable ?? true;
+  const isOpenable = true;
 
   const handleInit = useCallback(
     (element: HTMLDivElement | null) => {
@@ -112,20 +93,6 @@ function PaperView({
     [entity]
   );
 
-  const handleDoubleClick = useCallback(() => {
-    if (paper && isOpenable) onOpen?.(paper.id);
-  }, [isOpenable, paper, onOpen]);
-
-  const handleKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLDivElement>) => {
-      if (!paper || !isOpenable || (event.key !== 'Enter' && event.key !== ' ')) return;
-
-      event.preventDefault();
-      onOpen?.(paper.id);
-    },
-    [isOpenable, paper, onOpen]
-  );
-
   if (!paper) return null;
 
   return (
@@ -133,19 +100,15 @@ function PaperView({
       ref={handleInit}
       role={isOpenable ? 'button' : undefined}
       tabIndex={isOpenable ? 0 : undefined}
-      aria-label={itemConfig?.ariaLabel ?? (isOpenable ? 'Open article' : 'Blank sheet')}
-      onDoubleClick={handleDoubleClick}
-      onKeyDown={handleKeyDown}
+      aria-label={isOpenable ? 'Open article' : 'Blank sheet'}
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerCancel}
       onLostPointerCapture={handleLostPointerCapture}
-      className={`fixed top-0 left-0 flex cursor-grab touch-none flex-col overflow-hidden rounded-[3px] border border-stone-200 bg-[#fffdf7] p-6 text-left text-gray-950 outline-offset-4 will-change-transform select-none ${itemConfig?.className ?? ''} ${
+      className={`} fixed top-0 left-0 flex cursor-grab touch-none flex-col overflow-hidden rounded-[3px] border border-stone-200 bg-[#fffdf7] p-6 text-left text-gray-950 outline-offset-4 will-change-transform select-none ${
         isDragging ? 'cursor-grabbing' : ''
       }`}
-      style={{ ...paperStyle, ...itemConfig?.style }}
-    >
-      <ArticleRenderer entity={entity} />
-    </div>
+      style={{ ...paperStyle }}
+    ></div>
   );
 }

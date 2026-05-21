@@ -10,7 +10,7 @@ import {
   StackIndex,
   Velocity,
   Viewport,
-} from './traits.js';
+} from './traits/index.js';
 import { metersToCssPixels } from './utils/physics-units.js';
 
 type DeskConfig = Partial<{

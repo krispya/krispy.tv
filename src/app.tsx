@@ -2,6 +2,8 @@ import { lazy, Suspense } from 'react';
 import { Route, Router, Switch } from 'wouter';
 import { routes } from './routes.js';
 
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+
 const Desk = lazy(() =>
   import('./features/desk/desk.js').then((module) => ({ default: module.Desk }))
 );
@@ -20,11 +22,9 @@ const ArticleNotFound = lazy(() =>
   }))
 );
 
-const routerBase = import.meta.env.BASE_URL.replace(/\/$/, '');
-
 export function App() {
   return (
-    <Router base={routerBase}>
+    <Router base={base}>
       <main className="min-h-screen">
         <Suspense fallback={<RoutePending />}>
           <Switch>

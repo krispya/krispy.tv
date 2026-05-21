@@ -1,5 +1,5 @@
 import type { World } from 'koota';
-import { Time } from '../traits.js';
+import { Time } from '../traits/index.js';
 
 export function updateTime(world: World) {
   const now = performance.now();

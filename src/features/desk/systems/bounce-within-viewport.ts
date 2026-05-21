@@ -1,5 +1,5 @@
 import { Not, type World } from 'koota';
-import { Desk, IsEnteringDesk, Paper, Position, Ref, Velocity, Viewport } from '../traits.js';
+import { Desk, IsEnteringDesk, Paper, Position, Ref, Velocity, Viewport } from '../traits/index.js';
 import { getViewportRange } from '../utils/viewport-range.js';
 
 export function bounceWithinViewport(world: World) {

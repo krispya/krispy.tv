@@ -1,5 +1,5 @@
 import { Not, type World } from 'koota';
-import { Dragging, Position, Time, Velocity } from '../traits.js';
+import { Dragging, Position, Time, Velocity } from '../traits/index.js';
 
 export function applyVelocity(world: World) {
   const time = world.get(Time);

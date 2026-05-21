@@ -8,7 +8,7 @@ import {
   StackIndex,
   Time,
   Velocity,
-} from '../traits.js';
+} from '../traits/index.js';
 import { dampedLerp } from '../utils/damped-lerp.js';
 import { metersToCssPixels } from '../utils/physics-units.js';
 

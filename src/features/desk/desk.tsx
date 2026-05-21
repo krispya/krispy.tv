@@ -1,14 +1,12 @@
 import { createWorld } from 'koota';
 import { WorldProvider } from 'koota/react';
-import { useMemo, type CSSProperties } from 'react';
-import { useLocation } from 'wouter';
-import { routes } from '../../routes.js';
+import { type CSSProperties } from 'react';
 import { articles as articlesCatalog } from '../article/index.js';
 import { Frameloop } from './frameloop.js';
-import { getArticleSheetStyle } from './renderers/article-renderer.js';
+import { DeskRenderer } from './renderers/desk-renderer.js';
 import { PaperRenderer } from './renderers/paper-renderer.js';
 import { Startup } from './startup.js';
-import { Pointer, Time, Viewport } from './traits.js';
+import { Pointer, Time, Viewport } from './traits/index.js';
 
 export type DeskStageItem = {
   id: string;
@@ -25,14 +23,11 @@ const emptySheets = [
 ];
 
 export function Desk() {
-  // All your data
   const world = createWorld(Time, Pointer, Viewport);
-  const [, navigate] = useLocation();
 
   const articles = articlesCatalog.map((article) => ({
     id: article.slug,
     ariaLabel: `Open ${article.title}`,
-    style: getArticleSheetStyle(article),
   }));
 
   const empty = emptySheets.map((sheet) => ({
@@ -47,31 +42,13 @@ export function Desk() {
 
   const items = [...articles, ...empty];
 
-  const handleOpenArticle = (slug: string) => {
-    navigate(routes.article.href({ slug }));
-  };
-
   return (
     <WorldProvider world={world}>
       <Frameloop />
       <Startup items={items} />
-      <DeskScene items={items} onItemOpen={handleOpenArticle} />
+
+      <DeskRenderer />
+      <PaperRenderer />
     </WorldProvider>
-  );
-}
-
-function DeskScene({
-  items,
-  onItemOpen,
-}: {
-  items: DeskStageItem[];
-  onItemOpen?: (id: string) => void;
-}) {
-  const itemConfigById = useMemo(() => new Map(items.map((item) => [item.id, item])), [items]);
-
-  return (
-    <section className="relative h-screen min-h-[560px] overflow-hidden bg-[radial-gradient(circle_at_18%_20%,rgba(244,244,239,0.42),transparent_28%),linear-gradient(135deg,#879080,#b8b2a5_58%,#6f7b75)]">
-      <PaperRenderer itemConfigById={itemConfigById} onOpen={onItemOpen} />
-    </section>
   );
 }

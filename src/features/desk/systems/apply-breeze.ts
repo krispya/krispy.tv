@@ -1,5 +1,13 @@
 import { Not, type World } from 'koota';
-import { AngularVelocity, Dragging, Paper, Position, StackIndex, Time, Velocity } from '../traits.js';
+import {
+  AngularVelocity,
+  Dragging,
+  Paper,
+  Position,
+  StackIndex,
+  Time,
+  Velocity,
+} from '../traits/index.js';
 import { GRAVITY_METERS_PER_SECOND_SQUARED, metersToCssPixels } from '../utils/physics-units.js';
 
 const AIR_ACCELERATION = metersToCssPixels(0.08);

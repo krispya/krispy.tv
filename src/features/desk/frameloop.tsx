@@ -14,8 +14,8 @@ import {
   updateTime,
   updateTransform,
 } from './systems/index.js';
-import { Pointer, Viewport } from './traits.js';
-import { useAnimationFrame } from '../../utils/use-animation-frame.js';
+import { Pointer, Viewport } from './traits/index.js';
+import { useAnimationFrame } from '../frameloop/use-animation-frame.js';
 
 export function Frameloop() {
   const world = useWorld();

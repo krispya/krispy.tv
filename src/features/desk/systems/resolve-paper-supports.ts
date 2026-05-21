@@ -1,5 +1,5 @@
 import { Not, type World } from 'koota';
-import { AngularVelocity, Dragging, Paper, Position, StackIndex, Velocity } from '../traits.js';
+import { AngularVelocity, Dragging, Paper, Position, StackIndex, Velocity } from '../traits/index.js';
 import { metersToCssPixels } from '../utils/physics-units.js';
 
 const CONTACT_EPSILON = 0.5;
