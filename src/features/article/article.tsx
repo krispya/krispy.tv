@@ -21,26 +21,33 @@ export function Article({ slug }: { slug: string }) {
       >
         Back to desk
       </Link>
-      <header className="border-b border-gray-200 pb-8">
-        <time className="mb-2 block text-sm text-gray-500" dateTime={article.date}>
-          {formatArticleDate(article.date)}
-        </time>
-        <h1 className="mb-4 text-5xl leading-none font-bold text-gray-950 sm:text-6xl">
+      <header className="mb-10 text-center">
+        <h1 className="mb-6 font-serif text-5xl leading-none font-black tracking-tighter text-gray-950 uppercase sm:text-7xl">
           {article.title}
         </h1>
-        <p className="max-w-2xl text-lg text-gray-600">{article.summary}</p>
-        <p className="mt-4 text-base text-gray-600">
-          By{' '}
-          <a
-            className="text-primary-700 decoration-primary-200 hover:text-primary-800 hover:decoration-primary-400 underline"
-            href={author.site}
-            rel="noreferrer"
-          >
-            {author.name}
-          </a>
+        <p className="mx-auto mb-8 max-w-2xl font-serif text-xl text-gray-700 italic">
+          {article.summary}
         </p>
+        <div className="flex items-center justify-between border-y-2 border-gray-950 py-3 text-left">
+          <time
+            className="text-sm font-bold tracking-widest text-gray-900 uppercase"
+            dateTime={article.date}
+          >
+            {formatArticleDate(article.date)}
+          </time>
+          <span className="text-sm font-bold tracking-widest text-gray-900 uppercase">
+            By{' '}
+            <a
+              className="text-primary-700 decoration-primary-200 hover:text-primary-800 hover:decoration-primary-400 underline"
+              href={author.site}
+              rel="noreferrer"
+            >
+              {author.name}
+            </a>
+          </span>
+        </div>
       </header>
-      <div className="prose prose-gray mt-8 max-w-none">
+      <div className="prose prose-lg prose-gray prose-p:first-of-type:first-letter:float-left prose-p:first-of-type:first-letter:mr-3 prose-p:first-of-type:first-letter:text-7xl prose-p:first-of-type:first-letter:font-black prose-p:first-of-type:first-letter:mt-[-0.05em] prose-headings:font-serif prose-headings:font-black prose-headings:uppercase mt-10 max-w-none font-sans leading-relaxed tracking-wide">
         <Suspense fallback={<p className="text-sm text-gray-500">Loading article...</p>}>
           <ArticleContent article={article} />
         </Suspense>

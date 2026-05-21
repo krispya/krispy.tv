@@ -7,7 +7,7 @@ export function DeskRenderer() {
   return desk && <DeskView entity={desk} />;
 }
 
-function DeskView({ entity }: { entity: Entity }) {
+function DeskView({ entity: _entity }: { entity: Entity }) {
   return (
     <div
       style={{ backgroundColor: 'rgb(161, 123, 82)' }}

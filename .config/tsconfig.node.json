@@ -12,7 +12,8 @@
     "composite": true,
     "rewriteRelativeImportExtensions": true,
     "erasableSyntaxOnly": true,
-    "noEmit": true
+    "noEmit": true,
+    "jsx": "react-jsx"
   },
-  "include": ["../*.config.ts", "./*.ts"]
+  "include": ["../*.config.ts", "./*.ts", "../scripts"]
 }
