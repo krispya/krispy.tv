@@ -16,6 +16,7 @@ export const Velocity = trait({ x: 0, y: 0, z: 0 });
 export const AngularVelocity = trait({ x: 0, y: 0, z: 0 });
 export const Paper = trait({
   id: '',
+  openable: true,
   /** Meters. */
   thickness: 0,
 });
@@ -32,7 +33,17 @@ export const PaperPhysics = trait({
 export const Dragging = trait({
   offset: () => ({ x: 0, y: 0 }),
   rotation: () => ({ x: 0, y: 0, z: 0 }),
+  liftProgress: 0,
 });
+
+export const Pressed = trait({
+  pointerId: 0,
+  origin: () => ({ x: 0, y: 0 }),
+  offset: () => ({ x: 0, y: 0 }),
+  rotation: () => ({ x: 0, y: 0, z: 0 }),
+});
+
+export const Selected = trait();
 
 export const IsEnteringDesk = trait();
 export const StackIndex = trait({ value: 0 });

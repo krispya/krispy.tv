@@ -39,6 +39,7 @@ const DEFAULT_PAPER_PHYSICS = {
 
 export type PaperConfig = {
   id: string;
+  openable?: boolean;
   centered?: boolean;
   stackIndex?: number;
   thickness?: number;
@@ -90,6 +91,7 @@ export const actions = createActions((world) => ({
 
     const paper = {
       id: config.id,
+      openable: config.openable ?? true,
       thickness: config.thickness ?? DEFAULT_PAPER.thickness,
     };
     const physics = { ...DEFAULT_PAPER_PHYSICS, ...config.physics };

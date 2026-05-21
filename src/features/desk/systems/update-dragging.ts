@@ -3,6 +3,8 @@ import { Dragging, PaperPhysics, Pointer, Position, Time, Velocity } from '../tr
 import { dampedLerp } from '../utils/damped-lerp.js';
 import { metersToCssPixels } from '../utils/physics-units.js';
 
+const LIFT_DAMPING = 0.18;
+
 export function updateDragging(world: World) {
   const pointer = world.get(Pointer);
   const time = world.get(Time);
@@ -12,6 +14,8 @@ export function updateDragging(world: World) {
   world
     .query(Position, Velocity, Dragging, PaperPhysics)
     .updateEach(([position, velocity, dragging, physics]) => {
+      dragging.liftProgress = dampedLerp(dragging.liftProgress, 1, LIFT_DAMPING, time.delta);
+
       const oldX = position.x;
       const oldY = position.y;
 

@@ -15,10 +15,10 @@ export function Startup({ items }: StartupProps) {
   useEffect(() => {
     const desk = spawnDesk();
 
-    items.forEach(({ id }, index) => {
+    items.forEach(({ id, openable }, index) => {
       const centered = index === 0;
       const stackIndex = items.length - index - 1;
-      const paper = spawnPaper({ id, stackIndex, centered });
+      const paper = spawnPaper({ id, openable, stackIndex, centered });
 
       throwPaperOntoDesk(paper, { centered });
     });
