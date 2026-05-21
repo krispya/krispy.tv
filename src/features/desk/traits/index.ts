@@ -17,6 +17,7 @@ export const AngularVelocity = trait({ x: 0, y: 0, z: 0 });
 export const Paper = trait({
   id: '',
   openable: true,
+  color: '#fffdf7',
   /** Meters. */
   thickness: 0,
 });

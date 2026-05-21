@@ -173,10 +173,10 @@ function PaperView({ entity }: { entity: Entity }) {
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerCancel}
       onLostPointerCapture={handleLostPointerCapture}
-      className={`fixed top-0 left-0 flex cursor-grab touch-none flex-col overflow-hidden rounded-[3px] border border-stone-200 bg-[#fffdf7] p-6 text-left text-gray-950 will-change-transform select-none ${
+      className={`fixed top-0 left-0 flex cursor-grab touch-none flex-col overflow-hidden rounded-[3px] border border-stone-200 p-6 text-left text-gray-950 will-change-transform select-none ${
         isDragging ? 'cursor-grabbing' : ''
       } ${isSelected || isDragging ? 'outline-3 outline-offset-2 outline-blue-500' : ''}`}
-      style={{ ...paperStyle }}
+      style={{ ...paperStyle, backgroundColor: paper.color }}
     ></div>
   );
 }
