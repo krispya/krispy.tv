@@ -12,6 +12,8 @@ import {
   Viewport,
 } from './traits/index.js';
 import { metersToCssPixels } from './utils/physics-units.js';
+import { getPaperSize } from './utils/paper-size.js';
+import { randomInRange } from './utils/random.js';
 
 type DeskConfig = Partial<{
   wallBuffer: number;
@@ -50,21 +52,6 @@ export type PaperConfig = {
 type PaperThrowConfig = Partial<{
   centered: boolean;
 }>;
-
-function getPaperSize(viewportWidth: number) {
-  const width = Math.min(Math.max(viewportWidth * 0.32, 220), 380);
-
-  return {
-    width,
-    height: width * (11 / 8.5),
-  };
-}
-
-function randomInRange(min: number, max: number) {
-  if (max <= min) return (min + max) / 2;
-
-  return min + (max - min) * Math.random();
-}
 
 export const actions = createActions((world) => ({
   spawnDesk: (config: DeskConfig = {}) => {

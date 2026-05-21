@@ -4,6 +4,7 @@ import { useCallback, type CSSProperties } from 'react';
 import { useLocation } from 'wouter';
 import { routes } from '../../../routes.js';
 import { actions } from '../actions.js';
+import { PAPER_SIZE } from '../utils/paper-size.js';
 import {
   AngularVelocity,
   Dragging,
@@ -17,11 +18,11 @@ import {
 } from '../traits/index.js';
 
 const paperStyle = {
-  '--paper-width': 'clamp(220px, 32vw, 380px)',
+  '--paper-width': `clamp(${PAPER_SIZE.minWidth}px, ${PAPER_SIZE.viewportScale * 100}vw, ${PAPER_SIZE.maxWidth}px)`,
   width: 'var(--paper-width)',
-  aspectRatio: '8.5 / 11',
+  aspectRatio: `${PAPER_SIZE.aspectRatio * 11} / 11`,
   marginLeft: 'calc(var(--paper-width) / -2)',
-  marginTop: 'calc((var(--paper-width) * 11 / 8.5) / -2)',
+  marginTop: `calc(var(--paper-width) / ${PAPER_SIZE.aspectRatio} / -2)`,
 } as CSSProperties;
 
 const DRAG_THRESHOLD_PX = 5;
