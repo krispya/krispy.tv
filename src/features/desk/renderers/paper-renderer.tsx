@@ -81,10 +81,9 @@ function PaperView({ entity }: { entity: Entity }) {
         })
       );
       entity.add(Selected);
-      raisePaper(entity);
       event.currentTarget.setPointerCapture(event.pointerId);
     },
-    [entity, raisePaper]
+    [entity]
   );
 
   const handlePointerMove = useCallback(
@@ -108,6 +107,7 @@ function PaperView({ entity }: { entity: Entity }) {
       entity.set(AngularVelocity, { x: 0, y: 0, z: 0 });
       entity.remove(Pressed);
       entity.remove(Selected);
+      raisePaper(entity);
       entity.add(
         Dragging({
           offset: pressed.offset,
@@ -116,7 +116,7 @@ function PaperView({ entity }: { entity: Entity }) {
         })
       );
     },
-    [entity]
+    [entity, raisePaper]
   );
 
   const handlePointerUp = useCallback(
