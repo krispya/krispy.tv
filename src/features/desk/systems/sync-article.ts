@@ -4,6 +4,7 @@ import {
   ArticleOf,
   IsOffScreen,
   IsOpen,
+  IsPreloading,
   Paper,
   Position,
   Velocity,
@@ -14,6 +15,13 @@ export function syncArticle(world: World) {
   if (!route) return;
 
   const { slug } = route;
+
+  world.query(ArticleOf('*'), IsPreloading).readEach((_, entity) => {
+    const paper = entity.targetFor(ArticleOf);
+    if (!paper?.has(IsOpen) || paper.has(IsOffScreen)) {
+      entity.remove(IsPreloading);
+    }
+  });
 
   // When slug clears, remove IsOpen from paper — syncOpenState handles the throw.
   // The article entity's spring will detect paper lost IsOpen and slide off.
@@ -29,13 +37,18 @@ export function syncArticle(world: World) {
   });
   if (hasArticle) return;
 
-  // Find the paper that's open and off-screen
+  // Find the paper as soon as it opens so React can begin rendering while hidden.
   let targetPaper: Entity | undefined;
-  world.query(Paper, IsOpen, IsOffScreen).readEach(([paper], entity) => {
+  world.query(Paper, IsOpen).readEach(([paper], entity) => {
     if (paper.id === slug) targetPaper = entity;
   });
   if (!targetPaper) return;
 
   // Spawn article entity with relation to paper
-  world.spawn(Position({ x: 0, y: 1, z: 0 }), Velocity({ x: 0, y: 0, z: 0 }), ArticleOf(targetPaper));
+  world.spawn(
+    Position({ x: 0, y: 1, z: 0 }),
+    Velocity({ x: 0, y: 0, z: 0 }),
+    IsPreloading,
+    ArticleOf(targetPaper)
+  );
 }

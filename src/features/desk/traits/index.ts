@@ -49,6 +49,7 @@ export const Selected = trait();
 export const IsOpen = trait();
 export const IsOffScreen = trait();
 export const IsEnteringDesk = trait();
+export const IsPreloading = trait();
 export const ActiveSlug = trait({ slug: '' });
 export const ArticleOf = relation({ exclusive: true, autoDestroy: 'orphan' });
 export const StackIndex = trait({ value: 0 });

@@ -3,7 +3,7 @@ import { useHas, useQuery, useTarget, useTrait, useTraitEffect } from 'koota/rea
 import { lazy, Suspense, useRef } from 'react';
 import { Link } from 'wouter';
 import { routes } from '../../../routes.js';
-import { ArticleOf, IsOpen, Paper, Position } from '../traits/index.js';
+import { ArticleOf, IsOpen, IsPreloading, Paper, Position } from '../traits/index.js';
 
 const Article = lazy(() =>
   import('../../article/article.js').then((module) => ({ default: module.Article }))
@@ -31,11 +31,19 @@ function ArticleView({ entity }: { entity: Entity }) {
   const paper = useTarget(entity, ArticleOf);
   const slug = useTrait(paper, Paper)?.id;
   const closing = !useHas(paper, IsOpen);
+  const preloading = useHas(entity, IsPreloading);
 
   if (!slug) return null;
 
   return (
-    <div className="fixed inset-0 z-2000">
+    <div
+      className="fixed inset-0 z-2000"
+      style={{
+        pointerEvents: preloading ? 'none' : undefined,
+        visibility: preloading ? 'hidden' : undefined,
+      }}
+      aria-hidden={preloading ? true : undefined}
+    >
       <Link
         ref={backdropRef}
         href={routes.home.href()}
