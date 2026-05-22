@@ -4,7 +4,7 @@ import { articles as articlesCatalog } from '../article/index.js';
 import { actions } from './actions.js';
 import { randomBlankColor } from './utils/blank-page-colors.js';
 
-const MIN_PAGE_COUNT = 5;
+const MIN_PAGE_COUNT = 8;
 
 export function Startup() {
   const { destroyPapers, spawnDesk, spawnPaper, throwPaperOntoDesk } = useActions(actions);

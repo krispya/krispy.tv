@@ -103,6 +103,23 @@ async function loadImage(filePath: string): Promise<ImageInfo> {
         i++;
       }
     }
+  } else if (ext === 'webp') {
+    // RIFF header: bytes 12-15 are "VP8 ", "VP8L", or "VP8X"
+    const chunk = data.toString('ascii', 12, 16);
+    if (chunk === 'VP8 ') {
+      // Lossy: dimensions at offset 26-29 (little-endian 16-bit, masked to 14 bits)
+      width = data.readUInt16LE(26) & 0x3fff;
+      height = data.readUInt16LE(28) & 0x3fff;
+    } else if (chunk === 'VP8L') {
+      // Lossless: 32-bit signature at offset 21, width/height packed in bits
+      const bits = data.readUInt32LE(21);
+      width = (bits & 0x3fff) + 1;
+      height = ((bits >> 14) & 0x3fff) + 1;
+    } else if (chunk === 'VP8X') {
+      // Extended: canvas size at offset 24-29 (24-bit LE each)
+      width = (data[24] | (data[25] << 8) | (data[26] << 16)) + 1;
+      height = (data[27] | (data[28] << 8) | (data[29] << 16)) + 1;
+    }
   }
 
   return { src, width, height };
