@@ -17,6 +17,27 @@ import {
 } from '../traits/index.js';
 
 const DRAG_THRESHOLD_PX = 5;
+const PAPER_TEXTURE_OVERLAYS = [
+  'linear-gradient(17deg, rgba(49, 35, 18, 0.024), rgba(49, 35, 18, 0.04))',
+  'linear-gradient(133deg, rgba(75, 57, 26, 0.032), rgba(75, 57, 26, 0.048))',
+  'linear-gradient(251deg, rgba(34, 52, 65, 0.026), rgba(34, 52, 65, 0.04))',
+  'linear-gradient(68deg, rgba(56, 67, 38, 0.022), rgba(56, 67, 38, 0.038))',
+  'linear-gradient(309deg, rgba(83, 45, 49, 0.02), rgba(83, 45, 49, 0.036))',
+];
+
+function hashString(value: string): number {
+  let hash = 0;
+
+  for (let index = 0; index < value.length; index++) {
+    hash = (hash * 31 + value.charCodeAt(index)) | 0;
+  }
+
+  return Math.abs(hash);
+}
+
+function getPaperTextureOverlay(id: string): string {
+  return PAPER_TEXTURE_OVERLAYS[hashString(id) % PAPER_TEXTURE_OVERLAYS.length];
+}
 
 export function PaperRenderer() {
   const entities = useQuery(Paper, Position, Rotation);
@@ -175,9 +196,11 @@ function PaperView({ entity }: { entity: Entity }) {
         marginTop: paper.height / -2,
         backgroundColor: paper.color,
         ...(paper.openable && {
-          backgroundImage: `url(${import.meta.env.BASE_URL}images/articles/${paper.id}.png)`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'top center',
+          backgroundImage: `${getPaperTextureOverlay(paper.id)}, url(${import.meta.env.BASE_URL}images/articles/${paper.id}.png)`,
+          backgroundBlendMode: 'multiply, normal',
+          backgroundSize: 'cover, cover',
+          backgroundPosition: 'center, top center',
+          backgroundRepeat: 'no-repeat, no-repeat',
         }),
       }}
     ></div>
