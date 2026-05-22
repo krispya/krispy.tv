@@ -11,11 +11,9 @@ export function syncOpenState(world: World) {
     if (slug && paper.id === slug) {
       if (entity.has(IsOpen)) return;
       entity.add(IsOpen);
-      console.log(`Opened paper ${paper.id}`);
     } else {
       if (!entity.has(IsOpen)) return;
       entity.remove(IsOpen);
-      console.log(`Closed paper ${paper.id}`);
     }
   });
 }
