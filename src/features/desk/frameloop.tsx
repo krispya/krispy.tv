@@ -12,8 +12,10 @@ import {
   dampVelocity,
   detectOffScreen,
   resolvePaperSupports,
+  syncArticle,
   syncOpenState,
   syncToDOM,
+  updateArticleMotion,
   updateDragging,
   updateTime,
   updateTransform,
@@ -40,6 +42,8 @@ export function Frameloop() {
     updateTransform(world);
     syncOpenState(world);
     detectOffScreen(world);
+    syncArticle(world);
+    updateArticleMotion(world);
     syncToDOM(world);
   });
 

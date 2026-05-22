@@ -1,4 +1,4 @@
-import { trait } from 'koota';
+import { relation, trait } from 'koota';
 
 export const Time = trait({ last: 0, delta: 0 });
 export const Pointer = trait({ x: 0, y: 0 });
@@ -50,5 +50,6 @@ export const IsOpen = trait();
 export const IsOffScreen = trait();
 export const IsEnteringDesk = trait();
 export const ActiveSlug = trait({ slug: '' });
+export const ArticleOf = relation({ exclusive: true, autoDestroy: 'orphan' });
 export const StackIndex = trait({ value: 0 });
 export const Ref = trait(() => null! as HTMLElement);

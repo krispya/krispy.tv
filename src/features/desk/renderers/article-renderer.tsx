@@ -1,25 +1,59 @@
 import type { Entity } from 'koota';
-import { useQuery, useTrait } from 'koota/react';
-import { lazy, Suspense } from 'react';
-import { IsOffScreen, IsOpen, Paper } from '../traits/index.js';
+import { useHas, useQuery, useTarget, useTrait, useTraitEffect } from 'koota/react';
+import { lazy, Suspense, useRef } from 'react';
+import { Link } from 'wouter';
+import { routes } from '../../../routes.js';
+import { ArticleOf, IsOpen, Paper, Position } from '../traits/index.js';
 
 const Article = lazy(() =>
   import('../../article/article.js').then((module) => ({ default: module.Article }))
 );
 
 export function ArticleRenderer() {
-  const entities = useQuery(IsOpen, IsOffScreen, Paper);
+  const entities = useQuery(ArticleOf('*'));
   return entities.map((entity) => <ArticleView key={entity.id()} entity={entity} />);
 }
 
 function ArticleView({ entity }: { entity: Entity }) {
-  const paper = useTrait(entity, Paper);
+  const backdropRef = useRef<HTMLAnchorElement>(null);
+  const articleRef = useRef<HTMLDivElement>(null);
 
-  if (!paper) return null;
+  useTraitEffect(entity, Position, (pos) => {
+    if (!pos) return;
+    if (backdropRef.current) {
+      backdropRef.current.style.opacity = String(1 - pos.y);
+    }
+    if (articleRef.current) {
+      articleRef.current.style.transform = `translateY(${pos.y * 100}%)`;
+    }
+  });
+
+  const paper = useTarget(entity, ArticleOf);
+  const slug = useTrait(paper, Paper)?.id;
+  const closing = !useHas(paper, IsOpen);
+
+  if (!slug) return null;
 
   return (
-    <Suspense fallback={null}>
-      <Article slug={paper.id} />
-    </Suspense>
+    <div className="fixed inset-0 z-2000">
+      <Link
+        ref={backdropRef}
+        href={routes.home.href()}
+        className="absolute inset-0 bg-black/30"
+        style={{ opacity: 0, willChange: 'opacity' }}
+        aria-label="Close"
+      />
+      {!closing && (
+        <div
+          ref={articleRef}
+          className="absolute inset-0 mx-auto max-w-7xl"
+          style={{ transform: 'translateY(100%)', willChange: 'transform' }}
+        >
+          <Suspense fallback={null}>
+            <Article slug={slug} />
+          </Suspense>
+        </div>
+      )}
+    </div>
   );
 }

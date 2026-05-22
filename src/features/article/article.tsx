@@ -15,9 +15,6 @@ export function Article({ slug }: { slug: string }) {
 
   return (
     <div className="fixed inset-0 z-2000 flex items-end justify-center">
-      {/* Backdrop */}
-      <Link href={routes.home.href()} className="absolute inset-0 bg-black/30" aria-label="Close" />
-
       {/* Close button — floats top-right outside the paper */}
       <Link
         href={routes.home.href()}
