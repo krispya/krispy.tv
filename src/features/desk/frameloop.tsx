@@ -1,5 +1,7 @@
 import { useWorld } from 'koota/react';
 import { useEffect } from 'react';
+import { useRoute } from 'wouter';
+import { routes } from '../../routes.js';
 import {
   activateWallBarrier,
   applyAngularVelocity,
@@ -9,16 +11,19 @@ import {
   bounceWithinViewport,
   dampVelocity,
   resolvePaperSupports,
+  syncOpenState,
   syncToDOM,
   updateDragging,
   updateTime,
   updateTransform,
 } from './systems/index.js';
-import { Pointer, Viewport } from './traits/index.js';
+import { ActiveSlug, Pointer, Viewport } from './traits/index.js';
 import { useAnimationFrame } from '../frameloop/use-animation-frame.js';
 
 export function Frameloop() {
   const world = useWorld();
+  const [isArticle, params] = useRoute<{ slug: string }>(routes.article.path);
+  const slug = isArticle ? (params?.slug ?? '') : '';
 
   useAnimationFrame(() => {
     updateTime(world);
@@ -32,8 +37,13 @@ export function Frameloop() {
     bounceWithinViewport(world);
     dampVelocity(world);
     updateTransform(world);
+    syncOpenState(world);
     syncToDOM(world);
   });
+
+  useEffect(() => {
+    world.set(ActiveSlug, { slug });
+  }, [world, slug]);
 
   useEffect(() => {
     const updateViewport = () => {
