@@ -181,7 +181,7 @@ function PaperView({ entity }: { entity: Entity }) {
         ...paperStyle,
         backgroundColor: paper.color,
         ...(paper.openable && {
-          backgroundImage: `url(/images/articles/${paper.id}.png)`,
+          backgroundImage: `url(${import.meta.env.BASE_URL}images/articles/${paper.id}.png)`,
           backgroundSize: 'cover',
           backgroundPosition: 'top center',
         }),
