@@ -37,6 +37,7 @@ const ROOT = path.join(__dirname, '..');
 const PAPER_W = 816;
 const PAPER_H = 1056;
 const PADDING = 48;
+const PAPER_BACKGROUND = '#fffdf7';
 
 const PRIMARY_700 = 'oklch(0.525_0.223_3.958)';
 const PRIMARY_200 = 'oklch(0.899_0.061_343.231)';
@@ -318,8 +319,14 @@ async function main() {
 
     const png = await render(
       <div
-        tw="flex flex-col bg-white"
-        style={{ width: PAPER_W, height: PAPER_H, padding: PADDING, fontFamily: 'Inter Variable' }}
+        tw="flex flex-col"
+        style={{
+          width: PAPER_W,
+          height: PAPER_H,
+          padding: PADDING,
+          backgroundColor: PAPER_BACKGROUND,
+          fontFamily: 'Inter Variable',
+        }}
       >
         {/* Article header — mirrors article.tsx */}
         <div tw="flex flex-col mb-10 items-center justify-center">
