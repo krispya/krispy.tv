@@ -15,6 +15,8 @@ import { metersToCssPixels } from '../utils/physics-units.js';
 const DRAG_LIFT = 0.02;
 const PICKUP_STRAIGHTNESS = 0.82;
 const STRAIGHTEN_DAMPING = 0.28;
+const LANDING_EPSILON = 0.5;
+const LANDING_FLATTEN_DAMPING = 0.2;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
@@ -58,6 +60,13 @@ export function updateTransform(world: World) {
           time.delta
         );
         return;
+      }
+
+      // Flatten the paper when it lands on the surface
+      const supportZ = metersToCssPixels(restingHeight);
+      if (position.z <= supportZ + LANDING_EPSILON) {
+        rotation.x = dampedLerp(rotation.x, 0, LANDING_FLATTEN_DAMPING, time.delta);
+        rotation.y = dampedLerp(rotation.y, 0, LANDING_FLATTEN_DAMPING, time.delta);
       }
 
       rotation.x = clamp(rotation.x, -14, 14);

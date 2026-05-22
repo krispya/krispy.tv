@@ -47,6 +47,7 @@ export const Pressed = trait({
 export const Selected = trait();
 
 export const IsOpen = trait();
+export const IsOffScreen = trait();
 export const IsEnteringDesk = trait();
 export const ActiveSlug = trait({ slug: '' });
 export const StackIndex = trait({ value: 0 });

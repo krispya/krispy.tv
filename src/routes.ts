@@ -11,6 +11,9 @@ export const routes = {
     path: '/article/:slug',
     href: ({ slug }: { slug: string }) => `/article/${encodeURIComponent(slug)}`,
   },
+  deskGroup: {
+    path: /^\/(?:$|article\/[^/]+$)/,
+  },
 } as const;
 
 export type RouteSnapshot =

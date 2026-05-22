@@ -1,5 +1,14 @@
 import { Not, type World } from 'koota';
-import { Desk, IsEnteringDesk, Paper, Position, Ref, Velocity, Viewport } from '../traits/index.js';
+import {
+  Desk,
+  IsEnteringDesk,
+  IsOpen,
+  Paper,
+  Position,
+  Ref,
+  Velocity,
+  Viewport,
+} from '../traits/index.js';
 import { getViewportRange } from '../utils/viewport-range.js';
 
 export function bounceWithinViewport(world: World) {
@@ -8,7 +17,7 @@ export function bounceWithinViewport(world: World) {
   if (!viewport || !desk || viewport.width <= 0 || viewport.height <= 0) return;
 
   world
-    .query(Paper, Position, Velocity, Ref, Not(IsEnteringDesk))
+    .query(Paper, Position, Velocity, Ref, Not(IsEnteringDesk), Not(IsOpen))
     .updateEach(([_paper, position, velocity, ref]) => {
       const width = ref.offsetWidth;
       const height = ref.offsetHeight;

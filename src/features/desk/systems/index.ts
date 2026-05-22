@@ -5,6 +5,7 @@ export { applyGravity } from './apply-gravity.js';
 export { applyVelocity } from './apply-velocity.js';
 export { bounceWithinViewport } from './bounce-within-viewport.js';
 export { dampVelocity } from './damp-velocity.js';
+export { detectOffScreen } from './detect-off-screen.js';
 export { resolvePaperSupports } from './resolve-paper-supports.js';
 export { syncOpenState } from './sync-open-state.js';
 export { syncToDOM } from './sync-to-dom.js';

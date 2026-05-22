@@ -10,6 +10,7 @@ import {
   applyVelocity,
   bounceWithinViewport,
   dampVelocity,
+  detectOffScreen,
   resolvePaperSupports,
   syncOpenState,
   syncToDOM,
@@ -38,6 +39,7 @@ export function Frameloop() {
     dampVelocity(world);
     updateTransform(world);
     syncOpenState(world);
+    detectOffScreen(world);
     syncToDOM(world);
   });
 
