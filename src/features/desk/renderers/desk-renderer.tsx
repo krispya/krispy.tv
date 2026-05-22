@@ -11,7 +11,7 @@ function DeskView({ entity: _entity }: { entity: Entity }) {
   return (
     <div
       style={{ backgroundColor: 'rgb(161, 123, 82)' }}
-      className="relative h-screen overflow-hidden"
+      className="relative h-dvh touch-none overflow-hidden select-none"
     />
   );
 }

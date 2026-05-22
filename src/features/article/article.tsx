@@ -32,8 +32,8 @@ export function Article({ slug }: { slug: string }) {
       </Link>
 
       {/* Paper modal — full width with margins, flush to bottom */}
-      <article className="relative mt-6 mr-6 ml-6 flex max-h-[calc(100vh-24px)] w-full flex-col overflow-y-auto rounded-t-lg border border-b-0 border-stone-200 bg-[#fffdf7]">
-        <div className="mx-auto w-full max-w-3xl px-6 pt-12 pb-16 sm:px-10">
+      <article className="relative mt-4 flex h-[calc(100dvh-18px)] w-full flex-col overflow-y-auto rounded-t-lg border-stone-200 bg-[#fffdf7] sm:mt-6 sm:mr-6 sm:ml-6 sm:h-[calc(100dvh-24px)] sm:border sm:border-b-0">
+        <div className="mx-auto w-full max-w-3xl px-5 pt-12 pb-24 sm:px-10 sm:pb-16">
           <header className="mb-10 text-center">
             <h1 className="mb-6 font-serif text-5xl leading-none font-black tracking-tighter text-gray-950 uppercase sm:text-7xl">
               {article.title}
