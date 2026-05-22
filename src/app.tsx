@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { Route, Router, Switch } from 'wouter';
+import { Router, useRoute } from 'wouter';
 import { routes } from './routes.js';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
@@ -26,17 +26,41 @@ export function App() {
   return (
     <Router base={base}>
       <main className="min-h-screen">
-        <Suspense fallback={<RoutePending />}>
-          <Switch>
-            <Route path={routes.home.path} component={Desk} />
-            <Route path={routes.about.path} component={About} />
-            <Route path={routes.article.path}>{(params) => <Article slug={params.slug} />}</Route>
-            <Route component={ArticleNotFound} />
-          </Switch>
-        </Suspense>
+        <AppRoutes />
       </main>
     </Router>
   );
+}
+
+function AppRoutes() {
+  const [isHome] = useRoute(routes.home.path);
+  const [isArticle, articleParams] = useRoute(routes.article.path);
+  const [isAbout] = useRoute(routes.about.path);
+
+  if (isAbout) {
+    return (
+      <Suspense fallback={<RoutePending />}>
+        <About />
+      </Suspense>
+    );
+  }
+
+  if (isHome || isArticle) {
+    return (
+      <>
+        <Suspense fallback={<RoutePending />}>
+          <Desk />
+        </Suspense>
+        {isArticle && articleParams?.slug && (
+          <Suspense fallback={null}>
+            <Article slug={articleParams.slug} />
+          </Suspense>
+        )}
+      </>
+    );
+  }
+
+  return <ArticleNotFound />;
 }
 
 function RoutePending() {
