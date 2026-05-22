@@ -1,10 +1,9 @@
 import type { Entity } from 'koota';
 import { useActions, useHas, useQuery, useTrait } from 'koota/react';
-import { useCallback, type CSSProperties } from 'react';
+import { useCallback } from 'react';
 import { useLocation } from 'wouter';
 import { routes } from '../../../routes.js';
 import { actions } from '../actions.js';
-import { PAPER_SIZE } from '../utils/paper-size.js';
 import {
   AngularVelocity,
   Dragging,
@@ -16,14 +15,6 @@ import {
   Selected,
   Velocity,
 } from '../traits/index.js';
-
-const paperStyle = {
-  '--paper-width': `clamp(${PAPER_SIZE.minWidth}px, ${PAPER_SIZE.viewportScale * 100}vw, ${PAPER_SIZE.maxWidth}px)`,
-  width: 'var(--paper-width)',
-  aspectRatio: `${PAPER_SIZE.aspectRatio * 11} / 11`,
-  marginLeft: 'calc(var(--paper-width) / -2)',
-  marginTop: `calc(var(--paper-width) / ${PAPER_SIZE.aspectRatio} / -2)`,
-} as CSSProperties;
 
 const DRAG_THRESHOLD_PX = 5;
 
@@ -178,7 +169,10 @@ function PaperView({ entity }: { entity: Entity }) {
         isDragging ? 'cursor-grabbing' : ''
       } ${isSelected || isDragging ? 'outline-3 outline-offset-2 outline-blue-500' : ''}`}
       style={{
-        ...paperStyle,
+        width: paper.width,
+        height: paper.height,
+        marginLeft: paper.width / -2,
+        marginTop: paper.height / -2,
         backgroundColor: paper.color,
         ...(paper.openable && {
           backgroundImage: `url(${import.meta.env.BASE_URL}images/articles/${paper.id}.png)`,

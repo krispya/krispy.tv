@@ -16,8 +16,7 @@ import {
 } from '../traits/index.js';
 import { actions } from '../actions.js';
 import { metersToCssPixels } from '../utils/physics-units.js';
-import { randomInRange } from '../utils/random.js';
-import { getPaperSize } from '../utils/paper-size.js';
+import { randomInRange } from '../utils/math.js';
 
 const EXIT_SPEED = metersToCssPixels(1.2);
 
@@ -51,13 +50,13 @@ export function syncOpenState(world: World) {
 
       const viewportWidth = viewport?.width || window.innerWidth;
       const viewportHeight = viewport?.height || window.innerHeight;
-      const paperSize = getPaperSize(viewportWidth);
       const ref = entity.get(Ref);
-      const height = ref?.offsetHeight ?? paperSize.height;
+      const width = ref?.offsetWidth ?? paper.width;
+      const height = ref?.offsetHeight ?? paper.height;
 
       // Reposition just below viewport edge
       entity.set(Position, {
-        x: randomInRange(paperSize.width * 0.5, viewportWidth - paperSize.width * 0.5),
+        x: randomInRange(width * 0.5, viewportWidth - width * 0.5),
         y: viewportHeight + height / 2 + randomInRange(8, 24),
         z: metersToCssPixels(randomInRange(0.03, 0.06)),
       });

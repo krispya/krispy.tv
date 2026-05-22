@@ -8,6 +8,7 @@ import {
   Time,
   Velocity,
 } from '../traits/index.js';
+import { clamp01 } from '../utils/math.js';
 import { GRAVITY_METERS_PER_SECOND_SQUARED, metersToCssPixels } from '../utils/physics-units.js';
 
 const AIR_ACCELERATION = metersToCssPixels(0.08);
@@ -18,10 +19,6 @@ const VERTICAL_DRAG =
 const FLUTTER_LIFT = metersToCssPixels(0.1);
 const MAX_TORQUE = 120;
 const ANGULAR_DAMPING = 0.91;
-
-function clamp01(value: number) {
-  return Math.min(Math.max(value, 0), 1);
-}
 
 export function applyBreeze(world: World) {
   const time = world.get(Time);

@@ -17,6 +17,7 @@ import {
   syncToDOM,
   updateArticleMotion,
   updateDragging,
+  updateResponsiveDeskLayout,
   updateTime,
   updateTransform,
 } from './systems/index.js';
@@ -30,6 +31,7 @@ export function Frameloop() {
 
   useAnimationFrame(() => {
     updateTime(world);
+    updateResponsiveDeskLayout(world);
     updateDragging(world);
     applyGravity(world);
     applyBreeze(world);

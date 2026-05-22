@@ -12,5 +12,6 @@ export { syncOpenState } from './sync-open-state.js';
 export { syncToDOM } from './sync-to-dom.js';
 export { updateArticleMotion } from './update-article-motion.js';
 export { updateDragging } from './update-dragging.js';
+export { updateResponsiveDeskLayout } from './update-responsive-desk-layout.js';
 export { updateTime } from './update-time.js';
 export { updateTransform } from './update-transform.js';

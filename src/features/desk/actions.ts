@@ -2,6 +2,7 @@ import { createActions, type Entity } from 'koota';
 import {
   AngularVelocity,
   Desk,
+  DeskConfig,
   IsEnteringDesk,
   Paper,
   PaperPhysics,
@@ -13,12 +14,15 @@ import {
 } from './traits/index.js';
 import { metersToCssPixels } from './utils/physics-units.js';
 import { getPaperSize } from './utils/paper-size.js';
-import { randomInRange } from './utils/random.js';
+import { randomInRange } from './utils/math.js';
 
-type DeskConfig = Partial<{
-  wallBuffer: number;
-  wallBounce: number;
-  wallFriction: number;
+type DeskConfigOverrides = Partial<{
+  paperViewportScale: number;
+  paperMinWidth: number;
+  paperMaxWidth: number;
+  wallGutterPaperScale: number;
+  wallGutterMin: number;
+  wallGutterMax: number;
 }>;
 
 type PaperPhysicsConfig = Partial<{
@@ -28,21 +32,13 @@ type PaperPhysicsConfig = Partial<{
   stopSpeed: number;
 }>;
 
-const DEFAULT_PAPER = {
-  thickness: 0.0001,
-};
-
-const DEFAULT_PAPER_PHYSICS = {
-  throwDamping: 0.35,
-  maxThrowSpeed: 0.6,
-  friction: 0.2,
-  stopSpeed: 0.01,
-};
-
 export type PaperConfig = {
   id: string;
   openable?: boolean;
   color?: string;
+  width?: number;
+  height?: number;
+  aspectRatio?: number;
   centered?: boolean;
   stackIndex?: number;
   thickness?: number;
@@ -54,21 +50,30 @@ type PaperThrowConfig = Partial<{
 }>;
 
 export const actions = createActions((world) => ({
-  spawnDesk: (config: DeskConfig = {}) => {
-    return world.spawn(Desk({ wallBuffer: 200, wallBounce: 0.85, wallFriction: 0.68, ...config }));
+  spawnDesk: (config: DeskConfigOverrides = {}) => {
+    return world.spawn(Desk, DeskConfig(config));
   },
   spawnPaper: (config: PaperConfig) => {
     const viewport = world.get(Viewport);
     const desk = world.queryFirst(Desk)?.get(Desk);
+    const deskConfig = world.queryFirst(DeskConfig)?.get(DeskConfig);
+    if (!desk) throw new Error('spawnPaper requires a Desk entity. Call spawnDesk() first.');
+    if (!deskConfig)
+      throw new Error('spawnPaper requires a DeskConfig entity. Call spawnDesk() first.');
+
     const viewportWidth = viewport?.width || window.innerWidth;
     const viewportHeight = viewport?.height || window.innerHeight;
-    const wallBuffer = desk?.wallBuffer ?? 200;
-    const paperSize = getPaperSize(viewportWidth);
+    const paperLayout = {
+      aspectRatio: config.aspectRatio ?? 8.5 / 11,
+    };
+    const paperSize = getPaperSize(viewportWidth, deskConfig, paperLayout);
+    const paperWidth = config.width ?? paperSize.width;
+    const paperHeight = config.height ?? paperWidth / paperLayout.aspectRatio;
     const position = {
       x: config.centered
         ? viewportWidth / 2
-        : randomInRange(paperSize.width * 0.5, viewportWidth - paperSize.width * 0.5),
-      y: viewportHeight + paperSize.height / 2 + randomInRange(24, wallBuffer),
+        : randomInRange(paperWidth * 0.5, viewportWidth - paperWidth * 0.5),
+      y: viewportHeight + paperHeight / 2 + randomInRange(24, desk.wallGutter),
       z: metersToCssPixels(randomInRange(0.055, 0.09)),
     };
     const rotation = {
@@ -79,11 +84,13 @@ export const actions = createActions((world) => ({
 
     const paper = {
       id: config.id,
-      openable: config.openable ?? true,
-      color: config.color ?? '#fffdf7',
-      thickness: config.thickness ?? DEFAULT_PAPER.thickness,
+      ...(config.openable !== undefined && { openable: config.openable }),
+      ...(config.color !== undefined && { color: config.color }),
+      width: paperWidth,
+      height: paperHeight,
+      ...(config.aspectRatio !== undefined && { aspectRatio: config.aspectRatio }),
+      ...(config.thickness !== undefined && { thickness: config.thickness }),
     };
-    const physics = { ...DEFAULT_PAPER_PHYSICS, ...config.physics };
     const stackIndex = config.stackIndex ?? 0;
 
     return world.spawn(
@@ -92,7 +99,7 @@ export const actions = createActions((world) => ({
       Rotation(rotation),
       Velocity,
       AngularVelocity,
-      PaperPhysics(physics),
+      PaperPhysics(config.physics),
       StackIndex({ value: stackIndex })
     );
   },

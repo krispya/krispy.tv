@@ -9,7 +9,7 @@ import {
   Velocity,
   Viewport,
 } from '../traits/index.js';
-import { getViewportRange } from '../utils/viewport-range.js';
+import { getViewportRange } from '../utils/math.js';
 
 export function bounceWithinViewport(world: World) {
   const viewport = world.get(Viewport);
@@ -23,8 +23,8 @@ export function bounceWithinViewport(world: World) {
       const height = ref.offsetHeight;
       if (width <= 0 || height <= 0) return;
 
-      const rangeX = getViewportRange(width, viewport.width, desk.wallBuffer);
-      const rangeY = getViewportRange(height, viewport.height, desk.wallBuffer);
+      const rangeX = getViewportRange(width, viewport.width, desk.wallGutter);
+      const rangeY = getViewportRange(height, viewport.height, desk.wallGutter);
 
       if (position.x < rangeX.min) {
         position.x = rangeX.min;

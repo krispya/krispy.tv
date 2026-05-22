@@ -9,7 +9,7 @@ import {
   Time,
   Velocity,
 } from '../traits/index.js';
-import { dampedLerp } from '../utils/damped-lerp.js';
+import { clamp, dampedLerp } from '../utils/math.js';
 import { metersToCssPixels } from '../utils/physics-units.js';
 
 const DRAG_LIFT = 0.02;
@@ -17,10 +17,6 @@ const PICKUP_STRAIGHTNESS = 0.82;
 const STRAIGHTEN_DAMPING = 0.28;
 const LANDING_EPSILON = 0.5;
 const LANDING_FLATTEN_DAMPING = 0.2;
-
-function clamp(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), max);
-}
 
 export function updateTransform(world: World) {
   const time = world.get(Time);

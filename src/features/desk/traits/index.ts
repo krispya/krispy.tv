@@ -4,32 +4,54 @@ export const Time = trait({ last: 0, delta: 0 });
 export const Pointer = trait({ x: 0, y: 0 });
 export const Viewport = trait({ width: 0, height: 0 });
 
+export const DeskConfig = trait({
+  paperViewportScale: 0.5,
+  /** Pixels. */
+  paperMinWidth: 280,
+  /** Pixels. */
+  paperMaxWidth: 380,
+  wallGutterPaperScale: 0.5,
+  /** Pixels. */
+  wallGutterMin: 48,
+  /** Pixels. */
+  wallGutterMax: 200,
+});
+
 export const Desk = trait({
-  wallBuffer: 96,
-  wallBounce: 0.45,
+  /** Pixels. */
+  wallGutter: 200,
+  wallBounce: 0.85,
   wallFriction: 0.68,
+});
+
+export const Paper = trait({
+  id: '',
+  openable: true,
+  color: '#fffdf7',
+  /** Pixels. */
+  width: 380,
+  /** Pixels. */
+  height: 380 / (8.5 / 11),
+  /** Width-to-height ratio. */
+  aspectRatio: 8.5 / 11,
+  /** Meters. */
+  thickness: 0.0001,
+});
+
+export const PaperPhysics = trait({
+  throwDamping: 0.35,
+  /** Meters per second. */
+  maxThrowSpeed: 0.6,
+  /** Unitless coefficient of kinetic friction. */
+  friction: 0.2,
+  /** Meters per second. */
+  stopSpeed: 0.01,
 });
 
 export const Position = trait({ x: 0, y: 0, z: 0 });
 export const Rotation = trait({ x: 0, y: 0, z: 0 });
 export const Velocity = trait({ x: 0, y: 0, z: 0 });
 export const AngularVelocity = trait({ x: 0, y: 0, z: 0 });
-export const Paper = trait({
-  id: '',
-  openable: true,
-  color: '#fffdf7',
-  /** Meters. */
-  thickness: 0,
-});
-export const PaperPhysics = trait({
-  throwDamping: 0,
-  /** Meters per second. */
-  maxThrowSpeed: 0,
-  /** Unitless coefficient of kinetic friction. */
-  friction: 0,
-  /** Meters per second. */
-  stopSpeed: 0,
-});
 
 export const Dragging = trait({
   offset: () => ({ x: 0, y: 0 }),

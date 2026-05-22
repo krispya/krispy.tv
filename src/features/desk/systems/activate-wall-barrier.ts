@@ -1,6 +1,6 @@
 import { type World } from 'koota';
 import { Desk, IsEnteringDesk, Paper, Position, Ref, Viewport } from '../traits/index.js';
-import { getViewportRange } from '../utils/viewport-range.js';
+import { getViewportRange } from '../utils/math.js';
 
 export function activateWallBarrier(world: World) {
   const viewport = world.get(Viewport);
@@ -11,7 +11,7 @@ export function activateWallBarrier(world: World) {
     const height = ref.offsetHeight;
     if (height <= 0) return;
 
-    const rangeY = getViewportRange(height, viewport.height, desk.wallBuffer);
+    const rangeY = getViewportRange(height, viewport.height, desk.wallGutter);
     if (position.y <= rangeY.max) entity.remove(IsEnteringDesk);
   });
 }

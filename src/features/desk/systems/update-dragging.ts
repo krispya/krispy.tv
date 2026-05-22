@@ -1,6 +1,6 @@
 import type { World } from 'koota';
 import { Dragging, PaperPhysics, Pointer, Position, Time, Velocity } from '../traits/index.js';
-import { dampedLerp } from '../utils/damped-lerp.js';
+import { dampedLerp } from '../utils/math.js';
 import { metersToCssPixels } from '../utils/physics-units.js';
 
 const LIFT_DAMPING = 0.18;
