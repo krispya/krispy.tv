@@ -8,7 +8,7 @@ const DAMPING = 20;
 const REST_EPSILON = 0.001;
 
 /** Constant downward acceleration for the close — feels like a slam. */
-const CLOSE_ACCELERATION = 80;
+const CLOSE_ACCELERATION = 65;
 
 export function updateArticleMotion(world: World) {
   const time = world.get(Time);

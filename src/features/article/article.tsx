@@ -1,8 +1,9 @@
-import { createElement, Suspense, use, type ComponentType } from 'react';
-import { Link } from 'wouter';
+import { createElement, Suspense, use, useCallback, type ComponentType } from 'react';
+import { Link, useLocation } from 'wouter';
 import author from '@content/author.json';
 import { getArticle } from './catalog.js';
 import { formatArticleDate } from './utils/format-article-date.js';
+import { useDragToDismiss } from './utils/use-drag-to-dismiss.js';
 import type { Article as ArticleType } from './types.js';
 import { routes } from '../../routes.js';
 
@@ -10,6 +11,9 @@ const articleComponentPromises = new Map<string, Promise<unknown>>();
 
 export function Article({ slug }: { slug: string }) {
   const article = getArticle(slug);
+  const [, navigate] = useLocation();
+  const onDismiss = useCallback(() => navigate(routes.home.href()), [navigate]);
+  const { scrollRef, style } = useDragToDismiss(onDismiss);
 
   if (!article) return <ArticleNotFound />;
 
@@ -32,8 +36,16 @@ export function Article({ slug }: { slug: string }) {
       </Link>
 
       {/* Paper modal — full width with margins, flush to bottom */}
-      <article className="relative mt-4 flex h-[calc(100dvh-18px)] w-full flex-col overflow-y-auto rounded-t-lg border-stone-200 bg-[#fffdf7] sm:mt-6 sm:mr-6 sm:ml-6 sm:h-[calc(100dvh-24px)] sm:border sm:border-b-0">
-        <div className="mx-auto w-full max-w-3xl px-5 pt-12 pb-24 sm:px-10 sm:pb-16">
+      <article
+        ref={scrollRef}
+        className="relative mt-4 flex h-[calc(100dvh-18px)] w-full flex-col overflow-y-auto rounded-t-lg border-stone-200 bg-[#fffdf7] sm:mt-6 sm:mr-6 sm:ml-6 sm:h-[calc(100dvh-24px)] sm:border sm:border-b-0"
+        style={style}
+      >
+        {/* Drag handle — visual affordance only, touch/mobile */}
+        <div className="flex items-center justify-center pt-3 pb-1 sm:hidden">
+          <div className="h-1 w-10 rounded-full bg-stone-300" />
+        </div>
+        <div className="mx-auto w-full max-w-3xl px-5 pt-8 pb-24 sm:px-10 sm:pt-12 sm:pb-16">
           <header className="mb-10 text-center">
             <h1 className="mb-6 font-serif text-5xl leading-none font-black tracking-tighter text-gray-950 uppercase sm:text-7xl">
               {article.title}
