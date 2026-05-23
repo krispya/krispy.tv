@@ -3,7 +3,7 @@ import { useHas, useQuery, useTarget, useTrait, useTraitEffect } from 'koota/rea
 import { lazy, Suspense, useRef } from 'react';
 import { Link } from 'wouter';
 import { routes } from '../../../routes.js';
-import { ArticleOf, IsOpen, IsPreloading, Paper, Position } from '../traits/index.js';
+import { ArticleOf, IsPreloading, Paper, Position } from '../traits/index.js';
 
 const Article = lazy(() =>
   import('../../article/article.js').then((module) => ({ default: module.Article }))
@@ -30,7 +30,6 @@ function ArticleView({ entity }: { entity: Entity }) {
 
   const paper = useTarget(entity, ArticleOf);
   const slug = useTrait(paper, Paper)?.id;
-  const closing = !useHas(paper, IsOpen);
   const preloading = useHas(entity, IsPreloading);
 
   if (!slug) return null;
@@ -51,17 +50,15 @@ function ArticleView({ entity }: { entity: Entity }) {
         style={{ opacity: 0, willChange: 'opacity' }}
         aria-label="Close"
       />
-      {!closing && (
-        <div
-          ref={articleRef}
-          className="absolute inset-0 mx-auto max-w-7xl"
-          style={{ transform: 'translateY(100%)', willChange: 'transform' }}
-        >
-          <Suspense fallback={null}>
-            <Article slug={slug} />
-          </Suspense>
-        </div>
-      )}
+      <div
+        ref={articleRef}
+        className="absolute inset-0 mx-auto max-w-7xl"
+        style={{ transform: 'translateY(100%)', willChange: 'transform' }}
+      >
+        <Suspense fallback={null}>
+          <Article slug={slug} />
+        </Suspense>
+      </div>
     </div>
   );
 }

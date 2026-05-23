@@ -107,7 +107,7 @@ export const actions = createActions((world) => ({
   },
   throwPaperOntoDesk: (entity: Entity, config: PaperThrowConfig = {}) => {
     const launchAngle = config.centered ? 0 : randomInRange(-0.42, 0.42);
-    const launchSpeed = config.centered ? randomInRange(0.78, 0.84) : randomInRange(0.65, 0.95);
+    const launchSpeed = config.centered ? randomInRange(0.78, 0.84) : randomInRange(0.75, 0.95);
     const spinDir = Math.random() < 0.5 ? -1 : 1;
 
     entity.set(Velocity, {
