@@ -1,10 +1,10 @@
 import type { Entity } from 'koota';
 import { useHas, useQuery, useTarget, useTrait, useTraitEffect } from 'koota/react';
-import { forwardRef, lazy, Suspense, useRef } from 'react';
+import { lazy, Suspense, useRef, type ReactNode, type Ref } from 'react';
 import { Link, useLocation } from 'wouter';
 import { routes } from '../../../routes.js';
-import { useDragToDismiss } from '../../article/utils/use-drag-to-dismiss.js';
 import { ArticleOf, IsPreloading, Paper, Position } from '../traits/index.js';
+import { useDismissibleSheet } from '../utils/use-dismissible-sheet.js';
 
 const Article = lazy(() =>
   import('../../article/article.js').then((module) => ({ default: module.Article }))
@@ -21,7 +21,7 @@ function ArticleView({ entity }: { entity: Entity }) {
 
   const [, navigate] = useLocation();
   const onDismiss = () => navigate(routes.home.href());
-  const { containerRef, handleRef, scrollRef } = useDragToDismiss(onDismiss);
+  const { sheetRef, handleRef, scrollRef } = useDismissibleSheet({ onDismiss, wheelDismiss: false });
 
   useTraitEffect(entity, Position, (pos) => {
     if (!pos) return;
@@ -61,13 +61,16 @@ function ArticleView({ entity }: { entity: Entity }) {
         className="pointer-events-none absolute inset-0 mx-auto flex max-w-7xl items-end justify-center"
         style={{ transform: 'translateY(100%)', willChange: 'transform' }}
       >
-        <CloseButton />
         <div
-          ref={containerRef}
+          ref={sheetRef}
           className="pointer-events-auto relative mt-4 flex h-[calc(100dvh-18px)] w-full flex-col rounded-t-lg border-stone-200 bg-[#fffdf7] sm:mt-6 sm:mr-6 sm:ml-6 sm:h-[calc(100dvh-24px)] sm:border sm:border-b-0"
         >
+          <CloseButton />
+          <DragHandle ref={handleRef} />
           <Suspense fallback={null}>
-            <Article ref={scrollRef} slug={slug} topSlot={<DragHandle ref={handleRef} />} />
+            <ArticleSheetScroll ref={scrollRef}>
+              <Article slug={slug} />
+            </ArticleSheetScroll>
           </Suspense>
         </div>
       </div>
@@ -75,16 +78,29 @@ function ArticleView({ entity }: { entity: Entity }) {
   );
 }
 
-const DragHandle = forwardRef<HTMLDivElement>(function DragHandle(_, ref) {
+type DivRef = Ref<HTMLDivElement>;
+
+function ArticleSheetScroll({ children, ref }: { children: ReactNode; ref?: DivRef }) {
   return (
     <div
       ref={ref}
-      className="flex h-8 shrink-0 cursor-grab touch-none items-start justify-center pt-3 sm:hidden"
+      className="relative flex h-full min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain"
+    >
+      {children}
+    </div>
+  );
+}
+
+function DragHandle({ ref }: { ref?: DivRef }) {
+  return (
+    <div
+      ref={ref}
+      className="pointer-events-auto absolute top-2 left-1/2 z-30 flex h-10 w-28 -translate-x-1/2 cursor-grab touch-none items-start justify-center pt-2 sm:hidden"
     >
       <div className="h-1 w-10 rounded-full bg-stone-300" />
     </div>
   );
-});
+}
 
 function CloseButton() {
   return (
