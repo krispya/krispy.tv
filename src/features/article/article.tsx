@@ -18,7 +18,7 @@ export function Article({ slug }: { slug: string }) {
   if (!article) return <ArticleNotFound />;
 
   return (
-    <div className="fixed inset-0 z-2000 flex items-end justify-center">
+    <div className="fixed inset-0 z-2000 flex items-end justify-center" onClick={onDismiss}>
       {/* Close button — floats top-right outside the paper */}
       <Link
         href={routes.home.href()}
@@ -38,6 +38,7 @@ export function Article({ slug }: { slug: string }) {
       {/* Paper modal — full width with margins, flush to bottom */}
       <article
         ref={scrollRef}
+        onClick={(e) => e.stopPropagation()}
         className="relative mt-4 flex h-[calc(100dvh-18px)] w-full flex-col overflow-y-auto rounded-t-lg border-stone-200 bg-[#fffdf7] sm:mt-6 sm:mr-6 sm:ml-6 sm:h-[calc(100dvh-24px)] sm:border sm:border-b-0"
         style={style}
       >

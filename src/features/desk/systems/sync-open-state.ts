@@ -16,12 +16,12 @@ import {
 } from '../traits/index.js';
 import { actions } from '../actions.js';
 import { metersToCssPixels } from '../utils/physics-units.js';
-import { randomInRange } from '../utils/math.js';
+import { clamp, randomInRange } from '../utils/math.js';
 
 const EXIT_SPEED = metersToCssPixels(1.2);
 
 export function syncOpenState(world: World) {
-  const { throwPaperOntoDesk } = actions(world);
+  const { throwPaperOntoDesk, getLeastCoveredX } = actions(world);
   const route = world.get(ActiveSlug);
   if (!route) return;
 
@@ -54,9 +54,9 @@ export function syncOpenState(world: World) {
       const width = ref?.offsetWidth ?? paper.width;
       const height = ref?.offsetHeight ?? paper.height;
 
-      // Reposition just below viewport edge
+      // Reposition just below viewport edge, biased toward the least-covered quadrant
       entity.set(Position, {
-        x: randomInRange(width * 0.5, viewportWidth - width * 0.5),
+        x: clamp(getLeastCoveredX(entity), width * 0.5, viewportWidth - width * 0.5),
         y: viewportHeight + height / 2 + randomInRange(8, 24),
         z: metersToCssPixels(randomInRange(0.03, 0.06)),
       });

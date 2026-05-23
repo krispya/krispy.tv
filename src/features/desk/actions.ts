@@ -1,9 +1,11 @@
-import { createActions, type Entity } from 'koota';
+import { createActions, Not, type Entity } from 'koota';
 import {
   AngularVelocity,
   Desk,
   DeskConfig,
   IsEnteringDesk,
+  IsOffScreen,
+  IsOpen,
   Paper,
   PaperPhysics,
   Position,
@@ -106,7 +108,7 @@ export const actions = createActions((world) => ({
   throwPaperOntoDesk: (entity: Entity, config: PaperThrowConfig = {}) => {
     const launchAngle = config.centered ? 0 : randomInRange(-0.42, 0.42);
     const launchSpeed = config.centered ? randomInRange(0.78, 0.84) : randomInRange(0.65, 0.95);
-    const spin = config.centered ? randomInRange(-0.25, 0.25) : randomInRange(-1, 1);
+    const spinDir = Math.random() < 0.5 ? -1 : 1;
 
     entity.set(Velocity, {
       x: metersToCssPixels(Math.sin(launchAngle) * launchSpeed),
@@ -115,9 +117,9 @@ export const actions = createActions((world) => ({
     });
 
     entity.set(AngularVelocity, {
-      x: config.centered ? randomInRange(-2, 2) : randomInRange(-8, 8),
-      y: config.centered ? randomInRange(-2, 2) : randomInRange(-8, 8),
-      z: spin * (config.centered ? randomInRange(6, 12) : randomInRange(14, 30)),
+      x: config.centered ? randomInRange(-2, 2) : randomInRange(-12, 12),
+      y: config.centered ? randomInRange(-2, 2) : randomInRange(-12, 12),
+      z: spinDir * (config.centered ? randomInRange(6, 12) : randomInRange(22, 50)),
     });
 
     entity.add(IsEnteringDesk);
@@ -130,6 +132,37 @@ export const actions = createActions((world) => ({
     });
 
     entity.set(StackIndex, { value: top + 1 });
+  },
+  getLeastCoveredX: (exclude?: Entity) => {
+    const viewport = world.get(Viewport);
+    const viewportWidth = viewport?.width || window.innerWidth;
+    const NUM_COLS = 4;
+    const colWidth = viewportWidth / NUM_COLS;
+    const coverage = Array.from<number>({ length: NUM_COLS }).fill(0);
+
+    world.query(Paper, Position, Not(IsOpen), Not(IsOffScreen)).readEach(([_paper, pos], entity) => {
+      if (entity === exclude) return;
+      const col = Math.min(Math.max(Math.floor(pos.x / colWidth), 0), NUM_COLS - 1);
+      coverage[col]++;
+    });
+
+    let minCoverage = Infinity;
+    const candidates: number[] = [];
+    for (let i = 0; i < NUM_COLS; i++) {
+      if (coverage[i] < minCoverage) {
+        minCoverage = coverage[i];
+        candidates.length = 0;
+        candidates.push(i);
+      } else if (coverage[i] === minCoverage) {
+        candidates.push(i);
+      }
+    }
+
+    const chosen = candidates[Math.floor(Math.random() * candidates.length)];
+    return randomInRange(
+      chosen * colWidth + colWidth * 0.2,
+      (chosen + 1) * colWidth - colWidth * 0.2
+    );
   },
   destroyPapers: () => {
     world.query(Paper).forEach((entity) => entity.destroy());
