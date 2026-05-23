@@ -1,52 +1,26 @@
-import { createElement, Suspense, use, useCallback, type ComponentType } from 'react';
-import { Link, useLocation } from 'wouter';
+import { createElement, forwardRef, Suspense, use, type ComponentType, type ReactNode } from 'react';
+import { Link } from 'wouter';
 import author from '@content/author.json';
 import { getArticle } from './catalog.js';
 import { formatArticleDate } from './utils/format-article-date.js';
-import { useDragToDismiss } from './utils/use-drag-to-dismiss.js';
 import type { Article as ArticleType } from './types.js';
 import { routes } from '../../routes.js';
 
 const articleComponentPromises = new Map<string, Promise<unknown>>();
 
-export function Article({ slug }: { slug: string }) {
-  const article = getArticle(slug);
-  const [, navigate] = useLocation();
-  const onDismiss = useCallback(() => navigate(routes.home.href()), [navigate]);
-  const { scrollRef, style } = useDragToDismiss(onDismiss);
+export const Article = forwardRef<HTMLElement, { slug: string; topSlot?: ReactNode }>(
+  function Article({ slug, topSlot }, ref) {
+    const article = getArticle(slug);
 
-  if (!article) return <ArticleNotFound />;
+    if (!article) return <ArticleNotFound />;
 
-  return (
-    <div className="fixed inset-0 z-2000 flex items-end justify-center" onClick={onDismiss}>
-      {/* Close button — floats top-right outside the paper */}
-      <Link
-        href={routes.home.href()}
-        className="fixed top-4 right-4 z-2001 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-gray-700 shadow-lg backdrop-blur hover:bg-white hover:text-gray-950"
-        aria-label="Back to desk"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 20 20"
-          fill="currentColor"
-          className="h-5 w-5"
-        >
-          <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
-        </svg>
-      </Link>
-
-      {/* Paper modal — full width with margins, flush to bottom */}
+    return (
       <article
-        ref={scrollRef}
-        onClick={(e) => e.stopPropagation()}
-        className="relative mt-4 flex h-[calc(100dvh-18px)] w-full flex-col overflow-y-auto rounded-t-lg border-stone-200 bg-[#fffdf7] sm:mt-6 sm:mr-6 sm:ml-6 sm:h-[calc(100dvh-24px)] sm:border sm:border-b-0"
-        style={style}
+        ref={ref}
+        className="relative flex h-full min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain"
       >
-        {/* Drag handle — visual affordance only, touch/mobile */}
-        <div className="flex items-center justify-center pt-3 pb-1 sm:hidden">
-          <div className="h-1 w-10 rounded-full bg-stone-300" />
-        </div>
-        <div className="mx-auto w-full max-w-3xl px-5 pt-8 pb-24 sm:px-10 sm:pt-12 sm:pb-16">
+        {topSlot}
+        <div className="mx-auto w-full max-w-3xl px-5 pt-4 pb-24 sm:px-10 sm:pt-12 sm:pb-16">
           <header className="mb-10 text-center">
             <h1 className="mb-6 font-serif text-5xl leading-none font-black tracking-tighter text-gray-950 uppercase sm:text-7xl">
               {article.title}
@@ -80,9 +54,9 @@ export function Article({ slug }: { slug: string }) {
           </div>
         </div>
       </article>
-    </div>
-  );
-}
+    );
+  }
+);
 
 function ArticleContent({ article }: { article: ArticleType }) {
   const Component = use(loadArticleComponent(article)) as ComponentType;

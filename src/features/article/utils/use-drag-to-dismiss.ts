@@ -1,77 +1,161 @@
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 const DISMISS_THRESHOLD_PX = 120;
-const ACTIVATE_THRESHOLD_PX = 4;
-const SNAP_BACK_TRANSITION = 'transform 0.3s ease';
+const ACTIVATE_THRESHOLD_PX = 6;
+const SNAP_BACK_TRANSITION = 'transform 220ms cubic-bezier(0.2, 0, 0, 1)';
+
+type DragState = {
+  active: boolean;
+  startY: number;
+  y: number;
+};
+
+type DragRef = {
+  current: DragState;
+};
+
+function beginDrag(container: HTMLElement, dragRef: DragRef, clientY: number) {
+  dragRef.current = { active: true, startY: clientY, y: 0 };
+  container.style.transition = 'none';
+  container.style.transform = 'translateY(0px)';
+}
+
+function updateDrag(container: HTMLElement, dragRef: DragRef, clientY: number) {
+  const y = Math.max(0, clientY - dragRef.current.startY);
+  dragRef.current.y = y;
+  container.style.transform = `translateY(${y}px)`;
+}
+
+function finishDrag(container: HTMLElement, dragRef: DragRef, onDismiss: () => void) {
+  if (!dragRef.current.active) return;
+
+  const y = dragRef.current.y;
+  dragRef.current.active = false;
+
+  if (y > DISMISS_THRESHOLD_PX) {
+    onDismiss();
+    return;
+  }
+
+  dragRef.current.y = 0;
+  container.style.transition = SNAP_BACK_TRANSITION;
+  container.style.transform = 'translateY(0px)';
+}
 
 export function useDragToDismiss(onDismiss: () => void) {
-  const scrollRef = useRef<HTMLElement>(null);
-  const pointerStartYRef = useRef(0);
-  const isDraggingRef = useRef(false);
-  const dragYRef = useRef(0);
-  const [dragY, setDragY] = useState(0);
-  const [transition, setTransition] = useState(SNAP_BACK_TRANSITION);
+  const [container, containerRef] = useState<HTMLDivElement | null>(null);
+  const [handle, handleRef] = useState<HTMLDivElement | null>(null);
+  const [scroll, scrollRef] = useState<HTMLElement | null>(null);
+  const dragRef = useRef<DragState>({ active: false, startY: 0, y: 0 });
+  const onDismissRef = useRef(onDismiss);
 
-  const finishDrag = useCallback(() => {
-    if (!isDraggingRef.current) return;
-    isDraggingRef.current = false;
-
-    if (dragYRef.current > DISMISS_THRESHOLD_PX) {
-      onDismiss();
-    } else {
-      dragYRef.current = 0;
-      setTransition(SNAP_BACK_TRANSITION);
-      setDragY(0);
-    }
+  useEffect(() => {
+    onDismissRef.current = onDismiss;
   }, [onDismiss]);
 
   useEffect(() => {
-    const element = scrollRef.current;
-    if (!element) return;
+    if (!container || !handle) return;
 
-    const handleTouchStart = (event: TouchEvent) => {
-      if (event.touches.length !== 1) return;
-      pointerStartYRef.current = event.touches[0].clientY;
+    let pointerId: number | null = null;
+
+    const onPointerDown = (event: PointerEvent) => {
+      if (event.button !== 0) return;
+
+      pointerId = event.pointerId;
+      handle.setPointerCapture(event.pointerId);
+      beginDrag(container, dragRef, event.clientY);
+      event.preventDefault();
     };
 
-    const handleTouchMove = (event: TouchEvent) => {
-      if (event.touches.length !== 1) return;
+    const onPointerMove = (event: PointerEvent) => {
+      if (event.pointerId !== pointerId) return;
 
-      const dy = event.touches[0].clientY - pointerStartYRef.current;
+      updateDrag(container, dragRef, event.clientY);
+      event.preventDefault();
+    };
 
-      if (!isDraggingRef.current) {
-        if (element.scrollTop <= 0 && dy > ACTIVATE_THRESHOLD_PX) {
-          isDraggingRef.current = true;
-          setTransition('none');
+    const onPointerEnd = (event: PointerEvent) => {
+      if (event.pointerId !== pointerId) return;
+
+      pointerId = null;
+      finishDrag(container, dragRef, onDismissRef.current);
+    };
+
+    handle.addEventListener('pointerdown', onPointerDown);
+    handle.addEventListener('pointermove', onPointerMove);
+    handle.addEventListener('pointerup', onPointerEnd);
+    handle.addEventListener('pointercancel', onPointerEnd);
+
+    return () => {
+      handle.removeEventListener('pointerdown', onPointerDown);
+      handle.removeEventListener('pointermove', onPointerMove);
+      handle.removeEventListener('pointerup', onPointerEnd);
+      handle.removeEventListener('pointercancel', onPointerEnd);
+    };
+  }, [container, handle]);
+
+  useEffect(() => {
+    if (!container || !scroll) return;
+
+    let touchId: number | null = null;
+    let startY = 0;
+    let mode: 'pending' | 'scroll' | 'drag' = 'pending';
+
+    const getTouch = (event: TouchEvent) =>
+      Array.from(event.touches).find((touch) => touch.identifier === touchId);
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length !== 1) return;
+
+      const touch = e.touches[0];
+      touchId = touch.identifier;
+      startY = touch.clientY;
+      mode = 'pending';
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      const touch = getTouch(e);
+      if (!touch) return;
+
+      const deltaY = touch.clientY - startY;
+
+      if (mode === 'pending') {
+        if (Math.abs(deltaY) < ACTIVATE_THRESHOLD_PX) return;
+
+        if (deltaY > 0 && scroll.scrollTop <= 0) {
+          mode = 'drag';
+          beginDrag(container, dragRef, startY);
         } else {
+          mode = 'scroll';
           return;
         }
       }
 
-      event.preventDefault();
-
-      const clamped = Math.max(0, dy);
-      dragYRef.current = clamped;
-      setDragY(clamped);
+      if (mode === 'drag') {
+        e.preventDefault();
+        updateDrag(container, dragRef, touch.clientY);
+      }
     };
 
-    element.addEventListener('touchstart', handleTouchStart, { passive: true });
-    element.addEventListener('touchmove', handleTouchMove, { passive: false });
-    element.addEventListener('touchend', finishDrag);
-    element.addEventListener('touchcancel', finishDrag);
+    const onTouchEnd = () => {
+      if (mode === 'drag') finishDrag(container, dragRef, onDismissRef.current);
+
+      touchId = null;
+      mode = 'pending';
+    };
+
+    scroll.addEventListener('touchstart', onTouchStart, { passive: true });
+    scroll.addEventListener('touchmove', onTouchMove, { passive: false });
+    scroll.addEventListener('touchend', onTouchEnd);
+    scroll.addEventListener('touchcancel', onTouchEnd);
 
     return () => {
-      element.removeEventListener('touchstart', handleTouchStart);
-      element.removeEventListener('touchmove', handleTouchMove);
-      element.removeEventListener('touchend', finishDrag);
-      element.removeEventListener('touchcancel', finishDrag);
+      scroll.removeEventListener('touchstart', onTouchStart);
+      scroll.removeEventListener('touchmove', onTouchMove);
+      scroll.removeEventListener('touchend', onTouchEnd);
+      scroll.removeEventListener('touchcancel', onTouchEnd);
     };
-  }, [finishDrag]);
+  }, [container, scroll]);
 
-  const style: CSSProperties = {
-    transform: `translateY(${dragY}px)`,
-    transition,
-  };
-
-  return { scrollRef, style };
+  return { containerRef, handleRef, scrollRef };
 }
