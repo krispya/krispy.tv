@@ -136,6 +136,7 @@ export const actions = createActions((world) => ({
   getLeastCoveredX: (exclude?: Entity) => {
     const viewport = world.get(Viewport);
     const viewportWidth = viewport?.width || window.innerWidth;
+    const desk = world.queryFirst(Desk)?.get(Desk);
     const NUM_COLS = 4;
     const colWidth = viewportWidth / NUM_COLS;
     const coverage = Array.from<number>({ length: NUM_COLS }).fill(0);
@@ -158,7 +159,13 @@ export const actions = createActions((world) => ({
       }
     }
 
-    const chosen = candidates[Math.floor(Math.random() * candidates.length)];
+    const lastCol = desk?.lastThrowCol ?? -1;
+    const filtered = candidates.filter((col) => col !== lastCol);
+    const pool = filtered.length > 0 ? filtered : candidates;
+
+    const chosen = pool[Math.floor(Math.random() * pool.length)];
+    if (desk) desk.lastThrowCol = chosen;
+
     return randomInRange(
       chosen * colWidth + colWidth * 0.2,
       (chosen + 1) * colWidth - colWidth * 0.2

@@ -22,6 +22,7 @@ export const Desk = trait({
   wallGutter: 200,
   wallBounce: 0.85,
   wallFriction: 0.68,
+  lastThrowCol: -1,
 });
 
 export const Paper = trait({
