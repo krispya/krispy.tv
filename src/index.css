@@ -92,6 +92,22 @@
 }
 
 @layer utilities {
+  .article-sheet-viewport {
+    bottom: calc(0px - env(safe-area-inset-bottom, 0px));
+  }
+
+  .article-sheet {
+    height: calc(100dvh - 18px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  @media (min-width: 40rem) {
+    .article-sheet {
+      height: calc(100dvh - 24px);
+      padding-bottom: 0;
+    }
+  }
+
   .prose {
     & a {
       color: var(--color-primary-600);

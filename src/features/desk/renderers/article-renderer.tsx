@@ -58,12 +58,12 @@ function ArticleView({ entity }: { entity: Entity }) {
 
       <div
         ref={articleRef}
-        className="pointer-events-none absolute inset-0 mx-auto flex max-w-7xl items-end justify-center"
+        className="article-sheet-viewport pointer-events-none absolute inset-x-0 top-0 mx-auto flex max-w-7xl items-end justify-center"
         style={{ transform: 'translateY(100%)', willChange: 'transform' }}
       >
         <div
           ref={sheetRef}
-          className="pointer-events-auto relative mt-4 flex h-[calc(100dvh-18px)] w-full flex-col rounded-t-lg border-stone-200 bg-[#fffdf7] sm:mt-6 sm:mr-6 sm:ml-6 sm:h-[calc(100dvh-24px)] sm:border sm:border-b-0"
+          className="article-sheet pointer-events-auto relative mt-4 flex w-full flex-col rounded-t-lg border-stone-200 bg-[#fffdf7] sm:mt-6 sm:mr-6 sm:ml-6 sm:border sm:border-b-0"
         >
           <CloseButton />
           <DragHandle ref={handleRef} />
