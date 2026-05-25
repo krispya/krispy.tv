@@ -77,3 +77,7 @@ export const ActiveSlug = trait({ slug: '' });
 export const ArticleOf = relation({ exclusive: true, autoDestroy: 'orphan' });
 export const StackIndex = trait({ value: 0 });
 export const Ref = trait(() => null! as HTMLElement);
+
+export const ViewMode = trait({ mode: 'desk' as 'desk' | 'timeline' });
+export const CarouselOffset = trait({ x: 0, targetX: 0 });
+export const TimelineSlot = trait({ targetX: 0, index: 0, entered: false });

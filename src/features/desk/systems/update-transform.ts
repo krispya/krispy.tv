@@ -7,6 +7,7 @@ import {
   Rotation,
   StackIndex,
   Time,
+  TimelineSlot,
   Velocity,
 } from '../traits/index.js';
 import { clamp, dampedLerp } from '../utils/math.js';
@@ -25,6 +26,9 @@ export function updateTransform(world: World) {
   world
     .query(Velocity, Position, Rotation, Paper, StackIndex, AngularVelocity)
     .updateEach(([velocity, position, rotation, paper, stackIndex, angularVelocity], entity) => {
+      // Timeline system handles its own transforms
+      if (entity.has(TimelineSlot)) return;
+
       const dragging = entity.get(Dragging);
       const restingHeight = stackIndex.value * paper.thickness;
 

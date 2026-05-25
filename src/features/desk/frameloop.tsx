@@ -16,12 +16,14 @@ import {
   syncOpenState,
   syncToDOM,
   updateArticleMotion,
+  updateCarouselScroll,
   updateDragging,
   updateResponsiveDeskLayout,
   updateTime,
+  updateTimeline,
   updateTransform,
 } from './systems/index.js';
-import { ActiveSlug, Pointer, Viewport } from './traits/index.js';
+import { ActiveSlug, Pointer, ViewMode, Viewport } from './traits/index.js';
 import { useAnimationFrame } from '../frameloop/use-animation-frame.js';
 
 export function Frameloop() {
@@ -30,17 +32,27 @@ export function Frameloop() {
   const slug = isArticle ? (params?.slug ?? '') : '';
 
   useAnimationFrame(() => {
+    const isTimeline = world.get(ViewMode)?.mode === 'timeline';
+
     updateTime(world);
     updateResponsiveDeskLayout(world);
-    updateDragging(world);
-    applyGravity(world);
-    applyBreeze(world);
+
+    if (isTimeline) {
+      updateCarouselScroll(world);
+      updateTimeline(world);
+    } else {
+      updateDragging(world);
+      applyGravity(world);
+      applyBreeze(world);
+      resolvePaperSupports(world);
+      activateWallBarrier(world);
+      bounceWithinViewport(world);
+      dampVelocity(world);
+    }
+
     applyVelocity(world);
     applyAngularVelocity(world);
-    resolvePaperSupports(world);
-    activateWallBarrier(world);
-    bounceWithinViewport(world);
-    dampVelocity(world);
+
     updateTransform(world);
     syncOpenState(world);
     detectOffScreen(world);

@@ -1,6 +1,7 @@
 import type { World } from 'koota';
 import { Dragging, Paper, Position, Ref, Rotation, StackIndex } from '../traits/index.js';
 import { metersToCssPixels } from '../utils/physics-units.js';
+import { PAPER_TRANSFORM_PERSPECTIVE } from '../utils/transform.js';
 
 const DRAGGING_STACK_BOOST = 1000;
 const MAX_SHADOW_HEIGHT = 96;
@@ -27,7 +28,7 @@ export function syncToDOM(world: World) {
       const supportZ = metersToCssPixels(stackIndex.value * paper.thickness);
       const liftZ = Math.max(0, position.z - supportZ);
 
-      ref.style.transform = `translate(${position.x}px, ${position.y}px) perspective(1200px) translateZ(${position.z}px) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg) rotateZ(${rotation.z}deg)`;
+      ref.style.transform = `translate(${position.x}px, ${position.y}px) perspective(${PAPER_TRANSFORM_PERSPECTIVE}px) translateZ(${position.z}px) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg) rotateZ(${rotation.z}deg)`;
       ref.style.zIndex = cssZIndex.toString();
       ref.style.boxShadow = getShadow(liftZ);
     });

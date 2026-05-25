@@ -1,5 +1,5 @@
 import type { Entity } from 'koota';
-import { useActions, useHas, useQuery, useTrait } from 'koota/react';
+import { useActions, useHas, useQuery, useTrait, useWorld } from 'koota/react';
 import { useCallback } from 'react';
 import { useLocation } from 'wouter';
 import { routes } from '../../../routes.js';
@@ -13,7 +13,9 @@ import {
   Ref,
   Rotation,
   Selected,
+  TimelineSlot,
   Velocity,
+  ViewMode,
 } from '../traits/index.js';
 
 const DRAG_THRESHOLD_PX = 5;
@@ -45,13 +47,17 @@ export function PaperRenderer() {
 }
 
 function PaperView({ entity }: { entity: Entity }) {
+  const world = useWorld();
   const paper = useTrait(entity, Paper);
+  const viewMode = useTrait(world, ViewMode);
   const isDragging = useHas(entity, Dragging);
   const isSelected = useHas(entity, Selected);
+  const isInTimeline = useHas(entity, TimelineSlot);
   const { raisePaper } = useActions(actions);
   const [, navigate] = useLocation();
 
   const isOpenable = paper?.openable ?? true;
+  const isInteractionDisabled = viewMode?.mode === 'timeline' && !isOpenable;
 
   const handleInit = useCallback(
     (element: HTMLDivElement | null) => {
@@ -66,6 +72,7 @@ function PaperView({ entity }: { entity: Entity }) {
 
   const handlePointerDown = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
+      if (isInteractionDisabled) return;
       if (event.pointerType === 'mouse' && event.button !== 0) return;
 
       const rect = event.currentTarget.getBoundingClientRect();
@@ -95,7 +102,7 @@ function PaperView({ entity }: { entity: Entity }) {
       entity.add(Selected);
       event.currentTarget.setPointerCapture(event.pointerId);
     },
-    [entity]
+    [entity, isInteractionDisabled]
   );
 
   const handlePointerMove = useCallback(
@@ -109,6 +116,12 @@ function PaperView({ entity }: { entity: Entity }) {
       const distance = Math.hypot(dx, dy);
 
       if (distance < DRAG_THRESHOLD_PX) return;
+
+      if (entity.has(TimelineSlot)) {
+        entity.remove(Pressed);
+        entity.remove(Selected);
+        return;
+      }
 
       const rect = event.currentTarget.getBoundingClientRect();
       const centerX = rect.left + rect.width / 2;
@@ -186,9 +199,15 @@ function PaperView({ entity }: { entity: Entity }) {
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerCancel}
       onLostPointerCapture={handleLostPointerCapture}
-      className={`fixed top-0 left-0 flex cursor-grab touch-none flex-col overflow-hidden rounded-[3px] border border-stone-200 p-6 text-left text-gray-950 will-change-transform select-none ${
-        isDragging ? 'cursor-grabbing' : ''
-      } ${isSelected || isDragging ? 'outline-3 outline-offset-2 outline-blue-500' : ''}`}
+      className={`fixed top-0 left-0 flex flex-col overflow-hidden rounded-[3px] border border-stone-200 p-6 text-left text-gray-950 will-change-transform select-none ${
+        isInteractionDisabled
+          ? 'pointer-events-none cursor-default touch-auto'
+          : isInTimeline
+            ? 'cursor-pointer [touch-action:pan-x]'
+            : isDragging
+              ? 'cursor-grabbing touch-none'
+              : 'cursor-grab touch-none'
+      } ${!isInteractionDisabled && (isSelected || isDragging) ? 'outline-3 outline-offset-2 outline-blue-500' : ''}`}
       style={{
         width: paper.width,
         height: paper.height,

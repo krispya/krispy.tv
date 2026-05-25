@@ -1,22 +1,30 @@
 import { createActions, Not, type Entity } from 'koota';
 import {
   AngularVelocity,
+  CarouselOffset,
   Desk,
   DeskConfig,
+  Dragging,
   IsEnteringDesk,
   IsOffScreen,
   IsOpen,
   Paper,
   PaperPhysics,
   Position,
+  Pressed,
   Rotation,
+  Selected,
   StackIndex,
+  TimelineSlot,
   Velocity,
   Viewport,
+  ViewMode,
 } from './traits/index.js';
 import { metersToCssPixels } from './utils/physics-units.js';
 import { getPaperSize } from './utils/paper-size.js';
 import { randomInRange } from './utils/math.js';
+import { getTimelineVisualWidth, TIMELINE_GAP } from './utils/timeline-layout.js';
+import { articles as articlesCatalog } from '../article/index.js';
 
 type DeskConfigOverrides = Partial<{
   paperViewportScale: number;
@@ -173,5 +181,76 @@ export const actions = createActions((world) => ({
   },
   destroyPapers: () => {
     world.query(Paper).forEach((entity) => entity.destroy());
+  },
+  toggleViewMode: () => {
+    const viewMode = world.get(ViewMode);
+
+    if (viewMode?.mode === 'timeline') {
+      // Switch back to desk — scatter timeline papers and resume physics
+      const timelinePapers: Entity[] = [];
+      world.query(TimelineSlot).forEach((entity) => {
+        entity.remove(TimelineSlot);
+        timelinePapers.push(entity);
+      });
+
+      timelinePapers.forEach((entity, index) => {
+        const spinDir = Math.random() < 0.5 ? -1 : 1;
+        const fan = timelinePapers.length > 1 ? index / (timelinePapers.length - 1) - 0.5 : 0;
+
+        entity.set(Velocity, {
+          x: metersToCssPixels(fan * randomInRange(1.1, 1.6) + randomInRange(-0.65, 0.65)),
+          y: metersToCssPixels(randomInRange(-0.9, 0.95)),
+          z: metersToCssPixels(randomInRange(0.38, 0.62)),
+        });
+
+        entity.set(AngularVelocity, {
+          x: randomInRange(-55, 55),
+          y: randomInRange(-55, 55),
+          z: spinDir * randomInRange(70, 145),
+        });
+      });
+
+      world.set(ViewMode, { mode: 'desk' });
+      world.set(CarouselOffset, { x: 0, targetX: 0 });
+    } else {
+      // Switch to timeline — compute sorted slots for openable papers only
+      const dateBySlug = new Map(articlesCatalog.map((a) => [a.slug, Date.parse(a.date)]));
+
+      const openablePapers: Array<{ entity: Entity; paperWidth: number; date: number }> = [];
+
+      world.query(Paper).readEach(([paper], entity) => {
+        entity.remove(Dragging, Pressed, Selected);
+
+        if (!paper.openable) {
+          entity.set(Velocity, { x: 0, y: 0, z: 0 });
+          entity.set(AngularVelocity, { x: 0, y: 0, z: 0 });
+          return;
+        }
+
+        const date = dateBySlug.get(paper.id) ?? 0;
+        openablePapers.push({ entity, paperWidth: paper.width, date });
+      });
+
+      // Sort newest → oldest (left to right)
+      openablePapers.sort((a, b) => b.date - a.date);
+
+      let topStackIndex = 0;
+      world.query(StackIndex).readEach(([stackIndex]) => {
+        topStackIndex = Math.max(topStackIndex, stackIndex.value);
+      });
+
+      let cursor = TIMELINE_GAP;
+
+      openablePapers.forEach(({ entity, paperWidth }, index) => {
+        const visualPaperWidth = getTimelineVisualWidth(paperWidth);
+        const targetX = cursor + visualPaperWidth / 2;
+        cursor += visualPaperWidth + TIMELINE_GAP;
+        entity.set(StackIndex, { value: topStackIndex + index + 1 });
+        entity.add(TimelineSlot({ targetX, index, entered: false }));
+      });
+
+      world.set(ViewMode, { mode: 'timeline' });
+      world.set(CarouselOffset, { x: 0, targetX: 0 });
+    }
   },
 }));
