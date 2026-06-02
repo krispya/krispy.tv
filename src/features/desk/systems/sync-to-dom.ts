@@ -28,7 +28,7 @@ export function syncToDOM(world: World) {
       const blur = SHADOW_REST_BLUR + lift * SHADOW_LIFT_BLUR;
       const scaleX = 1 + lift * 0.07;
       const scaleY = 1 + lift * 0.045;
-      const opacity = 0.2 + lift * 0.1;
+      const opacity = 0.4 + lift * 0.1;
 
       ref.style.setProperty('--paper-z', `${position.z}px`);
       ref.style.setProperty('--paper-rotate-x', `${rotation.x}deg`);
