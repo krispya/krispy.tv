@@ -1,6 +1,6 @@
 import type { Entity } from 'koota';
 import { useActions, useHas, useQuery, useTrait } from 'koota/react';
-import { useCallback } from 'react';
+import { useCallback, type CSSProperties } from 'react';
 import { useLocation } from 'wouter';
 import { routes } from '../../../routes.js';
 import { actions } from '../actions.js';
@@ -17,6 +17,20 @@ import {
 } from '../traits/index.js';
 
 const DRAG_THRESHOLD_PX = 5;
+type PaperStyle = CSSProperties & Record<`--${string}`, string>;
+
+const PAPER_INITIAL_STYLE = {
+  '--paper-z': '0px',
+  '--paper-rotate-x': '0deg',
+  '--paper-rotate-y': '0deg',
+  '--paper-rotate-z': '0deg',
+  '--shadow-offset-x': '2px',
+  '--shadow-offset-y': '3px',
+  '--shadow-blur': '1px',
+  '--shadow-scale-x': '1',
+  '--shadow-scale-y': '1',
+  '--shadow-opacity': '0.2',
+} satisfies PaperStyle;
 const PAPER_TEXTURE_OVERLAYS = [
   'linear-gradient(17deg, rgba(49, 35, 18, 0.024), rgba(49, 35, 18, 0.04))',
   'linear-gradient(133deg, rgba(75, 57, 26, 0.032), rgba(75, 57, 26, 0.048))',
@@ -178,31 +192,56 @@ function PaperView({ entity }: { entity: Entity }) {
   return (
     <div
       ref={handleInit}
-      role={isOpenable ? 'button' : undefined}
-      tabIndex={isOpenable ? 0 : undefined}
-      aria-label={isOpenable ? 'Open article' : 'Blank sheet'}
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-      onPointerCancel={handlePointerCancel}
-      onLostPointerCapture={handleLostPointerCapture}
-      className={`fixed top-0 left-0 flex cursor-grab touch-none flex-col overflow-hidden rounded-[3px] border border-stone-200 p-6 text-left text-gray-950 will-change-transform select-none ${
-        isDragging ? 'cursor-grabbing' : ''
-      } ${isSelected || isDragging ? 'outline-3 outline-offset-2 outline-blue-500' : ''}`}
+      className="fixed top-0 left-0 isolate will-change-transform"
       style={{
+        ...PAPER_INITIAL_STYLE,
         width: paper.width,
         height: paper.height,
         marginLeft: paper.width / -2,
         marginTop: paper.height / -2,
-        backgroundColor: paper.color,
-        ...(paper.openable && {
-          backgroundImage: `${getPaperTextureOverlay(paper.id)}, url(${import.meta.env.BASE_URL}images/articles/${paper.id}.png)`,
-          backgroundBlendMode: 'multiply, normal',
-          backgroundSize: 'cover, cover',
-          backgroundPosition: 'center, top center',
-          backgroundRepeat: 'no-repeat, no-repeat',
-        }),
       }}
-    ></div>
+    >
+      <PaperShadow />
+      <div
+        role={isOpenable ? 'button' : undefined}
+        tabIndex={isOpenable ? 0 : undefined}
+        aria-label={isOpenable ? 'Open article' : 'Blank sheet'}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerCancel}
+        onLostPointerCapture={handleLostPointerCapture}
+        className={`absolute inset-0 flex cursor-grab touch-none flex-col overflow-hidden rounded-[3px] border border-stone-200 p-6 text-left text-gray-950 will-change-transform select-none ${
+          isDragging ? 'cursor-grabbing' : ''
+        } ${isSelected || isDragging ? 'outline-3 outline-offset-2 outline-blue-500' : ''}`}
+        style={{
+          transform:
+            'perspective(1200px) translateZ(var(--paper-z)) rotateX(var(--paper-rotate-x)) rotateY(var(--paper-rotate-y)) rotateZ(var(--paper-rotate-z))',
+          backgroundColor: paper.color,
+          ...(paper.openable && {
+            backgroundImage: `${getPaperTextureOverlay(paper.id)}, url(${import.meta.env.BASE_URL}images/articles/${paper.id}.png)`,
+            backgroundBlendMode: 'multiply, normal',
+            backgroundSize: 'cover, cover',
+            backgroundPosition: 'center, top center',
+            backgroundRepeat: 'no-repeat, no-repeat',
+          }),
+        }}
+      ></div>
+    </div>
+  );
+}
+
+function PaperShadow() {
+  return (
+    <div
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-0 rounded-[3px] bg-stone-950 will-change-transform"
+      style={{
+        opacity: 'var(--shadow-opacity)',
+        filter: 'blur(var(--shadow-blur))',
+        transform:
+          'translate(var(--shadow-offset-x), var(--shadow-offset-y)) rotate(var(--paper-rotate-z)) scale(var(--shadow-scale-x), var(--shadow-scale-y))',
+      }}
+    />
   );
 }
