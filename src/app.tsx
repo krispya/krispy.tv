@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { Route, Router, Switch } from 'wouter';
+import { DebugProvider } from './features/debug/index.js';
 import { routes } from './routes.js';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
@@ -20,29 +21,31 @@ const ArticleNotFound = lazy(() =>
 
 export function App() {
   return (
-    <Router base={base}>
-      <main className="min-h-screen">
-        <Switch>
-          <Route path={routes.about.path}>
-            <Suspense fallback={<RoutePending />}>
-              <About />
-            </Suspense>
-          </Route>
+    <DebugProvider enabled={true}>
+      <Router base={base}>
+        <main className="min-h-screen">
+          <Switch>
+            <Route path={routes.about.path}>
+              <Suspense fallback={<RoutePending />}>
+                <About />
+              </Suspense>
+            </Route>
 
-          <Route path={routes.deskGroup.path}>
-            <Suspense fallback={<RoutePending />}>
-              <Desk />
-            </Suspense>
-          </Route>
+            <Route path={routes.deskGroup.path}>
+              <Suspense fallback={<RoutePending />}>
+                <Desk />
+              </Suspense>
+            </Route>
 
-          <Route>
-            <Suspense fallback={<RoutePending />}>
-              <ArticleNotFound />
-            </Suspense>
-          </Route>
-        </Switch>
-      </main>
-    </Router>
+            <Route>
+              <Suspense fallback={<RoutePending />}>
+                <ArticleNotFound />
+              </Suspense>
+            </Route>
+          </Switch>
+        </main>
+      </Router>
+    </DebugProvider>
   );
 }
 
