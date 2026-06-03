@@ -1,5 +1,6 @@
 import rough from 'roughjs';
 import type { Options } from 'roughjs/bin/core.js';
+import { color } from '../../../color.js';
 
 // Draw the sketched rectangle right on the element's edge. The svg uses
 // overflow-visible so the hand-drawn wobble can straddle the border.
@@ -7,7 +8,7 @@ const SKETCH_INSET = 0;
 const DEFAULT_OPTIONS = {
   roughness: 1.6,
   bowing: 1.4,
-  stroke: '#2f2a24',
+  stroke: color.line.ink,
   strokeWidth: 1.3,
   preserveVertices: false,
 } satisfies Options;

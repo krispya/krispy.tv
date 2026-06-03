@@ -39,6 +39,24 @@
   --color-gray-800: oklch(0.278 0.033 256.848);
   --color-gray-900: oklch(0.21 0.034 264.665);
   --color-gray-950: oklch(0.13 0.028 261.692);
+
+  /* Brand palette — mirror of src/color.ts (most -> least dominant). */
+  --color-promenade: #f7f6e1;
+  --color-igniting: #f5d798;
+  --color-meat: #ee7f80;
+  --color-hazel: #a36943;
+  --color-root-beer: #7f524d;
+  --color-catnip: #88b094;
+  --color-over-the-sky: #9ad2e4;
+
+  /* Semantic roles — mirror of `color` in src/color.ts. */
+  --color-surface: #f7f6e1; /* promenade */
+  --color-desk: #dfddd9; /* neutral desktop surface */
+  --color-ink: #522520; /* shade(rootBeer, -45) */
+  --color-accent-gold: #f5d798;
+  --color-accent-coral: #ee7f80;
+  --color-accent-sage: #88b094;
+  --color-accent-sky: #9ad2e4;
 }
 
 @layer base {

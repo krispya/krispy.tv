@@ -15,6 +15,7 @@ import {
   Selected,
   Velocity,
 } from '../traits/index.js';
+import { color, shade } from '../../../color.js';
 import { metersToCssPixels } from '../utils/physics-units.js';
 import { getBookDepthMeters } from '../utils/resting-height.js';
 import { hashSeed, SketchOutline } from './sketch-outline.js';
@@ -41,12 +42,12 @@ const BOOK_INITIAL_STYLE = {
   '--book-shadow-opacity': '0.4',
 } satisfies BookStyle;
 
+const PAGE_LINE_LIGHT = color.surface.paper;
+const PAGE_LINE_DARK = color.surface.paperEdge;
 // Lines run horizontally and repeat down the face (head/tail edges).
-const PAGE_EDGE_HORIZONTAL_LINES =
-  'repeating-linear-gradient(to bottom, #fffaf0 0px, #fffaf0 2px, #dfd4c0 2px, #dfd4c0 3px)';
+const PAGE_EDGE_HORIZONTAL_LINES = `repeating-linear-gradient(to bottom, ${PAGE_LINE_LIGHT} 0px, ${PAGE_LINE_LIGHT} 2px, ${PAGE_LINE_DARK} 2px, ${PAGE_LINE_DARK} 3px)`;
 // Lines run vertically and repeat across the face (fore-edge).
-const PAGE_EDGE_VERTICAL_LINES =
-  'repeating-linear-gradient(to right, #fffaf0 0px, #fffaf0 2px, #dfd4c0 2px, #dfd4c0 3px)';
+const PAGE_EDGE_VERTICAL_LINES = `repeating-linear-gradient(to right, ${PAGE_LINE_LIGHT} 0px, ${PAGE_LINE_LIGHT} 2px, ${PAGE_LINE_DARK} 2px, ${PAGE_LINE_DARK} 3px)`;
 
 export function BookRenderer() {
   const entities = useQuery(Book, Position, Rotation);
@@ -171,7 +172,7 @@ function BookView({ entity }: { entity: Entity }) {
   const faceCenterX = (book.width - depth) / 2;
   const faceCenterY = (book.height - depth) / 2;
   const title = book.title || book.id;
-  const spineColor = shadeHexColor(book.color, -28);
+  const spineColor = shade(book.color, -28);
   const sketchEdges = depth >= SKETCH_EDGE_MIN_DEPTH_PX;
   const seed = hashSeed(book.id);
 
@@ -236,7 +237,7 @@ function BookView({ entity }: { entity: Entity }) {
             seed={seed + 2}
             className="rounded-[6px]"
             style={{
-              backgroundColor: shadeHexColor(book.color, -18),
+              backgroundColor: shade(book.color, -18),
               transform: `rotateY(180deg) translateZ(${halfDepth}px)`,
             }}
           />
@@ -338,16 +339,4 @@ function BookFace({
       {seed !== undefined && <SketchOutline width={width} height={height} seed={seed} />}
     </div>
   );
-}
-
-function shadeHexColor(color: string, amount: number) {
-  const hex = color.replace('#', '');
-  if (hex.length !== 6) return color;
-
-  const channels = [0, 2, 4].map((start) => {
-    const value = Number.parseInt(hex.slice(start, start + 2), 16);
-    return Math.min(255, Math.max(0, value + amount));
-  });
-
-  return `#${channels.map((value) => value.toString(16).padStart(2, '0')).join('')}`;
 }

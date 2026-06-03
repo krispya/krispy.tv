@@ -37,7 +37,7 @@ const ROOT = path.join(__dirname, '..');
 const PAPER_W = 816;
 const PAPER_H = 1056;
 const PADDING = 48;
-const PAPER_BACKGROUND = '#fffdf7';
+const PAPER_BACKGROUND = '#F7F6E1';
 
 const PRIMARY_700 = 'oklch(0.525_0.223_3.958)';
 const PRIMARY_200 = 'oklch(0.899_0.061_343.231)';

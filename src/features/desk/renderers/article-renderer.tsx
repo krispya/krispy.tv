@@ -63,7 +63,7 @@ function ArticleView({ entity }: { entity: Entity }) {
       >
         <div
           ref={sheetRef}
-          className="article-sheet pointer-events-auto relative mt-4 flex w-full flex-col rounded-t-lg border-stone-200 bg-[#fffdf7] sm:mt-6 sm:mr-6 sm:ml-6 sm:border sm:border-b-0"
+          className="article-sheet bg-surface pointer-events-auto relative mt-4 flex w-full flex-col rounded-t-lg border-stone-200 sm:mt-6 sm:mr-6 sm:ml-6 sm:border sm:border-b-0"
         >
           <CloseButton />
           <DragHandle ref={handleRef} />

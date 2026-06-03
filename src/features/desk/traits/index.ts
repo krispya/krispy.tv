@@ -1,4 +1,5 @@
 import { relation, trait } from 'koota';
+import { color } from '../../../color.js';
 
 export const Time = trait({ last: 0, delta: 0 });
 export const Pointer = trait({ x: 0, y: 0 });
@@ -28,7 +29,7 @@ export const Desk = trait({
 export const Paper = trait({
   id: '',
   openable: true,
-  color: '#fffdf7',
+  color: color.surface.paper,
   /** Pixels. */
   width: 380,
   /** Pixels. */
@@ -42,7 +43,7 @@ export const Paper = trait({
 export const Book = trait({
   id: '',
   title: '',
-  color: '#8f2f2f',
+  color: color.accent.sage,
   coverImage: '',
   /** Pixels. */
   width: 260,
