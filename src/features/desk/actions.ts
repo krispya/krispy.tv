@@ -213,13 +213,26 @@ export const actions = createActions((world) => ({
   },
 
   raiseDeskItem: (entity: Entity) => {
-    let top = 0;
+    const items: Array<{ entity: Entity; stackIndex: number }> = [];
 
     world.query(StackIndex).forEach((item) => {
-      top = Math.max(top, item.get(StackIndex)?.value ?? 0);
+      const stackIndex = item.get(StackIndex);
+      if (!stackIndex) return;
+
+      items.push({ entity: item, stackIndex: stackIndex.value });
     });
 
-    entity.set(StackIndex, { value: top + 1 });
+    items.sort((a, b) => a.stackIndex - b.stackIndex || a.entity.id() - b.entity.id());
+
+    const entityIndex = items.findIndex((item) => item.entity === entity);
+    if (entityIndex === -1) return;
+
+    const [raisedItem] = items.splice(entityIndex, 1);
+    items.push(raisedItem);
+
+    items.forEach((item, index) => {
+      item.entity.set(StackIndex, { value: index });
+    });
   },
 
   getLeastCoveredX: (exclude?: Entity) => {

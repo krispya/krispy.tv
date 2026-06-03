@@ -11,7 +11,6 @@ import {
   Pressed,
   Ref,
   Selected,
-  StackIndex,
   Velocity,
   Viewport,
 } from '../traits/index.js';
@@ -22,7 +21,7 @@ import { clamp, randomInRange } from '../utils/math.js';
 const EXIT_SPEED = metersToCssPixels(1.2);
 
 export function syncOpenState(world: World) {
-  const { throwOntoDesk: throwPaperOntoDesk, getLeastCoveredX } = actions(world);
+  const { throwOntoDesk: throwPaperOntoDesk, getLeastCoveredX, raiseDeskItem } = actions(world);
   const route = world.get(ActiveSlug);
   if (!route) return;
 
@@ -42,12 +41,7 @@ export function syncOpenState(world: World) {
       // Paper was open, now closing — throw back onto desk
       entity.remove(IsOpen, IsOffScreen, IsResting);
 
-      // Raise to top of stack
-      let top = 0;
-      world.query(StackIndex).readEach(([stackIndex]) => {
-        top = Math.max(top, stackIndex.value);
-      });
-      entity.set(StackIndex, { value: top + 1 });
+      raiseDeskItem(entity);
 
       const viewportWidth = viewport?.width || window.innerWidth;
       const viewportHeight = viewport?.height || window.innerHeight;
