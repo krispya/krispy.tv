@@ -1,6 +1,6 @@
 import { Entity } from 'koota';
 import { useQueryFirst } from 'koota/react';
-import { color } from '../../../color.js';
+import { getDeskBaseStyle, getDeskFoamLayerStyle } from '../desk-background.js';
 import { Desk } from '../traits';
 
 export function DeskRenderer() {
@@ -9,15 +9,13 @@ export function DeskRenderer() {
 }
 
 function DeskView({ entity: _entity }: { entity: Entity }) {
+  const foamStyle = getDeskFoamLayerStyle();
+
   return (
-    <div
-      style={{
-        backgroundColor: color.surface.desk,
-        // backgroundImage: `url(${import.meta.env.BASE_URL}desk-wood-d.webp)`,
-        backgroundPosition: 'center',
-        backgroundSize: 'cover',
-      }}
-      className="relative h-dvh touch-none overflow-hidden select-none"
-    />
+    <div style={getDeskBaseStyle()} className="relative h-dvh touch-none overflow-hidden select-none">
+      {foamStyle && (
+        <div aria-hidden className="pointer-events-none absolute inset-0" style={foamStyle} />
+      )}
+    </div>
   );
 }
