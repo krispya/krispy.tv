@@ -5,6 +5,7 @@ import {
   Dragging,
   IsOffScreen,
   IsOpen,
+  IsResting,
   Paper,
   Position,
   Pressed,
@@ -21,7 +22,7 @@ import { clamp, randomInRange } from '../utils/math.js';
 const EXIT_SPEED = metersToCssPixels(1.2);
 
 export function syncOpenState(world: World) {
-  const { throwPaperOntoDesk, getLeastCoveredX } = actions(world);
+  const { throwOntoDesk: throwPaperOntoDesk, getLeastCoveredX } = actions(world);
   const route = world.get(ActiveSlug);
   if (!route) return;
 
@@ -34,12 +35,12 @@ export function syncOpenState(world: World) {
 
       // Initiate exit — fly downward off the desk
       entity.add(IsOpen);
-      entity.remove(Dragging, Pressed, Selected);
+      entity.remove(Dragging, Pressed, Selected, IsResting);
       entity.set(Velocity, { x: 0, y: EXIT_SPEED, z: 0 });
       entity.set(AngularVelocity, { x: 0, y: 0, z: 0 });
     } else if (entity.has(IsOpen)) {
       // Paper was open, now closing — throw back onto desk
-      entity.remove(IsOpen, IsOffScreen);
+      entity.remove(IsOpen, IsOffScreen, IsResting);
 
       // Raise to top of stack
       let top = 0;

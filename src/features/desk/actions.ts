@@ -1,19 +1,24 @@
 import { createActions, Not, type Entity } from 'koota';
 import {
   AngularVelocity,
+  Book,
+  BoundingBox,
   Desk,
   DeskConfig,
   IsEnteringDesk,
   IsOffScreen,
   IsOpen,
+  IsResting,
+  KinematicBody,
   Paper,
-  PaperPhysics,
   Position,
   Rotation,
+  IsStackable,
   StackIndex,
   Velocity,
   Viewport,
 } from './traits/index.js';
+import { getBookDepthMeters } from './utils/resting-height.js';
 import { metersToCssPixels } from './utils/physics-units.js';
 import { getPaperSize } from './utils/paper-size.js';
 import { randomInRange } from './utils/math.js';
@@ -27,11 +32,12 @@ type DeskConfigOverrides = Partial<{
   wallGutterMax: number;
 }>;
 
-type PaperPhysicsConfig = Partial<{
+type KinematicBodyConfig = Partial<{
   throwDamping: number;
   maxThrowSpeed: number;
   friction: number;
   stopSpeed: number;
+  mass: number;
 }>;
 
 export type PaperConfig = {
@@ -44,17 +50,30 @@ export type PaperConfig = {
   centered?: boolean;
   stackIndex?: number;
   thickness?: number;
-  physics?: PaperPhysicsConfig;
+  physics?: KinematicBodyConfig;
 };
 
-type PaperThrowConfig = Partial<{
-  centered: boolean;
-}>;
+export type BookConfig = {
+  id: string;
+  title?: string;
+  color?: string;
+  coverImage?: string;
+  width?: number;
+  height?: number;
+  aspectRatio?: number;
+  centered?: boolean;
+  stackIndex?: number;
+  pageCount?: number;
+  pageThickness?: number;
+  coverThickness?: number;
+  physics?: KinematicBodyConfig;
+};
 
 export const actions = createActions((world) => ({
   spawnDesk: (config: DeskConfigOverrides = {}) => {
     return world.spawn(Desk, DeskConfig(config));
   },
+
   spawnPaper: (config: PaperConfig) => {
     const viewport = world.get(Viewport);
     const desk = world.queryFirst(Desk)?.get(Desk);
@@ -83,6 +102,7 @@ export const actions = createActions((world) => ({
       y: 0,
       z: config.centered ? randomInRange(-4, 4) : randomInRange(-28, 28),
     };
+    const paperThickness = config.thickness ?? 0.0001;
 
     const paper = {
       id: config.id,
@@ -91,21 +111,87 @@ export const actions = createActions((world) => ({
       width: paperWidth,
       height: paperHeight,
       ...(config.aspectRatio !== undefined && { aspectRatio: config.aspectRatio }),
-      ...(config.thickness !== undefined && { thickness: config.thickness }),
+      thickness: paperThickness,
     };
     const stackIndex = config.stackIndex ?? 0;
+    const paperDepth = metersToCssPixels(paper.thickness);
 
     return world.spawn(
       Paper(paper),
+      BoundingBox({ width: paperWidth, height: paperHeight }),
       Position(position),
       Rotation(rotation),
       Velocity,
       AngularVelocity,
-      PaperPhysics(config.physics),
+      KinematicBody({ mass: 1, ...config.physics, depth: paperDepth }),
+      IsStackable,
       StackIndex({ value: stackIndex })
     );
   },
-  throwPaperOntoDesk: (entity: Entity, config: PaperThrowConfig = {}) => {
+
+  spawnBook: (config: BookConfig) => {
+    const viewport = world.get(Viewport);
+    const desk = world.queryFirst(Desk)?.get(Desk);
+    const deskConfig = world.queryFirst(DeskConfig)?.get(DeskConfig);
+    if (!desk) throw new Error('spawnBook requires a Desk entity. Call spawnDesk() first.');
+    if (!deskConfig)
+      throw new Error('spawnBook requires a DeskConfig entity. Call spawnDesk() first.');
+
+    const viewportWidth = viewport?.width || window.innerWidth;
+    const viewportHeight = viewport?.height || window.innerHeight;
+    const bookLayout = {
+      aspectRatio: config.aspectRatio ?? 2 / 3,
+    };
+    const paperSize = getPaperSize(viewportWidth, deskConfig, bookLayout);
+    const bookWidth = config.width ?? paperSize.width * 0.72;
+    const bookHeight = config.height ?? bookWidth / bookLayout.aspectRatio;
+    const position = {
+      x: config.centered
+        ? viewportWidth / 2
+        : randomInRange(bookWidth * 0.5, viewportWidth - bookWidth * 0.5),
+      y: viewportHeight + bookHeight / 2 + randomInRange(24, desk.wallGutter),
+      z: metersToCssPixels(randomInRange(0.055, 0.09)),
+    };
+    const rotation = {
+      x: 0,
+      y: 0,
+      z: config.centered ? randomInRange(-4, 4) : randomInRange(-28, 28),
+    };
+    const pageCount = config.pageCount ?? 200;
+    const pageThickness = config.pageThickness ?? 0.0001;
+    const coverThickness = config.coverThickness ?? 0.002;
+    const book = {
+      id: config.id,
+      ...(config.title !== undefined && { title: config.title }),
+      ...(config.color !== undefined && { color: config.color }),
+      ...(config.coverImage !== undefined && { coverImage: config.coverImage }),
+      width: bookWidth,
+      height: bookHeight,
+      pageCount,
+      pageThickness,
+      coverThickness,
+    };
+    const stackIndex = config.stackIndex ?? 0;
+    const bookDepth = metersToCssPixels(getBookDepthMeters(book));
+
+    return world.spawn(
+      Book(book),
+      BoundingBox({ width: bookWidth, height: bookHeight }),
+      Position(position),
+      Rotation(rotation),
+      Velocity,
+      AngularVelocity,
+      KinematicBody({ mass: 8, ...config.physics, depth: bookDepth }),
+      StackIndex({ value: stackIndex })
+    );
+  },
+
+  throwOntoDesk: (
+    entity: Entity,
+    config: Partial<{
+      centered: boolean;
+    }> = {}
+  ) => {
     const launchAngle = config.centered ? 0 : randomInRange(-0.42, 0.42);
     const launchSpeed = config.centered ? randomInRange(0.78, 0.84) : randomInRange(0.75, 0.95);
     const spinDir = Math.random() < 0.5 ? -1 : 1;
@@ -122,9 +208,11 @@ export const actions = createActions((world) => ({
       z: spinDir * (config.centered ? randomInRange(6, 12) : randomInRange(22, 50)),
     });
 
+    entity.remove(IsResting);
     entity.add(IsEnteringDesk);
   },
-  raisePaper: (entity: Entity) => {
+
+  raiseDeskItem: (entity: Entity) => {
     let top = 0;
 
     world.query(StackIndex).forEach((item) => {
@@ -133,6 +221,7 @@ export const actions = createActions((world) => ({
 
     entity.set(StackIndex, { value: top + 1 });
   },
+
   getLeastCoveredX: (exclude?: Entity) => {
     const viewport = world.get(Viewport);
     const viewportWidth = viewport?.width || window.innerWidth;
@@ -171,6 +260,7 @@ export const actions = createActions((world) => ({
       (chosen + 1) * colWidth - colWidth * 0.2
     );
   },
+
   destroyPapers: () => {
     world.query(Paper).forEach((entity) => entity.destroy());
   },

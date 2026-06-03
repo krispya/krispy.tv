@@ -1,5 +1,12 @@
 import { type World } from 'koota';
-import { Desk, IsEnteringDesk, Paper, Position, Ref, Viewport } from '../traits/index.js';
+import {
+  BoundingBox,
+  Desk,
+  IsEnteringDesk,
+  KinematicBody,
+  Position,
+  Viewport,
+} from '../traits/index.js';
 import { getViewportRange } from '../utils/math.js';
 
 export function activateWallBarrier(world: World) {
@@ -7,11 +14,13 @@ export function activateWallBarrier(world: World) {
   const desk = world.queryFirst(Desk)?.get(Desk);
   if (!viewport || !desk || viewport.height <= 0) return;
 
-  world.query(IsEnteringDesk, Paper, Position, Ref).updateEach(([_paper, position, ref], entity) => {
-    const height = ref.offsetHeight;
-    if (height <= 0) return;
+  world
+    .query(IsEnteringDesk, Position, BoundingBox, KinematicBody)
+    .updateEach(([position, box], entity) => {
+      const height = box.height;
+      if (height <= 0) return;
 
-    const rangeY = getViewportRange(height, viewport.height, desk.wallGutter);
-    if (position.y <= rangeY.max) entity.remove(IsEnteringDesk);
-  });
+      const rangeY = getViewportRange(height, viewport.height, desk.wallGutter);
+      if (position.y <= rangeY.max) entity.remove(IsEnteringDesk);
+    });
 }

@@ -7,7 +7,13 @@ import { randomBlankColor } from './utils/blank-page-colors.js';
 const MIN_PAGE_COUNT = 8;
 
 export function Startup() {
-  const { destroyPapers, spawnDesk, spawnPaper, throwPaperOntoDesk } = useActions(actions);
+  const {
+    destroyPapers,
+    spawnBook,
+    spawnDesk,
+    spawnPaper,
+    throwOntoDesk: throwPaperOntoDesk,
+  } = useActions(actions);
 
   useEffect(() => {
     const desk = spawnDesk();
@@ -35,8 +41,19 @@ export function Startup() {
       throwPaperOntoDesk(paper, { centered });
     });
 
+    const book = spawnBook({
+      id: 'desk-css-book',
+      title: 'Book',
+      color: '#8f2f2f',
+      pageCount: 260,
+      stackIndex: items.length,
+    });
+
+    throwPaperOntoDesk(book);
+
     return () => {
       destroyPapers();
+      book.destroy();
       desk.destroy();
     };
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- mount-only initial spawn

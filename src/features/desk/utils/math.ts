@@ -2,6 +2,20 @@ export function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }
 
+export type Vector2 = { x: number; y: number };
+
+export function dot(a: Vector2, b: Vector2) {
+  return a.x * b.x + a.y * b.y;
+}
+
+export function scale(vector: Vector2, scalar: number): Vector2 {
+  return { x: vector.x * scalar, y: vector.y * scalar };
+}
+
+export function perpendicular(vector: Vector2): Vector2 {
+  return { x: -vector.y, y: vector.x };
+}
+
 export function clamp01(value: number) {
   return clamp(value, 0, 1);
 }

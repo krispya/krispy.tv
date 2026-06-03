@@ -2,6 +2,7 @@ import { Not, type World } from 'koota';
 import {
   AngularVelocity,
   Dragging,
+  IsResting,
   Paper,
   Position,
   StackIndex,
@@ -27,7 +28,7 @@ export function applyBreeze(world: World) {
   const seconds = time.last / 1000;
 
   world
-    .query(Position, Velocity, AngularVelocity, Paper, StackIndex, Not(Dragging))
+    .query(Position, Velocity, AngularVelocity, Paper, StackIndex, Not(Dragging), Not(IsResting))
     .updateEach(([position, velocity, angularVelocity, paper, stackIndex], entity) => {
       const supportZ = metersToCssPixels(stackIndex.value * paper.thickness);
       const lift = clamp01((position.z - supportZ) / AIRBORNE_HEIGHT);

@@ -1,26 +1,21 @@
 import { Not, type World } from 'koota';
 import {
   AngularVelocity,
+  BoundingBox,
   Desk,
   IsEnteringDesk,
   IsOpen,
-  Paper,
+  KinematicBody,
   Position,
-  Ref,
   Velocity,
   Viewport,
 } from '../traits/index.js';
+import {
+  applyBarrierBounceSpin,
+  getBounceSpinBias,
+  reflectVelocityOnBarrier,
+} from '../utils/barrier-bounce.js';
 import { getViewportRange } from '../utils/math.js';
-
-/** How much of the wall-parallel velocity becomes angular spin on bounce. */
-const BOUNCE_SPIN_FACTOR = 0.1;
-/** How much of the wall-normal (impact) velocity becomes spin on bounce. */
-const BOUNCE_NORMAL_SPIN_FACTOR = 0.06;
-
-/** Returns a spin sign biased toward continuing existing rotation, or random if at rest. */
-function spinSign(angVelZ: number) {
-  return angVelZ !== 0 ? Math.sign(angVelZ) : Math.random() < 0.5 ? 1 : -1;
-}
 
 export function bounceWithinViewport(world: World) {
   const viewport = world.get(Viewport);
@@ -28,60 +23,48 @@ export function bounceWithinViewport(world: World) {
   if (!viewport || !desk || viewport.width <= 0 || viewport.height <= 0) return;
 
   world
-    .query(Paper, Position, Velocity, AngularVelocity, Ref, Not(IsEnteringDesk), Not(IsOpen))
-    .updateEach(([_paper, position, velocity, angularVelocity, ref]) => {
-      const width = ref.offsetWidth;
-      const height = ref.offsetHeight;
+    .query(
+      Position,
+      Velocity,
+      AngularVelocity,
+      BoundingBox,
+      KinematicBody,
+      Not(IsEnteringDesk),
+      Not(IsOpen)
+    )
+    .updateEach(([position, velocity, angularVelocity, box]) => {
+      const width = box.width;
+      const height = box.height;
       if (width <= 0 || height <= 0) return;
 
       const rangeX = getViewportRange(width, viewport.width, desk.wallGutter);
       const rangeY = getViewportRange(height, viewport.height, desk.wallGutter);
 
       if (position.x < rangeX.min) {
+        const normal = { x: 1, y: 0 };
         position.x = rangeX.min;
-        if (velocity.x < 0) {
-          const parallel = velocity.y;
-          const normal = Math.abs(velocity.x);
-          velocity.x = -velocity.x * desk.wallBounce;
-          velocity.y *= desk.wallFriction;
-          angularVelocity.z +=
-            parallel * BOUNCE_SPIN_FACTOR +
-            spinSign(angularVelocity.z) * normal * BOUNCE_NORMAL_SPIN_FACTOR;
+        if (reflectVelocityOnBarrier(velocity, normal, desk.wallBounce, desk.wallFriction)) {
+          applyBarrierBounceSpin(angularVelocity, normal, velocity, getBounceSpinBias(normal));
         }
       } else if (position.x > rangeX.max) {
+        const normal = { x: -1, y: 0 };
         position.x = rangeX.max;
-        if (velocity.x > 0) {
-          const parallel = velocity.y;
-          const normal = Math.abs(velocity.x);
-          velocity.x = -velocity.x * desk.wallBounce;
-          velocity.y *= desk.wallFriction;
-          angularVelocity.z -=
-            parallel * BOUNCE_SPIN_FACTOR -
-            spinSign(angularVelocity.z) * normal * BOUNCE_NORMAL_SPIN_FACTOR;
+        if (reflectVelocityOnBarrier(velocity, normal, desk.wallBounce, desk.wallFriction)) {
+          applyBarrierBounceSpin(angularVelocity, normal, velocity, getBounceSpinBias(normal));
         }
       }
 
       if (position.y < rangeY.min) {
+        const normal = { x: 0, y: 1 };
         position.y = rangeY.min;
-        if (velocity.y < 0) {
-          const parallel = velocity.x;
-          const normal = Math.abs(velocity.y);
-          velocity.y = -velocity.y * desk.wallBounce;
-          velocity.x *= desk.wallFriction;
-          angularVelocity.z -=
-            parallel * BOUNCE_SPIN_FACTOR -
-            spinSign(angularVelocity.z) * normal * BOUNCE_NORMAL_SPIN_FACTOR;
+        if (reflectVelocityOnBarrier(velocity, normal, desk.wallBounce, desk.wallFriction)) {
+          applyBarrierBounceSpin(angularVelocity, normal, velocity, getBounceSpinBias(normal));
         }
       } else if (position.y > rangeY.max) {
+        const normal = { x: 0, y: -1 };
         position.y = rangeY.max;
-        if (velocity.y > 0) {
-          const parallel = velocity.x;
-          const normal = Math.abs(velocity.y);
-          velocity.y = -velocity.y * desk.wallBounce;
-          velocity.x *= desk.wallFriction;
-          angularVelocity.z +=
-            parallel * BOUNCE_SPIN_FACTOR +
-            spinSign(angularVelocity.z) * normal * BOUNCE_NORMAL_SPIN_FACTOR;
+        if (reflectVelocityOnBarrier(velocity, normal, desk.wallBounce, desk.wallFriction)) {
+          applyBarrierBounceSpin(angularVelocity, normal, velocity, getBounceSpinBias(normal));
         }
       }
     });

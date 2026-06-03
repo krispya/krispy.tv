@@ -2,6 +2,7 @@ import { createWorld } from 'koota';
 import { WorldProvider } from 'koota/react';
 import { Frameloop } from './frameloop.js';
 import { ArticleRenderer } from './renderers/article-renderer.js';
+import { BookRenderer } from './renderers/book-renderer.js';
 import { DeskRenderer } from './renderers/desk-renderer.js';
 import { PaperRenderer } from './renderers/paper-renderer.js';
 import { Startup } from './startup.js';
@@ -17,6 +18,7 @@ export function Desk() {
 
       <DeskRenderer />
       <PaperRenderer />
+      <BookRenderer />
       <ArticleRenderer />
     </WorldProvider>
   );

@@ -11,15 +11,17 @@ import {
   bounceWithinViewport,
   dampVelocity,
   detectOffScreen,
-  resolvePaperSupports,
+  resolveBodyCollisions,
+  resolveRestingBody,
   syncArticle,
+  syncBookToDOM,
   syncOpenState,
-  syncToDOM,
+  syncPaperToDOM,
   updateArticleMotion,
   updateDragging,
   updateResponsiveDeskLayout,
+  updateRotation,
   updateTime,
-  updateTransform,
 } from './systems/index.js';
 import { ActiveSlug, Pointer, Viewport } from './traits/index.js';
 import { useAnimationFrame } from '../frameloop/use-animation-frame.js';
@@ -37,16 +39,18 @@ export function Frameloop() {
     applyBreeze(world);
     applyVelocity(world);
     applyAngularVelocity(world);
-    resolvePaperSupports(world);
+    resolveRestingBody(world);
+    resolveBodyCollisions(world);
     activateWallBarrier(world);
     bounceWithinViewport(world);
     dampVelocity(world);
-    updateTransform(world);
+    updateRotation(world);
     syncOpenState(world);
     detectOffScreen(world);
     syncArticle(world);
     updateArticleMotion(world);
-    syncToDOM(world);
+    syncPaperToDOM(world);
+    syncBookToDOM(world);
   });
 
   useEffect(() => {

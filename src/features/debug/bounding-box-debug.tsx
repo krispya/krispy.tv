@@ -1,12 +1,12 @@
 import type { Entity } from 'koota';
 import { useHas, useTrait } from 'koota/react';
-import { BoundingBox, Rotation, Stackable, StackIndex } from '../desk/traits/index.js';
+import { BoundingBox, Rotation, IsStackable, StackIndex } from '../desk/traits/index.js';
 
 export function BoundingBoxDebug({ entity }: { entity: Entity }) {
   const box = useTrait(entity, BoundingBox);
   const rotation = useTrait(entity, Rotation);
   const stackIndex = useTrait(entity, StackIndex);
-  const isStackable = useHas(entity, Stackable);
+  const isStackable = useHas(entity, IsStackable);
 
   if (!box) return null;
 

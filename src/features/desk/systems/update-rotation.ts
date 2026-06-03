@@ -1,39 +1,34 @@
-import type { World } from 'koota';
+import { Not, type World } from 'koota';
 import {
   AngularVelocity,
   Dragging,
-  Paper,
+  IsResting,
+  KinematicBody,
   Position,
   Rotation,
-  StackIndex,
   Time,
   Velocity,
 } from '../traits/index.js';
 import { clamp, dampedLerp } from '../utils/math.js';
-import { metersToCssPixels } from '../utils/physics-units.js';
+import { getRestingHeight } from '../utils/resting-height.js';
 
-const DRAG_LIFT = 0.02;
 const PICKUP_STRAIGHTNESS = 0.82;
 const STRAIGHTEN_DAMPING = 0.28;
 const LANDING_EPSILON = 0.5;
 const LANDING_FLATTEN_DAMPING = 0.2;
 
-export function updateTransform(world: World) {
+export function updateRotation(world: World) {
   const time = world.get(Time);
   if (!time) return;
 
   world
-    .query(Velocity, Position, Rotation, Paper, StackIndex, AngularVelocity)
-    .updateEach(([velocity, position, rotation, paper, stackIndex, angularVelocity], entity) => {
+    .query(Velocity, Position, Rotation, AngularVelocity, KinematicBody, Not(IsResting))
+    .updateEach(([_velocity, position, rotation, angularVelocity], entity) => {
       const dragging = entity.get(Dragging);
-      const restingHeight = stackIndex.value * paper.thickness;
 
       if (dragging) {
         const pickupRotationScale = 1 - PICKUP_STRAIGHTNESS;
-        const dragLift = DRAG_LIFT * dragging.liftProgress;
 
-        position.z = metersToCssPixels(restingHeight + dragLift);
-        velocity.z = 0;
         angularVelocity.x = 0;
         angularVelocity.y = 0;
         angularVelocity.z = 0;
@@ -58,8 +53,7 @@ export function updateTransform(world: World) {
         return;
       }
 
-      // Flatten the paper when it lands on the surface
-      const supportZ = metersToCssPixels(restingHeight);
+      const supportZ = getRestingHeight(entity);
       if (position.z <= supportZ + LANDING_EPSILON) {
         rotation.x = dampedLerp(rotation.x, 0, LANDING_FLATTEN_DAMPING, time.delta);
         rotation.y = dampedLerp(rotation.y, 0, LANDING_FLATTEN_DAMPING, time.delta);

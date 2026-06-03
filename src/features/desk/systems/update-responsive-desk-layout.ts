@@ -1,5 +1,5 @@
 import type { World } from 'koota';
-import { Desk, DeskConfig, Paper, Viewport } from '../traits/index.js';
+import { BoundingBox, Desk, DeskConfig, Paper, Viewport } from '../traits/index.js';
 import { clamp } from '../utils/math.js';
 import { getPaperBaseWidth, getPaperSize } from '../utils/paper-size.js';
 
@@ -18,9 +18,11 @@ export function updateResponsiveDeskLayout(world: World) {
     config.wallGutterMax
   );
 
-  world.query(Paper).updateEach(([paper]) => {
+  world.query(Paper, BoundingBox).updateEach(([paper, box]) => {
     const size = getPaperSize(viewport.width, config, paper);
     paper.width = size.width;
     paper.height = size.height;
+    box.width = size.width;
+    box.height = size.height;
   });
 }

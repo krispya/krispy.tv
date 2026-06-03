@@ -39,7 +39,23 @@ export const Paper = trait({
   thickness: 0.0001,
 });
 
-export const PaperPhysics = trait({
+export const Book = trait({
+  id: '',
+  title: '',
+  color: '#8f2f2f',
+  coverImage: '',
+  /** Pixels. */
+  width: 260,
+  /** Pixels. */
+  height: 390,
+  pageCount: 200,
+  /** Meters. */
+  pageThickness: 0.0001,
+  /** Meters. */
+  coverThickness: 0.002,
+});
+
+export const KinematicBody = trait({
   throwDamping: 0.35,
   /** Meters per second. */
   maxThrowSpeed: 0.6,
@@ -47,8 +63,13 @@ export const PaperPhysics = trait({
   friction: 0.2,
   /** Meters per second. */
   stopSpeed: 0.01,
+  /** Pixels. */
+  depth: 0,
+  /** Arbitrary mass unit for 2D desk collisions. */
+  mass: 1,
 });
 
+export const BoundingBox = trait({ width: 0, height: 0 });
 export const Position = trait({ x: 0, y: 0, z: 0 });
 export const Rotation = trait({ x: 0, y: 0, z: 0 });
 export const Velocity = trait({ x: 0, y: 0, z: 0 });
@@ -69,10 +90,12 @@ export const Pressed = trait({
 
 export const Selected = trait();
 
+export const IsStackable = trait();
 export const IsOpen = trait();
 export const IsOffScreen = trait();
 export const IsEnteringDesk = trait();
 export const IsPreloading = trait();
+export const IsResting = trait();
 export const ActiveSlug = trait({ slug: '' });
 export const ArticleOf = relation({ exclusive: true, autoDestroy: 'orphan' });
 export const StackIndex = trait({ value: 0 });

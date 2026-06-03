@@ -1,6 +1,6 @@
 import type { World } from 'koota';
 import { Dragging, Paper, Position, Ref, Rotation, StackIndex } from '../traits/index.js';
-import { metersToCssPixels } from '../utils/physics-units.js';
+import { getRestingHeight } from '../utils/resting-height.js';
 
 const DRAGGING_STACK_BOOST = 1000;
 const MAX_SHADOW_HEIGHT = 96;
@@ -11,16 +11,16 @@ const SHADOW_LIFT_OFFSET_Y = 40;
 const SHADOW_REST_BLUR = 1;
 const SHADOW_LIFT_BLUR = 2;
 
-export function syncToDOM(world: World) {
+export function syncPaperToDOM(world: World) {
   world
     .query(Paper, Position, Rotation, Ref, StackIndex)
-    .updateEach(([paper, position, rotation, ref, stackIndex], entity) => {
+    .updateEach(([_paper, position, rotation, ref, stackIndex], entity) => {
       const cssZIndex = getPaperZIndex(stackIndex, entity.has(Dragging));
 
       ref.style.transform = `translate(${position.x}px, ${position.y}px)`;
       ref.style.zIndex = cssZIndex.toString();
 
-      const supportZ = metersToCssPixels(stackIndex.value * paper.thickness);
+      const supportZ = getRestingHeight(entity);
       const height = Math.min(Math.max(position.z - supportZ, 0), MAX_SHADOW_HEIGHT);
       const lift = height / MAX_SHADOW_HEIGHT;
       const offsetX = SHADOW_REST_OFFSET_X + lift * SHADOW_LIFT_OFFSET_X;

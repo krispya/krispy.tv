@@ -3,10 +3,12 @@ import { useActions, useHas, useQuery, useTrait } from 'koota/react';
 import { useCallback, type CSSProperties } from 'react';
 import { useLocation } from 'wouter';
 import { routes } from '../../../routes.js';
+import { BoundingBoxDebug, useDebug } from '../../debug/index.js';
 import { actions } from '../actions.js';
 import {
   AngularVelocity,
   Dragging,
+  IsResting,
   Paper,
   Pressed,
   Position,
@@ -62,8 +64,10 @@ function PaperView({ entity }: { entity: Entity }) {
   const paper = useTrait(entity, Paper);
   const isDragging = useHas(entity, Dragging);
   const isSelected = useHas(entity, Selected);
-  const { raisePaper } = useActions(actions);
+  const { raiseDeskItem } = useActions(actions);
   const [, navigate] = useLocation();
+
+  const { enabled: isDebug } = useDebug();
 
   const isOpenable = paper?.openable ?? true;
 
@@ -91,7 +95,7 @@ function PaperView({ entity }: { entity: Entity }) {
       };
       const rotation = entity.get(Rotation) ?? { x: 0, y: 0, z: 0 };
 
-      entity.remove(Dragging);
+      entity.remove(Dragging, IsResting);
       entity.set(Velocity, { x: 0, y: 0, z: 0 });
       entity.set(AngularVelocity, { x: 0, y: 0, z: 0 });
       entity.add(
@@ -131,9 +135,9 @@ function PaperView({ entity }: { entity: Entity }) {
       entity.set(Position, { x: centerX, y: centerY, z: 0 });
       entity.set(Velocity, { x: 0, y: 0, z: 0 });
       entity.set(AngularVelocity, { x: 0, y: 0, z: 0 });
-      entity.remove(Pressed);
+      entity.remove(Pressed, IsResting);
       entity.remove(Selected);
-      raisePaper(entity);
+      raiseDeskItem(entity);
       entity.add(
         Dragging({
           offset: pressed.offset,
@@ -142,7 +146,7 @@ function PaperView({ entity }: { entity: Entity }) {
         })
       );
     },
-    [entity, raisePaper]
+    [entity, raiseDeskItem]
   );
 
   const handlePointerUp = useCallback(
@@ -201,6 +205,7 @@ function PaperView({ entity }: { entity: Entity }) {
         marginTop: paper.height / -2,
       }}
     >
+      {isDebug && <BoundingBoxDebug entity={entity} />}
       <PaperShadow />
       <div
         role={isOpenable ? 'button' : undefined}
