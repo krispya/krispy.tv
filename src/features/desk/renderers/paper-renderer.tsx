@@ -17,6 +17,7 @@ import {
   Selected,
   Velocity,
 } from '../traits/index.js';
+import { hashSeed, SketchOutline } from './sketch-outline.js';
 
 const DRAG_THRESHOLD_PX = 5;
 type PaperStyle = CSSProperties & Record<`--${string}`, string>;
@@ -208,30 +209,37 @@ function PaperView({ entity }: { entity: Entity }) {
       {isDebug && <BoundingBoxDebug entity={entity} />}
       <PaperShadow />
       <div
-        role={isOpenable ? 'button' : undefined}
-        tabIndex={isOpenable ? 0 : undefined}
-        aria-label={isOpenable ? 'Open article' : 'Blank sheet'}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerCancel}
-        onLostPointerCapture={handleLostPointerCapture}
-        className={`absolute inset-0 flex cursor-grab touch-none flex-col overflow-hidden rounded-[3px] border border-stone-200 p-6 text-left text-gray-950 will-change-transform select-none ${
-          isDragging ? 'cursor-grabbing' : ''
-        } ${isSelected || isDragging ? 'outline-3 outline-offset-2 outline-blue-500' : ''}`}
+        className="absolute inset-0 will-change-transform"
         style={{
           transform:
             'perspective(1200px) translateZ(var(--paper-z)) rotateX(var(--paper-rotate-x)) rotateY(var(--paper-rotate-y)) rotateZ(var(--paper-rotate-z))',
-          backgroundColor: paper.color,
-          ...(paper.openable && {
-            backgroundImage: `${getPaperTextureOverlay(paper.id)}, url(${import.meta.env.BASE_URL}images/articles/${paper.id}.png)`,
-            backgroundBlendMode: 'multiply, normal',
-            backgroundSize: 'cover, cover',
-            backgroundPosition: 'center, top center',
-            backgroundRepeat: 'no-repeat, no-repeat',
-          }),
         }}
-      ></div>
+      >
+        <div
+          role={isOpenable ? 'button' : undefined}
+          tabIndex={isOpenable ? 0 : undefined}
+          aria-label={isOpenable ? 'Open article' : 'Blank sheet'}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerCancel}
+          onLostPointerCapture={handleLostPointerCapture}
+          className={`absolute inset-0 flex cursor-grab touch-none flex-col overflow-hidden rounded-[3px] p-6 text-left text-gray-950 select-none ${
+            isDragging ? 'cursor-grabbing' : ''
+          } ${isSelected || isDragging ? 'outline-3 outline-offset-2 outline-blue-500' : ''}`}
+          style={{
+            backgroundColor: paper.color,
+            ...(paper.openable && {
+              backgroundImage: `${getPaperTextureOverlay(paper.id)}, url(${import.meta.env.BASE_URL}images/articles/${paper.id}.png)`,
+              backgroundBlendMode: 'multiply, normal',
+              backgroundSize: 'cover, cover',
+              backgroundPosition: 'center, top center',
+              backgroundRepeat: 'no-repeat, no-repeat',
+            }),
+          }}
+        ></div>
+        <SketchOutline width={paper.width} height={paper.height} seed={hashSeed(paper.id)} />
+      </div>
     </div>
   );
 }

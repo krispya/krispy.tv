@@ -31,7 +31,7 @@ export function Startup() {
       return { id: `blank-page-${i + 1}`, openable: false, color };
     });
 
-    const items: { id: string; openable: boolean; color?: string }[] = [...articles, ...blanks];
+    const items: { id: string; openable: boolean; color?: string }[] = [...blanks];
 
     items.forEach(({ id, openable, color }, index) => {
       const centered = index === 0;

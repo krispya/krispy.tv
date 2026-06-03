@@ -17,8 +17,12 @@ import {
 } from '../traits/index.js';
 import { metersToCssPixels } from '../utils/physics-units.js';
 import { getBookDepthMeters } from '../utils/resting-height.js';
+import { hashSeed, SketchOutline } from './sketch-outline.js';
 
 const DRAG_THRESHOLD_PX = 5;
+// Below this depth (px) the spine/page-edge slivers are too thin for a
+// legible sketched outline, so we leave them unsketched.
+const SKETCH_EDGE_MIN_DEPTH_PX = 6;
 // Book lies flat like paper; a tiny tilt reveals just a sliver of the page edges.
 const BASE_BOOK_ROTATE_X = 5;
 const BASE_BOOK_ROTATE_Y = 3;
@@ -168,6 +172,8 @@ function BookView({ entity }: { entity: Entity }) {
   const faceCenterY = (book.height - depth) / 2;
   const title = book.title || book.id;
   const spineColor = shadeHexColor(book.color, -28);
+  const sketchEdges = depth >= SKETCH_EDGE_MIN_DEPTH_PX;
+  const seed = hashSeed(book.id);
 
   return (
     <div
@@ -202,12 +208,13 @@ function BookView({ entity }: { entity: Entity }) {
           }}
         >
           <BookFace
+            width={book.width}
+            height={book.height}
+            seed={seed + 1}
             className={`rounded-[6px] ${
               isSelected || isDragging ? 'outline-4 outline-offset-2 outline-blue-500' : ''
             }`}
             style={{
-              width: book.width,
-              height: book.height,
               backgroundColor: book.color,
               ...(book.coverImage && {
                 backgroundImage: `url(${book.coverImage})`,
@@ -224,18 +231,20 @@ function BookView({ entity }: { entity: Entity }) {
             </div>
           </BookFace>
           <BookFace
+            width={book.width}
+            height={book.height}
+            seed={seed + 2}
             className="rounded-[6px]"
             style={{
-              width: book.width,
-              height: book.height,
               backgroundColor: shadeHexColor(book.color, -18),
               transform: `rotateY(180deg) translateZ(${halfDepth}px)`,
             }}
           />
           <BookFace
+            width={depth}
+            height={book.height}
+            seed={sketchEdges ? seed + 3 : undefined}
             style={{
-              width: depth,
-              height: book.height,
               left: faceCenterX,
               backgroundColor: spineColor,
               backgroundImage: 'linear-gradient(to right, rgba(0,0,0,0.28), rgba(255,255,255,0.08))',
@@ -243,27 +252,30 @@ function BookView({ entity }: { entity: Entity }) {
             }}
           />
           <BookFace
+            width={depth}
+            height={book.height}
+            seed={sketchEdges ? seed + 4 : undefined}
             style={{
-              width: depth,
-              height: book.height,
               left: faceCenterX,
               background: PAGE_EDGE_VERTICAL_LINES,
               transform: `rotateY(90deg) translateZ(${halfWidth}px)`,
             }}
           />
           <BookFace
+            width={book.width}
+            height={depth}
+            seed={sketchEdges ? seed + 5 : undefined}
             style={{
-              width: book.width,
-              height: depth,
               top: faceCenterY,
               background: PAGE_EDGE_HORIZONTAL_LINES,
               transform: `rotateX(90deg) translateZ(${halfHeight}px)`,
             }}
           />
           <BookFace
+            width={book.width}
+            height={depth}
+            seed={sketchEdges ? seed + 6 : undefined}
             style={{
-              width: book.width,
-              height: depth,
               top: faceCenterY,
               background: PAGE_EDGE_HORIZONTAL_LINES,
               transform: `rotateX(-90deg) translateZ(${halfHeight}px)`,
@@ -303,20 +315,27 @@ function BookShadow() {
 }
 
 function BookFace({
+  width,
+  height,
+  seed,
   children,
   className = '',
   style,
 }: {
+  width: number;
+  height: number;
+  seed?: number;
   children?: ReactNode;
   className?: string;
-  style: CSSProperties;
+  style?: CSSProperties;
 }) {
   return (
     <div
-      className={`absolute top-0 left-0 overflow-hidden border border-black/10 shadow-sm [backface-visibility:hidden] ${className}`}
-      style={style}
+      className={`absolute top-0 left-0 shadow-sm [backface-visibility:hidden] ${className}`}
+      style={{ width, height, ...style }}
     >
       {children}
+      {seed !== undefined && <SketchOutline width={width} height={height} seed={seed} />}
     </div>
   );
 }

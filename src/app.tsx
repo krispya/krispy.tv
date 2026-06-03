@@ -21,7 +21,7 @@ const ArticleNotFound = lazy(() =>
 
 export function App() {
   return (
-    <DebugProvider enabled={true}>
+    <DebugProvider enabled={false}>
       <Router base={base}>
         <main className="min-h-screen">
           <Switch>

@@ -18,6 +18,7 @@
     "koota": "0.6.6-canary.0531fe1",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
+    "roughjs": "^4.6.6",
     "wouter": "^3.9.0"
   },
   "devDependencies": {
