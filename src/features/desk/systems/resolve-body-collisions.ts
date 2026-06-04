@@ -5,6 +5,7 @@ import {
   Desk,
   Dragging,
   IsEnteringDesk,
+  IsOpen,
   IsResting,
   IsStackable,
   KinematicBody,
@@ -56,7 +57,8 @@ export function resolveBodyCollisions(world: World) {
       StackIndex,
       KinematicBody,
       Not(Dragging),
-      Not(IsEnteringDesk)
+      Not(IsEnteringDesk),
+      Not(IsOpen)
     )
     .readEach(([position, rotation, velocity, angularVelocity, box, stackIndex, body], entity) => {
       if (box.width <= 0 || box.height <= 0) return;
@@ -111,7 +113,7 @@ export function resolveBodyCollisions(world: World) {
   if (resolved.size === 0) return;
 
   world
-    .query(Position, Velocity, AngularVelocity, Not(Dragging), Not(IsEnteringDesk))
+    .query(Position, Velocity, AngularVelocity, Not(Dragging), Not(IsEnteringDesk), Not(IsOpen))
     .updateEach(([position, velocity, angularVelocity], entity) => {
       const next = resolved.get(entity);
       if (!next) return;
