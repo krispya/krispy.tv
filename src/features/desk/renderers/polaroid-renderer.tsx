@@ -3,6 +3,7 @@ import { useActions, useHas, useQuery, useTrait } from 'koota/react';
 import { useCallback, type CSSProperties } from 'react';
 import { BoundingBoxDebug, useDebug } from '../../debug/index.js';
 import { actions } from '../actions.js';
+import { PolaroidGlossOverlay } from './polaroid-gloss-overlay.js';
 import {
   AngularVelocity,
   Dragging,
@@ -196,25 +197,34 @@ function PolaroidView({ entity }: { entity: Entity }) {
         }}
       >
         <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[3px] bg-[#f8f6f0] p-3 shadow-inner">
-          <div className="relative shrink-0" style={{ width: imageSize, height: imageSize }}>
-            <img
-              src={polaroid.imageSrc}
-              alt=""
-              draggable={false}
-              className="h-full w-full object-cover"
-            />
-            <SketchOutline
-              width={imageSize}
-              height={imageSize}
-              seed={hashSeed(`${polaroid.id}:image`)}
-            />
-          </div>
+          <PolaroidPhoto id={polaroid.id} imageSrc={polaroid.imageSrc} imageSize={imageSize} />
           {polaroid.caption ? (
             <p className="mt-2 text-center text-sm text-stone-700">{polaroid.caption}</p>
           ) : null}
         </div>
         <SketchOutline width={polaroid.width} height={polaroid.height} seed={hashSeed(polaroid.id)} />
       </div>
+    </div>
+  );
+}
+
+function PolaroidPhoto({
+  id,
+  imageSrc,
+  imageSize,
+}: {
+  id: string;
+  imageSrc: string;
+  imageSize: number;
+}) {
+  return (
+    <div
+      className="relative isolate shrink-0 overflow-hidden"
+      style={{ width: imageSize, height: imageSize }}
+    >
+      <img src={imageSrc} alt="" draggable={false} className="h-full w-full object-cover" />
+      <PolaroidGlossOverlay id={id} size={imageSize} />
+      <SketchOutline width={imageSize} height={imageSize} seed={hashSeed(`${id}:image`)} />
     </div>
   );
 }

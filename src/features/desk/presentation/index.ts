@@ -15,6 +15,15 @@ export {
 } from './lift.js';
 export { type DeskShadowStyle, toShadowStyle } from './shadow.js';
 export {
+  getPolaroidCelGlossStripes,
+  getPolaroidGlossGradientId,
+  getPolaroidGlossPaths,
+  POLAROID_GLOSS_OPACITY_BOTTOM,
+  POLAROID_GLOSS_OPACITY_TOP,
+  type CelGlossStripe,
+  type PolaroidGlossPath,
+} from './polaroid.js';
+export {
   getStageFillScale,
   getStageFillTransform,
   getStagePerspective,
