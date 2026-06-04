@@ -190,6 +190,83 @@
     }
   }
 
+  @keyframes paper-lines-boil-slot-0 {
+    0%,
+    33.333% {
+      visibility: visible;
+    }
+    33.334%,
+    100% {
+      visibility: hidden;
+    }
+  }
+
+  @keyframes paper-lines-boil-slot-1 {
+    0%,
+    33.333% {
+      visibility: hidden;
+    }
+    33.334%,
+    66.666% {
+      visibility: visible;
+    }
+    66.667%,
+    100% {
+      visibility: hidden;
+    }
+  }
+
+  @keyframes paper-lines-boil-slot-2 {
+    0%,
+    66.666% {
+      visibility: hidden;
+    }
+    66.667%,
+    100% {
+      visibility: visible;
+    }
+  }
+
+  .paper-lines-boil-frame {
+    visibility: hidden;
+    animation-duration: 0.36s;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    animation-delay: var(--boil-phase);
+  }
+
+  .paper-lines-boil-frame--0 {
+    animation-name: paper-lines-boil-slot-0;
+  }
+
+  .paper-lines-boil-frame--1 {
+    animation-name: paper-lines-boil-slot-1;
+  }
+
+  .paper-lines-boil-frame--2 {
+    animation-name: paper-lines-boil-slot-2;
+  }
+
+  .paper-lines-boil--static .paper-lines-boil-frame {
+    animation: none;
+    visibility: visible;
+  }
+
+  .paper-lines-boil--paused .paper-lines-boil-frame {
+    animation-play-state: paused;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .paper-lines-boil-frame {
+      animation: none !important;
+      visibility: hidden;
+    }
+
+    .paper-lines-boil-frame--0 {
+      visibility: visible;
+    }
+  }
+
   .article-sheet-viewport {
     bottom: calc(0px - env(safe-area-inset-bottom, 0px));
   }

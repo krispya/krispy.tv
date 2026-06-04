@@ -18,7 +18,7 @@ import {
   Velocity,
 } from '../traits/index.js';
 import { cssPixelsToMeters } from '../utils/physics-units.js';
-import { hashSeed, SketchOutline } from './sketch-outline.js';
+import { PaperLinesOverlay } from './paper-lines-overlay.js';
 
 const DRAG_THRESHOLD_PX = 5;
 type PaperStyle = CSSProperties & Record<`--${string}`, string>;
@@ -236,7 +236,7 @@ function PaperView({ entity }: { entity: Entity }) {
             }),
           }}
         />
-        <SketchOutline width={paper.width} height={paper.height} seed={hashSeed(paper.id)} />
+        <PaperLinesOverlay paperId={paper.id} paused={isDragging} />
       </div>
     </div>
   );

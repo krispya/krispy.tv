@@ -15,6 +15,19 @@ export {
 } from './lift.js';
 export { type DeskShadowStyle, toShadowStyle } from './shadow.js';
 export {
+  getPaperLineSrc,
+  getPaperLineVariant,
+  getPaperLinesBoilPhaseOffset,
+  getPaperLinesBoilStartFrame,
+  getPaperLinesFrameStyle,
+  PAPER_LINES_COLOR,
+  getPaperLinesTransform,
+  PAPER_LINES_BOIL_CYCLE_SECONDS,
+  PAPER_LINES_LAYOUT,
+  US_LETTER_LINE_COUNT,
+  type PaperLinesLayout,
+} from './paper-lines.js';
+export {
   getPolaroidCelGlossStripes,
   getPolaroidGlossGradientId,
   getPolaroidGlossPaths,
