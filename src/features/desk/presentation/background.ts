@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { color } from '../../color.js';
+import { color } from '../../../color.js';
 
 /** Public asset path (under `public/`). */
 export const DESK_FOAM_IMAGE = 'foam-splash.jpg';

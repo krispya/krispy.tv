@@ -1,12 +1,8 @@
 import type { World } from 'koota';
 import { Book, Dragging, Position, Ref, Rotation, StackIndex } from '../traits/index.js';
-import {
-  getHeightAbovePlaneM,
-  toShadowLift01,
-  toMeshLiftScale,
-  toShadowStyle,
-  toTranslateZPx,
-} from '../utils/desk-space.js';
+import { getHeightAbovePlaneM, toLift01 } from '../utils/height.js';
+import { toMeshLiftScale, toTranslateZPx } from '../presentation/lift.js';
+import { toShadowStyle } from '../presentation/shadow.js';
 import { metersToCssPixels } from '../utils/physics-units.js';
 import { getBookDepthMeters } from '../utils/resting-height.js';
 import { getBookShadowClip, getBookShadowSize } from '../utils/book-shadow.js';
@@ -19,7 +15,7 @@ export function syncBookToDOM(world: World) {
     .updateEach(([book, position, rotation, ref, stackIndex], entity) => {
       const cssZIndex = getBookZIndex(stackIndex, entity.has(Dragging));
       const heightM = getHeightAbovePlaneM(position.z);
-      const lift = toShadowLift01(heightM);
+      const lift = toLift01(heightM);
       const shadow = toShadowStyle(heightM);
       const depthPx = metersToCssPixels(getBookDepthMeters(book));
       // Rotation only matters while grounded; once lifted the shadow becomes a light-space

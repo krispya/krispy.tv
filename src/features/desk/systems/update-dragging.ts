@@ -8,7 +8,7 @@ import {
   Time,
   Velocity,
 } from '../traits/index.js';
-import { DRAG_LIFT_MAX_M } from '../utils/desk-space.js';
+import { DRAG_LIFT_MAX_M } from '../utils/height.js';
 import { dampedLerp } from '../utils/math.js';
 import { cssPixelsToMeters } from '../utils/physics-units.js';
 

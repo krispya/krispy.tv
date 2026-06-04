@@ -1,7 +1,7 @@
 import { Entity } from 'koota';
 import { useQueryFirst } from 'koota/react';
-import { getDeskFillTransform } from '../camera.js';
-import { getDeskBaseStyle, getDeskFoamLayerStyle } from '../desk-background.js';
+import { getDeskBaseStyle, getDeskFoamLayerStyle } from '../presentation/background.js';
+import { getStageFillTransform } from '../presentation/stage.js';
 import { Desk } from '../traits';
 
 export function DeskRenderer() {
@@ -12,7 +12,7 @@ export function DeskRenderer() {
 function DeskView({ entity: _entity }: { entity: Entity }) {
   const foamStyle = getDeskFoamLayerStyle();
 
-  const fillTransform = getDeskFillTransform();
+  const fillTransform = getStageFillTransform();
 
   return (
     <div

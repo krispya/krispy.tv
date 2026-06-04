@@ -1,6 +1,10 @@
 import { createWorld } from 'koota';
 import { WorldProvider } from 'koota/react';
-import { getDeskPerspectiveOrigin, getDeskPerspectiveValue, getDeskTiltTransform } from './camera.js';
+import {
+  getStagePerspective,
+  getStagePerspectiveOrigin,
+  getStageTiltTransform,
+} from './presentation/stage.js';
 import { Frameloop } from './frameloop.js';
 import { ArticleRenderer } from './renderers/article-renderer.js';
 import { BookRenderer } from './renderers/book-renderer.js';
@@ -32,11 +36,11 @@ function Stage({ children }: { children: React.ReactNode }) {
     <div
       className="fixed inset-0 overflow-hidden"
       style={{
-        perspective: getDeskPerspectiveValue(),
-        perspectiveOrigin: getDeskPerspectiveOrigin(),
+        perspective: getStagePerspective(),
+        perspectiveOrigin: getStagePerspectiveOrigin(),
       }}
     >
-      <div className="absolute inset-0" style={{ transform: getDeskTiltTransform() }}>
+      <div className="absolute inset-0" style={{ transform: getStageTiltTransform() }}>
         {children}
       </div>
     </div>

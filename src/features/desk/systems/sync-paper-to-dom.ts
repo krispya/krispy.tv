@@ -1,10 +1,7 @@
 import type { World } from 'koota';
-import {
-  getHeightAbovePlaneM,
-  toMeshLiftScale,
-  toShadowStyle,
-  toTranslateZPx,
-} from '../utils/desk-space.js';
+import { getHeightAbovePlaneM } from '../utils/height.js';
+import { toMeshLiftScale, toTranslateZPx } from '../presentation/lift.js';
+import { toShadowStyle } from '../presentation/shadow.js';
 import { Dragging, Paper, Position, Ref, Rotation, StackIndex } from '../traits/index.js';
 import { metersToCssPixels } from '../utils/physics-units.js';
 
