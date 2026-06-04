@@ -258,7 +258,8 @@ export const actions = createActions((world) => ({
       Velocity,
       AngularVelocity,
       KinematicBody({ mass: 2, ...config.physics, depth: thickness }),
-      StackIndex({ value: stackIndex })
+      StackIndex({ value: stackIndex }),
+      IsStackable
     );
   },
 
