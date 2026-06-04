@@ -17,6 +17,7 @@ import {
   syncBookToDOM,
   syncOpenState,
   syncPaperToDOM,
+  syncPolaroidToDOM,
   updateArticleMotion,
   updateDragging,
   updateResponsiveDeskLayout,
@@ -50,6 +51,7 @@ export function Frameloop() {
     syncArticle(world);
     updateArticleMotion(world);
     syncPaperToDOM(world);
+    syncPolaroidToDOM(world);
     syncBookToDOM(world);
   });
 

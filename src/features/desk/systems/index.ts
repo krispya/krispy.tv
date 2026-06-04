@@ -12,6 +12,7 @@ export { syncArticle } from './sync-article.js';
 export { syncBookToDOM } from './sync-book-to-dom.js';
 export { syncOpenState } from './sync-open-state.js';
 export { syncPaperToDOM } from './sync-paper-to-dom.js';
+export { syncPolaroidToDOM } from './sync-polaroid-to-dom.js';
 export { updateArticleMotion } from './update-article-motion.js';
 export { updateDragging } from './update-dragging.js';
 export { updateResponsiveDeskLayout } from './update-responsive-desk-layout.js';

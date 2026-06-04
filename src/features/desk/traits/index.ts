@@ -56,6 +56,20 @@ export const Book = trait({
   coverThickness: 0.002,
 });
 
+export const Polaroid = trait({
+  id: '',
+  imageSrc: '',
+  caption: '',
+  /** Pixels. */
+  width: 200,
+  /** Pixels. */
+  height: 240,
+  /** Width-to-height ratio. */
+  aspectRatio: 3.5 / 4.2,
+  /** Meters. */
+  thickness: 0.00035,
+});
+
 export const KinematicBody = trait({
   throwDamping: 0.35,
   /** Meters per second. */

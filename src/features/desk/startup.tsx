@@ -1,6 +1,7 @@
 import { useActions } from 'koota/react';
 import { useEffect } from 'react';
 import { articles as articlesCatalog } from '../article/index.js';
+import { polaroids as polaroidsCatalog } from '../polaroid/index.js';
 import { actions } from './actions.js';
 
 const MIN_PAGE_COUNT = 8;
@@ -8,9 +9,11 @@ const MIN_PAGE_COUNT = 8;
 export function Startup() {
   const {
     destroyPapers,
+    destroyPolaroids,
     spawnBook,
     spawnDesk,
     spawnPaper,
+    spawnPolaroid,
     throwOntoDesk: throwPaperOntoDesk,
   } = useActions(actions);
 
@@ -47,8 +50,22 @@ export function Startup() {
 
     throwPaperOntoDesk(book);
 
+    let polaroidStackIndex = items.length + 1;
+    for (const polaroid of polaroidsCatalog) {
+      const entity = spawnPolaroid({
+        id: polaroid.slug,
+        imageSrc: polaroid.imageSrc,
+        caption: polaroid.caption,
+        stackIndex: polaroidStackIndex,
+      });
+
+      throwPaperOntoDesk(entity);
+      polaroidStackIndex++;
+    }
+
     return () => {
       destroyPapers();
+      destroyPolaroids();
       book.destroy();
       desk.destroy();
     };

@@ -12,6 +12,7 @@ import {
   IsResting,
   KinematicBody,
   Paper,
+  Polaroid,
   Position,
   Rotation,
   IsStackable,
@@ -67,6 +68,19 @@ export type BookConfig = {
   pageCount?: number;
   pageThickness?: number;
   coverThickness?: number;
+  physics?: KinematicBodyConfig;
+};
+
+export type PolaroidConfig = {
+  id: string;
+  imageSrc: string;
+  caption?: string;
+  width?: number;
+  height?: number;
+  aspectRatio?: number;
+  centered?: boolean;
+  stackIndex?: number;
+  thickness?: number;
   physics?: KinematicBodyConfig;
 };
 
@@ -193,6 +207,61 @@ export const actions = createActions((world) => ({
     );
   },
 
+  spawnPolaroid: (config: PolaroidConfig) => {
+    const viewport = world.get(Viewport);
+    const desk = world.queryFirst(Desk)?.get(Desk);
+    const deskConfig = world.queryFirst(DeskConfig)?.get(DeskConfig);
+    if (!desk) throw new Error('spawnPolaroid requires a Desk entity. Call spawnDesk() first.');
+    if (!deskConfig)
+      throw new Error('spawnPolaroid requires a DeskConfig entity. Call spawnDesk() first.');
+
+    const viewportWidth = viewport?.width || window.innerWidth;
+    const viewportHeight = viewport?.height || window.innerHeight;
+    const polaroidLayout = {
+      aspectRatio: config.aspectRatio ?? 3.5 / 4.2,
+    };
+    const paperSize = getPaperSize(viewportWidth, deskConfig, polaroidLayout);
+    const polaroidWidth = config.width ?? paperSize.width * 0.55;
+    const polaroidHeight = config.height ?? polaroidWidth / polaroidLayout.aspectRatio;
+    const position = {
+      x: cssPixelsToMeters(
+        config.centered
+          ? viewportWidth / 2
+          : randomInRange(polaroidWidth * 0.5, viewportWidth - polaroidWidth * 0.5)
+      ),
+      y: cssPixelsToMeters(viewportHeight + polaroidHeight / 2 + randomInRange(24, desk.wallGutter)),
+      z: randomInRange(0.055, 0.09),
+    };
+    const rotation = {
+      x: 0,
+      y: 0,
+      z: config.centered ? randomInRange(-4, 4) : randomInRange(-28, 28),
+    };
+    const thickness = config.thickness ?? 0.00035;
+
+    const polaroid = {
+      id: config.id,
+      imageSrc: config.imageSrc,
+      caption: config.caption ?? '',
+      width: polaroidWidth,
+      height: polaroidHeight,
+      ...(config.aspectRatio !== undefined && { aspectRatio: config.aspectRatio }),
+      thickness,
+    };
+    const stackIndex = config.stackIndex ?? 0;
+
+    return world.spawn(
+      Polaroid(polaroid),
+      BoundingBox({ width: polaroidWidth, height: polaroidHeight }),
+      Position(position),
+      Rotation(rotation),
+      Velocity,
+      AngularVelocity,
+      KinematicBody({ mass: 2, ...config.physics, depth: thickness }),
+      StackIndex({ value: stackIndex })
+    );
+  },
+
   throwOntoDesk: (
     entity: Entity,
     config: Partial<{
@@ -286,5 +355,9 @@ export const actions = createActions((world) => ({
 
   destroyPapers: () => {
     world.query(Paper).forEach((entity) => entity.destroy());
+  },
+
+  destroyPolaroids: () => {
+    world.query(Polaroid).forEach((entity) => entity.destroy());
   },
 }));
