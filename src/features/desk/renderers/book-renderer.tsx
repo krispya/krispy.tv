@@ -40,7 +40,6 @@ const BOOK_INITIAL_STYLE = {
   '--book-shadow-size': '0px',
   '--book-shadow-clip': 'none',
   '--book-shadow-lift': 'none',
-  '--book-shadow-blur': '1px',
   '--book-shadow-opacity': '0.4',
 } satisfies BookStyle;
 
@@ -287,29 +286,20 @@ function BookView({ entity }: { entity: Entity }) {
 }
 
 function BookShadow() {
-  // Blur lives on the wrapper so clip-path (on the child) doesn't hard-clip the soft edge.
-  // clip-path is applied after filters within an element, which would erase the blur.
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none absolute top-1/2 left-1/2 will-change-transform"
+      className="pointer-events-none absolute top-1/2 left-1/2 bg-stone-950 will-change-transform"
       style={{
         width: 'var(--book-shadow-size)',
         height: 'var(--book-shadow-size)',
         marginLeft: 'calc(var(--book-shadow-size) / -2)',
         marginTop: 'calc(var(--book-shadow-size) / -2)',
         transform: 'var(--book-shadow-lift)',
-        filter: 'blur(var(--book-shadow-blur))',
+        opacity: 'var(--book-shadow-opacity)',
+        clipPath: 'var(--book-shadow-clip)',
       }}
-    >
-      <div
-        className="size-full bg-stone-950"
-        style={{
-          opacity: 'var(--book-shadow-opacity)',
-          clipPath: 'var(--book-shadow-clip)',
-        }}
-      />
-    </div>
+    />
   );
 }
 

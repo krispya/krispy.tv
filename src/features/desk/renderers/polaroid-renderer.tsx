@@ -31,7 +31,6 @@ const POLAROID_INITIAL_STYLE = {
   '--paper-lift-scale': '1',
   '--shadow-offset-x': '2px',
   '--shadow-offset-y': '3px',
-  '--shadow-blur': '1px',
   '--shadow-scale-x': '1',
   '--shadow-scale-y': '1',
   '--shadow-opacity': '0.2',
@@ -236,7 +235,6 @@ function PolaroidShadow() {
       className="pointer-events-none absolute inset-0 rounded-[3px] bg-stone-950 will-change-transform"
       style={{
         opacity: 'var(--shadow-opacity)',
-        filter: 'blur(var(--shadow-blur))',
         transform:
           'translate(var(--shadow-offset-x), var(--shadow-offset-y)) rotate(var(--paper-rotate-z)) scale(var(--shadow-scale-x), var(--shadow-scale-y))',
       }}

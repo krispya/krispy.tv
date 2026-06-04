@@ -26,7 +26,6 @@ export function syncPolaroidToDOM(world: World) {
       ref.style.setProperty('--paper-rotate-z', `${rotation.z}deg`);
       ref.style.setProperty('--shadow-offset-x', `${shadow.offsetX}px`);
       ref.style.setProperty('--shadow-offset-y', `${shadow.offsetY}px`);
-      ref.style.setProperty('--shadow-blur', `${shadow.blur}px`);
       ref.style.setProperty('--shadow-scale-x', shadow.scaleX.toString());
       ref.style.setProperty('--shadow-scale-y', shadow.scaleY.toString());
       ref.style.setProperty('--shadow-opacity', shadow.opacity.toString());

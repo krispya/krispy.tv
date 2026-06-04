@@ -39,7 +39,6 @@ export function syncBookToDOM(world: World) {
         '--book-shadow-lift',
         `translate(${shadow.offsetX.toFixed(2)}px, ${shadow.offsetY.toFixed(2)}px) scale(${shadow.scaleX.toFixed(3)}, ${shadow.scaleY.toFixed(3)})`
       );
-      ref.style.setProperty('--book-shadow-blur', `${shadow.blur}px`);
       ref.style.setProperty('--book-shadow-opacity', shadow.opacity.toFixed(3));
     });
 }
