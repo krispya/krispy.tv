@@ -5,6 +5,8 @@
 // This is the single place to retune the look. The Tailwind `@theme` block
 // in src/index.css mirrors these values for the view layer.
 
+import { shade } from './features/desk/utils/color';
+
 export const palette = {
   promenade: '#F7F6E1',
   folio: '#FFFDF7',
@@ -15,19 +17,6 @@ export const palette = {
   catnip: '#88B094',
   overTheSky: '#9AD2E4',
 } as const;
-
-/** Shift a hex color's channels. Positive lightens, negative darkens. */
-export function shade(hex: string, amount: number): string {
-  const clean = hex.replace('#', '');
-  if (clean.length !== 6) return hex;
-
-  const channels = [0, 2, 4].map((start) => {
-    const value = Number.parseInt(clean.slice(start, start + 2), 16);
-    return Math.min(255, Math.max(0, value + amount));
-  });
-
-  return `#${channels.map((value) => value.toString(16).padStart(2, '0')).join('')}`;
-}
 
 type ColorTokens = {
   surface: { desk: string; paper: string; articlePaper: string; paperEdge: string };
@@ -46,7 +35,7 @@ export const color: ColorTokens = {
     paperEdge: shade(palette.promenade, -30),
   },
   line: {
-    ink: shade(palette.rootBeer, -45),
+    ink: shade(palette.rootBeer, -25),
     inkSoft: palette.rootBeer,
   },
   accent: {

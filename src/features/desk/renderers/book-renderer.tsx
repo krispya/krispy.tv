@@ -15,10 +15,11 @@ import {
   Selected,
   Velocity,
 } from '../traits/index.js';
-import { color, shade } from '../../../color.js';
+import { color } from '../../../color.js';
 import { cssPixelsToMeters, metersToCssPixels } from '../utils/physics-units.js';
 import { getBookDepthMeters } from '../utils/resting-height.js';
 import { hashSeed, SketchOutline } from './sketch-outline.js';
+import { shade } from '../utils/color.js';
 
 const DRAG_THRESHOLD_PX = 5;
 // Below this depth (px) the spine/page-edge slivers are too thin for a
