@@ -22,14 +22,10 @@ import {
 } from './traits/index.js';
 import { getBookDepthMeters } from './utils/resting-height.js';
 import { cssPixelsToMeters, metersToCssPixels } from './utils/physics-units.js';
-import { getPaperSize } from './utils/paper-size.js';
-import { randomInRange } from './utils/math.js';
+import { clamp, randomInRange } from './utils/math.js';
 
 type DeskConfigOverrides = Partial<{
-  paperViewportScale: number;
-  paperMinWidth: number;
-  paperMaxWidth: number;
-  wallGutterPaperScale: number;
+  wallGutter: number;
   wallGutterMin: number;
   wallGutterMax: number;
 }>;
@@ -41,6 +37,10 @@ type KinematicBodyConfig = Partial<{
   stopSpeed: number;
   mass: number;
 }>;
+
+type ThrowOntoDeskConfig = {
+  centered?: boolean;
+};
 
 export type PaperConfig = {
   id: string;
@@ -84,183 +84,176 @@ export type PolaroidConfig = {
   physics?: KinematicBodyConfig;
 };
 
+function getOffScreenThrowPosition(
+  width: number,
+  height: number,
+  config: ThrowOntoDeskConfig,
+  viewportWidth: number,
+  viewportHeight: number,
+  wallGutter: number
+) {
+  return {
+    x: cssPixelsToMeters(
+      config.centered ? viewportWidth / 2 : randomInRange(width * 0.5, viewportWidth - width * 0.5)
+    ),
+    y: cssPixelsToMeters(viewportHeight + height / 2 + randomInRange(24, wallGutter)),
+    z: randomInRange(0.055, 0.09),
+  };
+}
+
+function getThrowRotation(centered?: boolean) {
+  return {
+    x: 0,
+    y: 0,
+    z: centered ? randomInRange(-4, 4) : randomInRange(-28, 28),
+  };
+}
+
 export const actions = createActions((world) => ({
   spawnDesk: (config: DeskConfigOverrides = {}) => {
-    return world.spawn(Desk, DeskConfig(config));
+    const deskEntity = world.spawn(Desk, DeskConfig(config));
+    const resolved = deskEntity.get(DeskConfig);
+    if (resolved) {
+      deskEntity.set(Desk, {
+        wallGutter: clamp(resolved.wallGutter, resolved.wallGutterMin, resolved.wallGutterMax),
+      });
+    }
+    return deskEntity;
   },
 
   spawnPaper: (config: PaperConfig) => {
     const viewport = world.get(Viewport);
     const desk = world.queryFirst(Desk)?.get(Desk);
-    const deskConfig = world.queryFirst(DeskConfig)?.get(DeskConfig);
     if (!desk) throw new Error('spawnPaper requires a Desk entity. Call spawnDesk() first.');
-    if (!deskConfig)
-      throw new Error('spawnPaper requires a DeskConfig entity. Call spawnDesk() first.');
 
     const viewportWidth = viewport?.width || window.innerWidth;
     const viewportHeight = viewport?.height || window.innerHeight;
-    const paperLayout = {
-      aspectRatio: config.aspectRatio ?? 8.5 / 11,
-    };
-    const paperSize = getPaperSize(viewportWidth, deskConfig, paperLayout);
-    const paperWidth = config.width ?? paperSize.width;
-    const paperHeight = config.height ?? paperWidth / paperLayout.aspectRatio;
-    const position = {
-      x: cssPixelsToMeters(
-        config.centered
-          ? viewportWidth / 2
-          : randomInRange(paperWidth * 0.5, viewportWidth - paperWidth * 0.5)
-      ),
-      y: cssPixelsToMeters(viewportHeight + paperHeight / 2 + randomInRange(24, desk.wallGutter)),
-      z: randomInRange(0.055, 0.09),
-    };
-    const rotation = {
-      x: 0,
-      y: 0,
-      z: config.centered ? randomInRange(-4, 4) : randomInRange(-28, 28),
-    };
-    const paperThickness = config.thickness ?? 0.0001;
 
-    const paper = {
-      id: config.id,
-      ...(config.openable !== undefined && { openable: config.openable }),
-      color:
-        config.color ??
-        (config.openable === false ? color.surface.paper : color.surface.articlePaper),
-      width: paperWidth,
-      height: paperHeight,
-      ...(config.aspectRatio !== undefined && { aspectRatio: config.aspectRatio }),
-      thickness: paperThickness,
-    };
-    const stackIndex = config.stackIndex ?? 0;
-    const paperDepth = paper.thickness;
-
-    return world.spawn(
-      Paper(paper),
-      BoundingBox({ width: paperWidth, height: paperHeight }),
-      Position(position),
-      Rotation(rotation),
+    const entity = world.spawn(
+      Paper({
+        id: config.id,
+        ...(config.openable !== undefined && { openable: config.openable }),
+        color:
+          config.color ??
+          (config.openable === false ? color.surface.paper : color.surface.articlePaper),
+        ...(config.width !== undefined && { width: config.width }),
+        ...(config.height !== undefined && { height: config.height }),
+        ...(config.aspectRatio !== undefined && { aspectRatio: config.aspectRatio }),
+        ...(config.thickness !== undefined && { thickness: config.thickness }),
+      }),
+      Rotation(getThrowRotation(config.centered)),
       Velocity,
       AngularVelocity,
-      KinematicBody({ mass: 1, ...config.physics, depth: paperDepth }),
       IsStackable,
-      StackIndex({ value: stackIndex })
+      StackIndex({ value: config.stackIndex ?? 0 })
     );
+
+    const paper = entity.get(Paper)!;
+    entity.add(BoundingBox({ width: paper.width, height: paper.height }));
+    entity.add(KinematicBody({ mass: 1, ...config.physics, depth: paper.thickness }));
+    entity.add(
+      Position(
+        getOffScreenThrowPosition(
+          paper.width,
+          paper.height,
+          config,
+          viewportWidth,
+          viewportHeight,
+          desk.wallGutter
+        )
+      )
+    );
+
+    return entity;
   },
 
   spawnBook: (config: BookConfig) => {
     const viewport = world.get(Viewport);
     const desk = world.queryFirst(Desk)?.get(Desk);
-    const deskConfig = world.queryFirst(DeskConfig)?.get(DeskConfig);
     if (!desk) throw new Error('spawnBook requires a Desk entity. Call spawnDesk() first.');
-    if (!deskConfig)
-      throw new Error('spawnBook requires a DeskConfig entity. Call spawnDesk() first.');
 
     const viewportWidth = viewport?.width || window.innerWidth;
     const viewportHeight = viewport?.height || window.innerHeight;
-    const bookLayout = {
-      aspectRatio: config.aspectRatio ?? 2 / 3,
-    };
-    const paperSize = getPaperSize(viewportWidth, deskConfig, bookLayout);
-    const bookWidth = config.width ?? paperSize.width * 0.72;
-    const bookHeight = config.height ?? bookWidth / bookLayout.aspectRatio;
-    const position = {
-      x: cssPixelsToMeters(
-        config.centered
-          ? viewportWidth / 2
-          : randomInRange(bookWidth * 0.5, viewportWidth - bookWidth * 0.5)
-      ),
-      y: cssPixelsToMeters(viewportHeight + bookHeight / 2 + randomInRange(24, desk.wallGutter)),
-      z: randomInRange(0.055, 0.09),
-    };
-    const rotation = {
-      x: 0,
-      y: 0,
-      z: config.centered ? randomInRange(-4, 4) : randomInRange(-28, 28),
-    };
-    const pageCount = config.pageCount ?? 200;
-    const pageThickness = config.pageThickness ?? 0.0001;
-    const coverThickness = config.coverThickness ?? 0.002;
-    const book = {
-      id: config.id,
-      ...(config.title !== undefined && { title: config.title }),
-      ...(config.color !== undefined && { color: config.color }),
-      ...(config.coverImage !== undefined && { coverImage: config.coverImage }),
-      width: bookWidth,
-      height: bookHeight,
-      pageCount,
-      pageThickness,
-      coverThickness,
-    };
-    const stackIndex = config.stackIndex ?? 0;
-    const bookDepth = getBookDepthMeters(book);
 
-    return world.spawn(
-      Book(book),
-      BoundingBox({ width: bookWidth, height: bookHeight }),
-      Position(position),
-      Rotation(rotation),
+    const entity = world.spawn(
+      Book({
+        id: config.id,
+        ...(config.title !== undefined && { title: config.title }),
+        ...(config.color !== undefined && { color: config.color }),
+        ...(config.coverImage !== undefined && { coverImage: config.coverImage }),
+        ...(config.width !== undefined && { width: config.width }),
+        ...(config.height !== undefined && { height: config.height }),
+        ...(config.pageCount !== undefined && { pageCount: config.pageCount }),
+        ...(config.pageThickness !== undefined && { pageThickness: config.pageThickness }),
+        ...(config.coverThickness !== undefined && { coverThickness: config.coverThickness }),
+      }),
+      Rotation(getThrowRotation(config.centered)),
       Velocity,
       AngularVelocity,
-      KinematicBody({ mass: 8, ...config.physics, depth: bookDepth }),
-      StackIndex({ value: stackIndex })
+      StackIndex({ value: config.stackIndex ?? 0 })
     );
+
+    const book = entity.get(Book)!;
+    entity.add(BoundingBox({ width: book.width, height: book.height }));
+    entity.add(
+      Position(
+        getOffScreenThrowPosition(
+          book.width,
+          book.height,
+          config,
+          viewportWidth,
+          viewportHeight,
+          desk.wallGutter
+        )
+      )
+    );
+    entity.add(KinematicBody({ mass: 8, ...config.physics, depth: getBookDepthMeters(book) }));
+
+    return entity;
   },
 
   spawnPolaroid: (config: PolaroidConfig) => {
     const viewport = world.get(Viewport);
     const desk = world.queryFirst(Desk)?.get(Desk);
-    const deskConfig = world.queryFirst(DeskConfig)?.get(DeskConfig);
     if (!desk) throw new Error('spawnPolaroid requires a Desk entity. Call spawnDesk() first.');
-    if (!deskConfig)
-      throw new Error('spawnPolaroid requires a DeskConfig entity. Call spawnDesk() first.');
 
     const viewportWidth = viewport?.width || window.innerWidth;
     const viewportHeight = viewport?.height || window.innerHeight;
-    const polaroidLayout = {
-      aspectRatio: config.aspectRatio ?? 3.5 / 4.2,
-    };
-    const paperSize = getPaperSize(viewportWidth, deskConfig, polaroidLayout);
-    const polaroidWidth = config.width ?? paperSize.width * 0.55;
-    const polaroidHeight = config.height ?? polaroidWidth / polaroidLayout.aspectRatio;
-    const position = {
-      x: cssPixelsToMeters(
-        config.centered
-          ? viewportWidth / 2
-          : randomInRange(polaroidWidth * 0.5, viewportWidth - polaroidWidth * 0.5)
-      ),
-      y: cssPixelsToMeters(viewportHeight + polaroidHeight / 2 + randomInRange(24, desk.wallGutter)),
-      z: randomInRange(0.055, 0.09),
-    };
-    const rotation = {
-      x: 0,
-      y: 0,
-      z: config.centered ? randomInRange(-4, 4) : randomInRange(-28, 28),
-    };
-    const thickness = config.thickness ?? 0.00035;
 
-    const polaroid = {
-      id: config.id,
-      imageSrc: config.imageSrc,
-      caption: config.caption ?? '',
-      width: polaroidWidth,
-      height: polaroidHeight,
-      ...(config.aspectRatio !== undefined && { aspectRatio: config.aspectRatio }),
-      thickness,
-    };
-    const stackIndex = config.stackIndex ?? 0;
-
-    return world.spawn(
-      Polaroid(polaroid),
-      BoundingBox({ width: polaroidWidth, height: polaroidHeight }),
-      Position(position),
-      Rotation(rotation),
+    const entity = world.spawn(
+      Polaroid({
+        id: config.id,
+        imageSrc: config.imageSrc,
+        ...(config.caption !== undefined && { caption: config.caption }),
+        ...(config.width !== undefined && { width: config.width }),
+        ...(config.height !== undefined && { height: config.height }),
+        ...(config.aspectRatio !== undefined && { aspectRatio: config.aspectRatio }),
+        ...(config.thickness !== undefined && { thickness: config.thickness }),
+      }),
+      Rotation(getThrowRotation(config.centered)),
       Velocity,
       AngularVelocity,
-      KinematicBody({ mass: 2, ...config.physics, depth: thickness }),
-      StackIndex({ value: stackIndex }),
+      StackIndex({ value: config.stackIndex ?? 0 }),
       IsStackable
     );
+
+    const polaroid = entity.get(Polaroid)!;
+    entity.add(BoundingBox({ width: polaroid.width, height: polaroid.height }));
+    entity.add(
+      Position(
+        getOffScreenThrowPosition(
+          polaroid.width,
+          polaroid.height,
+          config,
+          viewportWidth,
+          viewportHeight,
+          desk.wallGutter
+        )
+      )
+    );
+    entity.add(KinematicBody({ mass: 2, ...config.physics, depth: polaroid.thickness }));
+
+    return entity;
   },
 
   throwOntoDesk: (

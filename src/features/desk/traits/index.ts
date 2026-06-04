@@ -6,12 +6,8 @@ export const Pointer = trait({ x: 0, y: 0 });
 export const Viewport = trait({ width: 0, height: 0 });
 
 export const DeskConfig = trait({
-  paperViewportScale: 0.5,
-  /** Pixels. */
-  paperMinWidth: 280,
-  /** Pixels. */
-  paperMaxWidth: 380,
-  wallGutterPaperScale: 0.5,
+  /** Pixels. Off-screen throw margin. */
+  wallGutter: 190,
   /** Pixels. */
   wallGutterMin: 48,
   /** Pixels. */

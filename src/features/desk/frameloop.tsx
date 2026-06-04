@@ -20,7 +20,6 @@ import {
   syncPolaroidToDOM,
   updateArticleMotion,
   updateDragging,
-  updateResponsiveDeskLayout,
   updateRotation,
   updateTime,
 } from './systems/index.js';
@@ -34,7 +33,6 @@ export function Frameloop() {
 
   useAnimationFrame(() => {
     updateTime(world);
-    updateResponsiveDeskLayout(world);
     updateDragging(world);
     applyGravity(world);
     applyBreeze(world);
