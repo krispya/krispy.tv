@@ -1,5 +1,6 @@
 import rough from 'roughjs';
 import type { Options } from 'roughjs/bin/core.js';
+import type { CSSProperties } from 'react';
 import { color } from '../../../color.js';
 
 // Draw the sketched rectangle right on the element's edge. The svg uses
@@ -13,7 +14,13 @@ const DEFAULT_OPTIONS = {
   preserveVertices: false,
 } satisfies Options;
 
+const BOIL_VARIANT_COUNT = 3;
+/** Full cycle length; each variant is visible for 1/3 (~8 fps boil). */
+const BOIL_CYCLE_SECONDS = 0.36;
+
 const roughGenerator = rough.generator();
+
+type SketchPath = ReturnType<typeof roughGenerator.toPaths>[number];
 
 /** Stable positive integer seed derived from an arbitrary key. */
 export function hashSeed(value: string): number {
@@ -38,38 +45,63 @@ function getSketchOutlinePaths(width: number, height: number, seed: number, opti
   return roughGenerator.toPaths(drawable);
 }
 
+function getBoilPhaseOffset(seed: number) {
+  // Desync outlines so they do not boil in lockstep.
+  return -((seed % 997) / 997) * BOIL_CYCLE_SECONDS;
+}
+
+function SketchPaths({ paths }: { paths: SketchPath[] }) {
+  return paths.map((path, index) => (
+    <path
+      key={index}
+      d={path.d}
+      stroke={path.stroke}
+      strokeWidth={path.strokeWidth}
+      fill="none"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  ));
+}
+
 export function SketchOutline({
   width,
   height,
   seed,
   options,
+  animate = true,
+  paused = false,
 }: {
   width: number;
   height: number;
   seed: number;
   options?: Options;
+  /** Cycle rough.js seeds for a line-boil effect (CSS-driven). */
+  animate?: boolean;
+  /** Freeze the boil on the current frame (e.g. while dragging). */
+  paused?: boolean;
 }) {
-  const paths = getSketchOutlinePaths(width, height, seed, options);
+  const phaseOffset = getBoilPhaseOffset(seed);
+  const variants = animate
+    ? Array.from({ length: BOIL_VARIANT_COUNT }, (_, index) =>
+        getSketchOutlinePaths(width, height, seed + index, options)
+      )
+    : [getSketchOutlinePaths(width, height, seed, options)];
 
   return (
     <svg
       aria-hidden="true"
-      className="pointer-events-none absolute inset-0 overflow-visible"
+      className={`sketch-boil pointer-events-none absolute inset-0 overflow-visible${animate ? '' : 'sketch-boil--static'}${paused ? 'sketch-boil--paused' : ''}`}
       width={width}
       height={height}
       viewBox={`0 0 ${width} ${height}`}
       fill="none"
+      style={{ '--boil-phase': `${phaseOffset}s` } as CSSProperties}
     >
-      {paths.map((path, index) => (
-        <path
-          key={index}
-          d={path.d}
-          stroke={path.stroke}
-          strokeWidth={path.strokeWidth}
-          fill="none"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
+      {variants.map((paths, frameIndex) => (
+        <g key={frameIndex} className={`sketch-boil-frame sketch-boil-frame--${frameIndex}`}>
+          <SketchPaths paths={paths} />
+        </g>
       ))}
     </svg>
   );

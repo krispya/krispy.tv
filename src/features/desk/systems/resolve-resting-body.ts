@@ -8,10 +8,8 @@ import {
   Rotation,
   Velocity,
 } from '../traits/index.js';
-import { metersToCssPixels } from '../utils/physics-units.js';
-import { getRestingHeight } from '../utils/resting-height.js';
 
-const CONTACT_EPSILON = 0.5;
+const CONTACT_EPSILON_M = 0.001;
 const ROTATION_REST_EPSILON = 0.01;
 const ANGULAR_REST_SPEED = 0.001;
 
@@ -27,17 +25,15 @@ export function resolveRestingBody(world: World) {
       Not(IsResting)
     )
     .updateEach(([position, rotation, velocity, angularVelocity, body], entity) => {
-      const supportZ = getRestingHeight(entity);
+      if (position.z > CONTACT_EPSILON_M) return;
 
-      if (position.z > supportZ + CONTACT_EPSILON) return;
-
-      position.z = supportZ;
+      position.z = 0;
       if (velocity.z < 0) velocity.z = 0;
       angularVelocity.x = 0;
       angularVelocity.y = 0;
       angularVelocity.z = 0;
 
-      const stopSpeed = metersToCssPixels(body.stopSpeed);
+      const stopSpeed = body.stopSpeed;
       const isStill = Math.hypot(velocity.x, velocity.y) <= stopSpeed && velocity.z <= 0;
       const isFlat =
         Math.abs(rotation.x) <= ROTATION_REST_EPSILON &&

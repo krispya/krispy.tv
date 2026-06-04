@@ -8,6 +8,7 @@ import {
   Viewport,
 } from '../traits/index.js';
 import { getViewportRange } from '../utils/math.js';
+import { cssPixelsToMeters } from '../utils/physics-units.js';
 
 export function activateWallBarrier(world: World) {
   const viewport = world.get(Viewport);
@@ -17,10 +18,14 @@ export function activateWallBarrier(world: World) {
   world
     .query(IsEnteringDesk, Position, BoundingBox, KinematicBody)
     .updateEach(([position, box], entity) => {
-      const height = box.height;
+      const height = cssPixelsToMeters(box.height);
       if (height <= 0) return;
 
-      const rangeY = getViewportRange(height, viewport.height, desk.wallGutter);
+      const rangeY = getViewportRange(
+        height,
+        cssPixelsToMeters(viewport.height),
+        cssPixelsToMeters(desk.wallGutter)
+      );
       if (position.y <= rangeY.max) entity.remove(IsEnteringDesk);
     });
 }

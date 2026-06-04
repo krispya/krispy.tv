@@ -1,13 +1,12 @@
 import type { Entity, World } from 'koota';
 import {
   ActiveSlug,
+  ArticleMotion,
   ArticleOf,
   IsOffScreen,
   IsOpen,
   IsPreloading,
   Paper,
-  Position,
-  Velocity,
 } from '../traits/index.js';
 
 export function syncArticle(world: World) {
@@ -31,7 +30,7 @@ export function syncArticle(world: World) {
 
   // Check if an article entity already exists for this slug
   let hasArticle = false;
-  world.query(ArticleOf('*'), Position).readEach((_, entity) => {
+  world.query(ArticleOf('*'), ArticleMotion).readEach((_, entity) => {
     const paper = entity.targetFor(ArticleOf);
     if (paper?.get(Paper)?.id === slug) hasArticle = true;
   });
@@ -45,10 +44,5 @@ export function syncArticle(world: World) {
   if (!targetPaper) return;
 
   // Spawn article entity with relation to paper
-  world.spawn(
-    Position({ x: 0, y: 1, z: 0 }),
-    Velocity({ x: 0, y: 0, z: 0 }),
-    IsPreloading,
-    ArticleOf(targetPaper)
-  );
+  world.spawn(ArticleMotion({ progress: 1, velocity: 0 }), IsPreloading, ArticleOf(targetPaper));
 }

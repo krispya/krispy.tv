@@ -1,5 +1,6 @@
 import { createWorld } from 'koota';
 import { WorldProvider } from 'koota/react';
+import { getDeskPerspectiveOrigin, getDeskPerspectiveValue, getDeskTiltTransform } from './camera.js';
 import { Frameloop } from './frameloop.js';
 import { ArticleRenderer } from './renderers/article-renderer.js';
 import { BookRenderer } from './renderers/book-renderer.js';
@@ -16,10 +17,28 @@ export function Desk() {
       <Frameloop />
       <Startup />
 
-      <DeskRenderer />
-      <PaperRenderer />
-      <BookRenderer />
+      <Stage>
+        <DeskRenderer />
+        <PaperRenderer />
+        <BookRenderer />
+      </Stage>
       <ArticleRenderer />
     </WorldProvider>
+  );
+}
+
+function Stage({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      className="fixed inset-0 overflow-hidden"
+      style={{
+        perspective: getDeskPerspectiveValue(),
+        perspectiveOrigin: getDeskPerspectiveOrigin(),
+      }}
+    >
+      <div className="absolute inset-0" style={{ transform: getDeskTiltTransform() }}>
+        {children}
+      </div>
+    </div>
   );
 }

@@ -12,11 +12,12 @@ export type DeskBackgroundBase =
  * Desk background tuning. Foam is a high-contrast texture; `screen` / `lighten`
  * let the dark areas show the base while bright specks add grain. Foam sits on a
  * separate layer so `opacityPercent` only softens the texture, not the base.
+ * `blendMode` is applied with `mix-blend-mode` so the foam composites into the base.
  */
 export const deskBackground: {
   base: DeskBackgroundBase;
   foam: {
-    blendMode: 'screen' | 'lighten' | 'overlay' | 'soft-light' | 'multiply';
+    blendMode: 'screen' | 'lighten' | 'overlay' | 'soft-light' | 'multiply' | 'normal';
     hueRotateDeg: number;
     saturatePercent: number;
     brightnessPercent: number;
@@ -27,12 +28,12 @@ export const deskBackground: {
 } = {
   base: { type: 'color', value: color.surface.desk },
   foam: {
-    blendMode: 'multiply',
+    blendMode: 'screen',
     hueRotateDeg: 0,
     saturatePercent: 100,
     brightnessPercent: 100,
     contrastPercent: 100,
-    opacityPercent: 75,
+    opacityPercent: 100,
   },
 };
 
@@ -75,7 +76,7 @@ export function getDeskFoamLayerStyle(): CSSProperties | null {
 
   return {
     backgroundImage: `url(${getDeskFoamUrl()})`,
-    backgroundBlendMode: foam.blendMode,
+    mixBlendMode: foam.blendMode,
     backgroundSize: 'cover',
     backgroundPosition: 'center',
     backgroundRepeat: 'no-repeat',

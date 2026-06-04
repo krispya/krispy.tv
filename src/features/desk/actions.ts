@@ -1,4 +1,5 @@
 import { createActions, Not, type Entity } from 'koota';
+import { color } from '../../color.js';
 import {
   AngularVelocity,
   Book,
@@ -19,7 +20,7 @@ import {
   Viewport,
 } from './traits/index.js';
 import { getBookDepthMeters } from './utils/resting-height.js';
-import { metersToCssPixels } from './utils/physics-units.js';
+import { cssPixelsToMeters, metersToCssPixels } from './utils/physics-units.js';
 import { getPaperSize } from './utils/paper-size.js';
 import { randomInRange } from './utils/math.js';
 
@@ -91,11 +92,13 @@ export const actions = createActions((world) => ({
     const paperWidth = config.width ?? paperSize.width;
     const paperHeight = config.height ?? paperWidth / paperLayout.aspectRatio;
     const position = {
-      x: config.centered
-        ? viewportWidth / 2
-        : randomInRange(paperWidth * 0.5, viewportWidth - paperWidth * 0.5),
-      y: viewportHeight + paperHeight / 2 + randomInRange(24, desk.wallGutter),
-      z: metersToCssPixels(randomInRange(0.055, 0.09)),
+      x: cssPixelsToMeters(
+        config.centered
+          ? viewportWidth / 2
+          : randomInRange(paperWidth * 0.5, viewportWidth - paperWidth * 0.5)
+      ),
+      y: cssPixelsToMeters(viewportHeight + paperHeight / 2 + randomInRange(24, desk.wallGutter)),
+      z: randomInRange(0.055, 0.09),
     };
     const rotation = {
       x: 0,
@@ -107,14 +110,16 @@ export const actions = createActions((world) => ({
     const paper = {
       id: config.id,
       ...(config.openable !== undefined && { openable: config.openable }),
-      ...(config.color !== undefined && { color: config.color }),
+      color:
+        config.color ??
+        (config.openable === false ? color.surface.paper : color.surface.articlePaper),
       width: paperWidth,
       height: paperHeight,
       ...(config.aspectRatio !== undefined && { aspectRatio: config.aspectRatio }),
       thickness: paperThickness,
     };
     const stackIndex = config.stackIndex ?? 0;
-    const paperDepth = metersToCssPixels(paper.thickness);
+    const paperDepth = paper.thickness;
 
     return world.spawn(
       Paper(paper),
@@ -146,11 +151,13 @@ export const actions = createActions((world) => ({
     const bookWidth = config.width ?? paperSize.width * 0.72;
     const bookHeight = config.height ?? bookWidth / bookLayout.aspectRatio;
     const position = {
-      x: config.centered
-        ? viewportWidth / 2
-        : randomInRange(bookWidth * 0.5, viewportWidth - bookWidth * 0.5),
-      y: viewportHeight + bookHeight / 2 + randomInRange(24, desk.wallGutter),
-      z: metersToCssPixels(randomInRange(0.055, 0.09)),
+      x: cssPixelsToMeters(
+        config.centered
+          ? viewportWidth / 2
+          : randomInRange(bookWidth * 0.5, viewportWidth - bookWidth * 0.5)
+      ),
+      y: cssPixelsToMeters(viewportHeight + bookHeight / 2 + randomInRange(24, desk.wallGutter)),
+      z: randomInRange(0.055, 0.09),
     };
     const rotation = {
       x: 0,
@@ -172,7 +179,7 @@ export const actions = createActions((world) => ({
       coverThickness,
     };
     const stackIndex = config.stackIndex ?? 0;
-    const bookDepth = metersToCssPixels(getBookDepthMeters(book));
+    const bookDepth = getBookDepthMeters(book);
 
     return world.spawn(
       Book(book),
@@ -197,9 +204,9 @@ export const actions = createActions((world) => ({
     const spinDir = Math.random() < 0.5 ? -1 : 1;
 
     entity.set(Velocity, {
-      x: metersToCssPixels(Math.sin(launchAngle) * launchSpeed),
-      y: -metersToCssPixels(Math.cos(launchAngle) * launchSpeed),
-      z: metersToCssPixels(config.centered ? randomInRange(0.14, 0.16) : randomInRange(0.12, 0.22)),
+      x: Math.sin(launchAngle) * launchSpeed,
+      y: -Math.cos(launchAngle) * launchSpeed,
+      z: config.centered ? randomInRange(0.14, 0.16) : randomInRange(0.12, 0.22),
     });
 
     entity.set(AngularVelocity, {
@@ -245,7 +252,10 @@ export const actions = createActions((world) => ({
 
     world.query(Paper, Position, Not(IsOpen), Not(IsOffScreen)).readEach(([_paper, pos], entity) => {
       if (entity === exclude) return;
-      const col = Math.min(Math.max(Math.floor(pos.x / colWidth), 0), NUM_COLS - 1);
+      const col = Math.min(
+        Math.max(Math.floor(metersToCssPixels(pos.x) / colWidth), 0),
+        NUM_COLS - 1
+      );
       coverage[col]++;
     });
 

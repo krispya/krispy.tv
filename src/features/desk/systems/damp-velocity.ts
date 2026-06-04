@@ -1,6 +1,6 @@
 import { Not, type World } from 'koota';
 import { Dragging, IsResting, KinematicBody, Time, Velocity } from '../traits/index.js';
-import { GRAVITY_METERS_PER_SECOND_SQUARED, metersToCssPixels } from '../utils/physics-units.js';
+import { GRAVITY_METERS_PER_SECOND_SQUARED } from '../utils/physics-units.js';
 
 export function dampVelocity(world: World) {
   const time = world.get(Time);
@@ -10,7 +10,7 @@ export function dampVelocity(world: World) {
     .query(Velocity, KinematicBody, Not(Dragging), Not(IsResting))
     .updateEach(([velocity, physics]) => {
       const speed = Math.hypot(velocity.x, velocity.y);
-      const stopSpeed = metersToCssPixels(physics.stopSpeed);
+      const stopSpeed = physics.stopSpeed;
 
       if (speed <= stopSpeed) {
         velocity.x = 0;
@@ -18,7 +18,7 @@ export function dampVelocity(world: World) {
         return;
       }
 
-      const friction = metersToCssPixels(physics.friction * GRAVITY_METERS_PER_SECOND_SQUARED);
+      const friction = physics.friction * GRAVITY_METERS_PER_SECOND_SQUARED;
       const nextSpeed = Math.max(0, speed - friction * time.delta);
       const scale = nextSpeed / speed;
 

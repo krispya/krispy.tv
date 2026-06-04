@@ -15,10 +15,10 @@ import {
   Viewport,
 } from '../traits/index.js';
 import { actions } from '../actions.js';
-import { metersToCssPixels } from '../utils/physics-units.js';
+import { cssPixelsToMeters } from '../utils/physics-units.js';
 import { clamp, randomInRange } from '../utils/math.js';
 
-const EXIT_SPEED = metersToCssPixels(1.2);
+const EXIT_SPEED = 1.3;
 
 export function syncOpenState(world: World) {
   const { throwOntoDesk: throwPaperOntoDesk, getLeastCoveredX, raiseDeskItem } = actions(world);
@@ -51,9 +51,11 @@ export function syncOpenState(world: World) {
 
       // Reposition just below viewport edge, biased toward the least-covered quadrant
       entity.set(Position, {
-        x: clamp(getLeastCoveredX(entity), width * 0.5, viewportWidth - width * 0.5),
-        y: viewportHeight + height / 2 + randomInRange(8, 24),
-        z: metersToCssPixels(randomInRange(0.03, 0.06)),
+        x: cssPixelsToMeters(
+          clamp(getLeastCoveredX(entity), width * 0.5, viewportWidth - width * 0.5)
+        ),
+        y: cssPixelsToMeters(viewportHeight + height / 2 + randomInRange(8, 24)),
+        z: randomInRange(0.03, 0.06),
       });
 
       throwPaperOntoDesk(entity);

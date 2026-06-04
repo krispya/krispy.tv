@@ -42,6 +42,7 @@
 
   /* Brand palette — mirror of src/color.ts (most -> least dominant). */
   --color-promenade: #f7f6e1;
+  --color-folio: #fffdf7;
   --color-igniting: #f5d798;
   --color-meat: #ee7f80;
   --color-hazel: #a36943;
@@ -50,7 +51,8 @@
   --color-over-the-sky: #9ad2e4;
 
   /* Semantic roles — mirror of `color` in src/color.ts. */
-  --color-surface: #f7f6e1; /* promenade */
+  --color-surface: #f7f6e1; /* promenade — blank paper */
+  --color-article-paper: #fffdf7; /* folio */
   --color-desk: #dfddd9; /* neutral desktop surface */
   --color-ink: #522520; /* shade(rootBeer, -45) */
   --color-accent-gold: #f5d798;
@@ -110,6 +112,84 @@
 }
 
 @layer utilities {
+  /* Each slot holds one variant for a third of the cycle, then cuts (no crossfade). */
+  @keyframes sketch-boil-slot-0 {
+    0%,
+    33.333% {
+      visibility: visible;
+    }
+    33.334%,
+    100% {
+      visibility: hidden;
+    }
+  }
+
+  @keyframes sketch-boil-slot-1 {
+    0%,
+    33.333% {
+      visibility: hidden;
+    }
+    33.334%,
+    66.666% {
+      visibility: visible;
+    }
+    66.667%,
+    100% {
+      visibility: hidden;
+    }
+  }
+
+  @keyframes sketch-boil-slot-2 {
+    0%,
+    66.666% {
+      visibility: hidden;
+    }
+    66.667%,
+    100% {
+      visibility: visible;
+    }
+  }
+
+  .sketch-boil-frame {
+    visibility: hidden;
+    animation-duration: 0.36s;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    animation-delay: var(--boil-phase);
+  }
+
+  .sketch-boil-frame--0 {
+    animation-name: sketch-boil-slot-0;
+  }
+
+  .sketch-boil-frame--1 {
+    animation-name: sketch-boil-slot-1;
+  }
+
+  .sketch-boil-frame--2 {
+    animation-name: sketch-boil-slot-2;
+  }
+
+  .sketch-boil--static .sketch-boil-frame {
+    animation: none;
+    visibility: visible;
+  }
+
+  .sketch-boil--paused .sketch-boil-frame {
+    animation-play-state: paused;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sketch-boil-frame {
+      animation: none !important;
+      visibility: hidden;
+    }
+
+    .sketch-boil-frame--0 {
+      visibility: visible;
+    }
+  }
+
   .article-sheet-viewport {
     bottom: calc(0px - env(safe-area-inset-bottom, 0px));
   }

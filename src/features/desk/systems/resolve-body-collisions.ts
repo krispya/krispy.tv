@@ -16,6 +16,7 @@ import {
 import { applyBounceSpin, getBounceSpinBias, invertSpinBias } from '../utils/barrier-bounce.js';
 import { clamp, dot, perpendicular, scale, type Vector2 } from '../utils/math.js';
 import { getOBBCollision, type OrientedBox } from '../utils/obb-collision.js';
+import { cssPixelsToMeters } from '../utils/physics-units.js';
 
 type Body = OrientedBox & {
   entity: Entity;
@@ -33,11 +34,11 @@ type Body = OrientedBox & {
 };
 
 const MIN_MASS = 0.001;
-const RESTING_EPSILON = 0.5;
-const POSITION_SLOP = 0.5;
+const RESTING_EPSILON_M = 0.001;
+const POSITION_SLOP = cssPixelsToMeters(0.5);
 const POSITION_CORRECTION = 0.9;
 const PENETRATION_BIAS_SECONDS = 0.08;
-const MAX_PENETRATION_BIAS_SPEED = 900;
+const MAX_PENETRATION_BIAS_SPEED = cssPixelsToMeters(900);
 
 export function resolveBodyCollisions(world: World) {
   const desk = world.queryFirst(Desk)?.get(Desk);
@@ -66,9 +67,9 @@ export function resolveBodyCollisions(world: World) {
         rotation: { z: rotation.z },
         velocity: { x: velocity.x, y: velocity.y, z: velocity.z },
         angularVelocity: { z: angularVelocity.z },
-        box: { width: box.width, height: box.height },
+        box: { width: cssPixelsToMeters(box.width), height: cssPixelsToMeters(box.height) },
         stackIndex: stackIndex.value,
-        restingHeight: body.depth / 2,
+        restingHeight: 0,
         resting: entity.has(IsResting),
         stackable: entity.has(IsStackable),
         inverseMass: 1 / Math.max(body.mass, MIN_MASS),
@@ -159,7 +160,7 @@ function shouldResolveCollision(a: Body, b: Body) {
 }
 
 function isActive(body: Body) {
-  return body.position.z > body.restingHeight + RESTING_EPSILON;
+  return body.position.z > body.restingHeight + RESTING_EPSILON_M;
 }
 
 function applyCollisionImpulse(

@@ -16,6 +16,7 @@ import {
   reflectVelocityOnBarrier,
 } from '../utils/barrier-bounce.js';
 import { getViewportRange } from '../utils/math.js';
+import { cssPixelsToMeters } from '../utils/physics-units.js';
 
 export function bounceWithinViewport(world: World) {
   const viewport = world.get(Viewport);
@@ -33,12 +34,20 @@ export function bounceWithinViewport(world: World) {
       Not(IsOpen)
     )
     .updateEach(([position, velocity, angularVelocity, box]) => {
-      const width = box.width;
-      const height = box.height;
+      const width = cssPixelsToMeters(box.width);
+      const height = cssPixelsToMeters(box.height);
       if (width <= 0 || height <= 0) return;
 
-      const rangeX = getViewportRange(width, viewport.width, desk.wallGutter);
-      const rangeY = getViewportRange(height, viewport.height, desk.wallGutter);
+      const rangeX = getViewportRange(
+        width,
+        cssPixelsToMeters(viewport.width),
+        cssPixelsToMeters(desk.wallGutter)
+      );
+      const rangeY = getViewportRange(
+        height,
+        cssPixelsToMeters(viewport.height),
+        cssPixelsToMeters(desk.wallGutter)
+      );
 
       if (position.x < rangeX.min) {
         const normal = { x: 1, y: 0 };

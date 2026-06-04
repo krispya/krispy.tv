@@ -10,11 +10,9 @@ import {
   Velocity,
 } from '../traits/index.js';
 import { clamp, dampedLerp } from '../utils/math.js';
-import { getRestingHeight } from '../utils/resting-height.js';
-
 const PICKUP_STRAIGHTNESS = 0.82;
 const STRAIGHTEN_DAMPING = 0.28;
-const LANDING_EPSILON = 0.5;
+const LANDING_EPSILON_M = 0.001;
 const LANDING_FLATTEN_DAMPING = 0.2;
 
 export function updateRotation(world: World) {
@@ -53,8 +51,7 @@ export function updateRotation(world: World) {
         return;
       }
 
-      const supportZ = getRestingHeight(entity);
-      if (position.z <= supportZ + LANDING_EPSILON) {
+      if (position.z <= LANDING_EPSILON_M) {
         rotation.x = dampedLerp(rotation.x, 0, LANDING_FLATTEN_DAMPING, time.delta);
         rotation.y = dampedLerp(rotation.y, 0, LANDING_FLATTEN_DAMPING, time.delta);
       }

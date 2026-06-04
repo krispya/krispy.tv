@@ -7,6 +7,7 @@
 
 export const palette = {
   promenade: '#F7F6E1',
+  folio: '#FFFDF7',
   igniting: '#F5D798',
   meat: '#EE7F80',
   hazel: '#A36943',
@@ -29,7 +30,7 @@ export function shade(hex: string, amount: number): string {
 }
 
 type ColorTokens = {
-  surface: { desk: string; paper: string; paperEdge: string };
+  surface: { desk: string; paper: string; articlePaper: string; paperEdge: string };
   line: { ink: string; inkSoft: string };
   accent: { gold: string; coral: string; sage: string; sky: string; wood: string };
 };
@@ -41,6 +42,7 @@ export const color: ColorTokens = {
     // that lets the warm paper + accents read like the illustrated reference.
     desk: '#DFDDD9',
     paper: palette.promenade,
+    articlePaper: palette.folio,
     paperEdge: shade(palette.promenade, -30),
   },
   line: {

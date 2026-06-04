@@ -17,6 +17,7 @@ import {
   Selected,
   Velocity,
 } from '../traits/index.js';
+import { cssPixelsToMeters } from '../utils/physics-units.js';
 import { hashSeed, SketchOutline } from './sketch-outline.js';
 
 const DRAG_THRESHOLD_PX = 5;
@@ -27,6 +28,7 @@ const PAPER_INITIAL_STYLE = {
   '--paper-rotate-x': '0deg',
   '--paper-rotate-y': '0deg',
   '--paper-rotate-z': '0deg',
+  '--paper-lift-scale': '1',
   '--shadow-offset-x': '2px',
   '--shadow-offset-y': '3px',
   '--shadow-blur': '1px',
@@ -87,12 +89,10 @@ function PaperView({ entity }: { entity: Entity }) {
     (event: React.PointerEvent<HTMLDivElement>) => {
       if (event.pointerType === 'mouse' && event.button !== 0) return;
 
-      const rect = event.currentTarget.getBoundingClientRect();
-      const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height / 2;
+      const position = entity.get(Position) ?? { x: 0, y: 0, z: 0 };
       const offset = {
-        x: event.clientX - centerX,
-        y: event.clientY - centerY,
+        x: cssPixelsToMeters(event.clientX) - position.x,
+        y: cssPixelsToMeters(event.clientY) - position.y,
       };
       const rotation = entity.get(Rotation) ?? { x: 0, y: 0, z: 0 };
 
@@ -129,11 +129,9 @@ function PaperView({ entity }: { entity: Entity }) {
 
       if (distance < DRAG_THRESHOLD_PX) return;
 
-      const rect = event.currentTarget.getBoundingClientRect();
-      const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height / 2;
+      const position = entity.get(Position) ?? { x: 0, y: 0, z: 0 };
 
-      entity.set(Position, { x: centerX, y: centerY, z: 0 });
+      entity.set(Position, { x: position.x, y: position.y, z: 0 });
       entity.set(Velocity, { x: 0, y: 0, z: 0 });
       entity.set(AngularVelocity, { x: 0, y: 0, z: 0 });
       entity.remove(Pressed, IsResting);
@@ -197,7 +195,7 @@ function PaperView({ entity }: { entity: Entity }) {
   return (
     <div
       ref={handleInit}
-      className="fixed top-0 left-0 isolate will-change-transform"
+      className="absolute top-0 left-0 isolate will-change-transform [transform-style:preserve-3d]"
       style={{
         ...PAPER_INITIAL_STYLE,
         width: paper.width,
@@ -209,24 +207,25 @@ function PaperView({ entity }: { entity: Entity }) {
       {isDebug && <BoundingBoxDebug entity={entity} />}
       <PaperShadow />
       <div
-        className="absolute inset-0 will-change-transform"
+        role={isOpenable ? 'button' : undefined}
+        tabIndex={isOpenable ? 0 : undefined}
+        aria-label={isOpenable ? 'Open article' : 'Blank sheet'}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerCancel}
+        onLostPointerCapture={handleLostPointerCapture}
+        onDragStart={(event) => event.preventDefault()}
+        className={`absolute inset-0 cursor-grab touch-none rounded-[3px] select-none [-webkit-user-drag:none] ${
+          isDragging ? 'cursor-grabbing' : ''
+        } ${isSelected || isDragging ? 'outline-3 outline-offset-2 outline-blue-500' : ''}`}
         style={{
           transform:
-            'perspective(1200px) translateZ(var(--paper-z)) rotateX(var(--paper-rotate-x)) rotateY(var(--paper-rotate-y)) rotateZ(var(--paper-rotate-z))',
+            'translateZ(var(--paper-z)) rotateX(var(--paper-rotate-x)) rotateY(var(--paper-rotate-y)) rotateZ(var(--paper-rotate-z)) scale(var(--paper-lift-scale))',
         }}
       >
         <div
-          role={isOpenable ? 'button' : undefined}
-          tabIndex={isOpenable ? 0 : undefined}
-          aria-label={isOpenable ? 'Open article' : 'Blank sheet'}
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          onPointerCancel={handlePointerCancel}
-          onLostPointerCapture={handleLostPointerCapture}
-          className={`absolute inset-0 flex cursor-grab touch-none flex-col overflow-hidden rounded-[3px] p-6 text-left text-gray-950 select-none ${
-            isDragging ? 'cursor-grabbing' : ''
-          } ${isSelected || isDragging ? 'outline-3 outline-offset-2 outline-blue-500' : ''}`}
+          className="pointer-events-none absolute inset-0 overflow-hidden rounded-[3px] p-6 text-left text-gray-950"
           style={{
             backgroundColor: paper.color,
             ...(paper.openable && {
@@ -237,7 +236,7 @@ function PaperView({ entity }: { entity: Entity }) {
               backgroundRepeat: 'no-repeat, no-repeat',
             }),
           }}
-        ></div>
+        />
         <SketchOutline width={paper.width} height={paper.height} seed={hashSeed(paper.id)} />
       </div>
     </div>

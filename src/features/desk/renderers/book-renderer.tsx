@@ -16,7 +16,7 @@ import {
   Velocity,
 } from '../traits/index.js';
 import { color, shade } from '../../../color.js';
-import { metersToCssPixels } from '../utils/physics-units.js';
+import { cssPixelsToMeters, metersToCssPixels } from '../utils/physics-units.js';
 import { getBookDepthMeters } from '../utils/resting-height.js';
 import { hashSeed, SketchOutline } from './sketch-outline.js';
 
@@ -35,6 +35,7 @@ const BOOK_INITIAL_STYLE = {
   '--book-rotate-x': '0deg',
   '--book-rotate-y': '0deg',
   '--book-rotate-z': '0deg',
+  '--book-lift-scale': '1',
   '--book-shadow-size': '0px',
   '--book-shadow-clip': 'none',
   '--book-shadow-lift': 'none',
@@ -73,12 +74,10 @@ function BookView({ entity }: { entity: Entity }) {
   function handlePointerDown(event: PointerEvent<HTMLDivElement>) {
     if (event.pointerType === 'mouse' && event.button !== 0) return;
 
-    const rect = event.currentTarget.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
+    const position = entity.get(Position) ?? { x: 0, y: 0, z: 0 };
     const offset = {
-      x: event.clientX - centerX,
-      y: event.clientY - centerY,
+      x: cssPixelsToMeters(event.clientX) - position.x,
+      y: cssPixelsToMeters(event.clientY) - position.y,
     };
     const rotation = entity.get(Rotation) ?? { x: 0, y: 0, z: 0 };
 
@@ -112,11 +111,9 @@ function BookView({ entity }: { entity: Entity }) {
 
     if (distance < DRAG_THRESHOLD_PX) return;
 
-    const rect = event.currentTarget.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
+    const position = entity.get(Position) ?? { x: 0, y: 0, z: 0 };
 
-    entity.set(Position, { x: centerX, y: centerY, z: 0 });
+    entity.set(Position, { x: position.x, y: position.y, z: 0 });
     entity.set(Velocity, { x: 0, y: 0, z: 0 });
     entity.set(AngularVelocity, { x: 0, y: 0, z: 0 });
     entity.remove(Pressed, IsResting);
@@ -179,7 +176,7 @@ function BookView({ entity }: { entity: Entity }) {
   return (
     <div
       ref={handleInit}
-      className="fixed top-0 left-0 isolate will-change-transform"
+      className="absolute top-0 left-0 isolate will-change-transform [transform-style:preserve-3d]"
       style={{
         ...BOOK_INITIAL_STYLE,
         width: book.width,
@@ -198,14 +195,14 @@ function BookView({ entity }: { entity: Entity }) {
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerCancel}
         onLostPointerCapture={handleLostPointerCapture}
-        className={`absolute inset-0 cursor-grab touch-none select-none [perspective:1200px] ${
+        className={`absolute inset-0 cursor-grab touch-none select-none ${
           isDragging ? 'cursor-grabbing' : ''
         }`}
       >
         <div
           className="absolute inset-0 will-change-transform [transform-style:preserve-3d]"
           style={{
-            transform: `translateZ(var(--book-z)) rotateX(calc(var(--book-rotate-x) + ${BASE_BOOK_ROTATE_X}deg)) rotateY(calc(var(--book-rotate-y) - ${BASE_BOOK_ROTATE_Y}deg)) rotateZ(var(--book-rotate-z))`,
+            transform: `translateZ(var(--book-z)) rotateX(calc(var(--book-rotate-x) + ${BASE_BOOK_ROTATE_X}deg)) rotateY(calc(var(--book-rotate-y) - ${BASE_BOOK_ROTATE_Y}deg)) rotateZ(var(--book-rotate-z)) scale(var(--book-lift-scale))`,
           }}
         >
           <BookFace

@@ -3,7 +3,7 @@ import { useHas, useQuery, useTarget, useTrait, useTraitEffect } from 'koota/rea
 import { lazy, Suspense, useRef, type ReactNode, type Ref } from 'react';
 import { Link, useLocation } from 'wouter';
 import { routes } from '../../../routes.js';
-import { ArticleOf, IsPreloading, Paper, Position } from '../traits/index.js';
+import { ArticleMotion, ArticleOf, IsPreloading, Paper } from '../traits/index.js';
 import { useDismissibleSheet } from '../utils/use-dismissible-sheet.js';
 
 const Article = lazy(() =>
@@ -23,13 +23,13 @@ function ArticleView({ entity }: { entity: Entity }) {
   const onDismiss = () => navigate(routes.home.href());
   const { sheetRef, handleRef, scrollRef } = useDismissibleSheet({ onDismiss, wheelDismiss: false });
 
-  useTraitEffect(entity, Position, (pos) => {
-    if (!pos) return;
+  useTraitEffect(entity, ArticleMotion, (motion) => {
+    if (!motion) return;
     if (backdropRef.current) {
-      backdropRef.current.style.opacity = String(1 - pos.y);
+      backdropRef.current.style.opacity = String(1 - motion.progress);
     }
     if (articleRef.current) {
-      articleRef.current.style.transform = `translateY(${pos.y * 100}%)`;
+      articleRef.current.style.transform = `translateY(${motion.progress * 100}%)`;
     }
   });
 
@@ -63,7 +63,7 @@ function ArticleView({ entity }: { entity: Entity }) {
       >
         <div
           ref={sheetRef}
-          className="article-sheet bg-surface pointer-events-auto relative mt-4 flex w-full flex-col rounded-t-lg border-stone-200 sm:mt-6 sm:mr-6 sm:ml-6 sm:border sm:border-b-0"
+          className="article-sheet bg-article-paper pointer-events-auto relative mt-4 flex w-full flex-col rounded-t-lg border-stone-200 sm:mt-6 sm:mr-6 sm:ml-6 sm:border sm:border-b-0"
         >
           <CloseButton />
           <DragHandle ref={handleRef} />

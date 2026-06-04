@@ -64,19 +64,31 @@ export const KinematicBody = trait({
   friction: 0.2,
   /** Meters per second. */
   stopSpeed: 0.01,
-  /** Pixels. */
+  /** Meters (thickness along Z for mesh and support offset). */
   depth: 0,
   /** Arbitrary mass unit for 2D desk collisions. */
   mass: 1,
 });
 
 export const BoundingBox = trait({ width: 0, height: 0 });
+/** Meters. */
 export const Position = trait({ x: 0, y: 0, z: 0 });
+/** Degrees. */
 export const Rotation = trait({ x: 0, y: 0, z: 0 });
+/** Meters per second. */
 export const Velocity = trait({ x: 0, y: 0, z: 0 });
+/** Meters per second. */
 export const AngularVelocity = trait({ x: 0, y: 0, z: 0 });
 
+export const ArticleMotion = trait({
+  /** Normalized sheet translation where 0 = open and 1 = below viewport. */
+  progress: 0,
+  /** Normalized progress per second. */
+  velocity: 0,
+});
+
 export const Dragging = trait({
+  /** Meters. */
   offset: () => ({ x: 0, y: 0 }),
   rotation: () => ({ x: 0, y: 0, z: 0 }),
   liftProgress: 0,
@@ -84,7 +96,9 @@ export const Dragging = trait({
 
 export const Pressed = trait({
   pointerId: 0,
+  /** CSS pixels. */
   origin: () => ({ x: 0, y: 0 }),
+  /** Meters. */
   offset: () => ({ x: 0, y: 0 }),
   rotation: () => ({ x: 0, y: 0, z: 0 }),
 });

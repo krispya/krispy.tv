@@ -1,5 +1,6 @@
 import type { World } from 'koota';
 import { IsOffScreen, IsOpen, Position, Ref, Viewport } from '../traits/index.js';
+import { metersToCssPixels } from '../utils/physics-units.js';
 
 /**
  * Marks an open paper as off-screen once it has fully exited through the bottom of the viewport.
@@ -16,7 +17,7 @@ export function detectOffScreen(world: World) {
     if (entity.has(IsOffScreen)) return;
 
     const height = ref.offsetHeight;
-    if (position.y - height / 2 > viewport.height) {
+    if (metersToCssPixels(position.y) - height / 2 > viewport.height) {
       entity.add(IsOffScreen);
     }
   });
