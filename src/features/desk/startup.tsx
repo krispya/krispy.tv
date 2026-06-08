@@ -33,7 +33,7 @@ export function Startup() {
       openable: false,
     }));
 
-    const items: { id: string; openable: boolean }[] = [...articles, ...blanks];
+    const items: { id: string; openable: boolean }[] = [...blanks];
 
     items.forEach(({ id, openable }, index) => {
       const centered = index === 0;

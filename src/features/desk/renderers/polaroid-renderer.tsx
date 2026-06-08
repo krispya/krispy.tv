@@ -311,7 +311,7 @@ function PolaroidShadow() {
       style={{
         opacity: 'var(--shadow-opacity)',
         transform:
-          'translate(var(--shadow-offset-x), var(--shadow-offset-y)) rotate(var(--paper-rotate-z)) scale(calc(var(--shadow-scale-x) * var(--shadow-rotation-scale-x)), calc(var(--shadow-scale-y) * var(--shadow-rotation-scale-y)))',
+          'translate(var(--shadow-offset-x), var(--shadow-offset-y)) rotate(var(--paper-rotate-z)) scale(calc(var(--shadow-scale-x) * var(--shadow-rotation-scale-x) * var(--paper-lift-scale)), calc(var(--shadow-scale-y) * var(--shadow-rotation-scale-y) * var(--paper-lift-scale)))',
       }}
     />
   );

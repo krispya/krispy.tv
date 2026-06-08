@@ -65,6 +65,10 @@ function HeadphonesView({ entity }: { entity: Entity }) {
           transform: 'translateZ(var(--headphones-z)) rotateZ(var(--headphones-rotate-z))',
         }}
       >
+        <div
+          className="pointer-events-none absolute"
+          style={getHeadphonesMaskStyle(getHeadphonesFillSrc(), headphones.fillColor)}
+        />
         {HEADPHONES_FILL_TONES.map((tone) => (
           <div
             key={tone.name}
@@ -85,19 +89,11 @@ function HeadphonesShadow() {
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none absolute inset-0 bg-stone-950 will-change-transform"
+      className="pointer-events-none absolute top-[58%] left-[56%] aspect-square w-[72%] rounded-full bg-stone-950 will-change-transform"
       style={{
         opacity: 'var(--shadow-opacity)',
         transform:
-          'translate(var(--shadow-offset-x), var(--shadow-offset-y)) rotate(var(--headphones-rotate-z)) scale(var(--shadow-scale-x), var(--shadow-scale-y))',
-        WebkitMaskImage: `url(${getHeadphonesFillSrc()})`,
-        maskImage: `url(${getHeadphonesFillSrc()})`,
-        WebkitMaskSize: '100% 100%',
-        maskSize: '100% 100%',
-        WebkitMaskPosition: 'center',
-        maskPosition: 'center',
-        WebkitMaskRepeat: 'no-repeat',
-        maskRepeat: 'no-repeat',
+          'translate(-50%, -50%) translate(var(--shadow-offset-x), var(--shadow-offset-y)) scale(var(--shadow-scale-x), var(--shadow-scale-y))',
       }}
     />
   );

@@ -18,6 +18,7 @@ import { metersToCssPixels } from '../utils/physics-units.js';
 const DRAGGING_STACK_BOOST = 1000;
 const FOCUSED_STACK_BOOST = 2000;
 const FOCUSED_SCALE = 1.34;
+const FOCUSED_SHADOW_OPACITY_MULTIPLIER = 0;
 const MIN_ROTATED_SHADOW_SCALE_X = 0.18;
 const MIN_ROTATED_SHADOW_SCALE_Y = 0.35;
 
@@ -36,6 +37,11 @@ export function syncPolaroidToDOM(world: World) {
       const shadow = toShadowStyle(heightM);
       const rotatedShadow = getRotatedShadowScale(rotation);
       const liftScale = lerp(toMeshLiftScale(heightM), FOCUSED_SCALE, focusProgress);
+      const shadowOpacity = lerp(
+        shadow.opacity,
+        shadow.opacity * FOCUSED_SHADOW_OPACITY_MULTIPLIER,
+        focusProgress
+      );
 
       ref.style.transform = `translate(${metersToCssPixels(position.x)}px, ${metersToCssPixels(
         position.y
@@ -52,7 +58,7 @@ export function syncPolaroidToDOM(world: World) {
       ref.style.setProperty('--shadow-scale-y', shadow.scaleY.toString());
       ref.style.setProperty('--shadow-rotation-scale-x', rotatedShadow.x.toString());
       ref.style.setProperty('--shadow-rotation-scale-y', rotatedShadow.y.toString());
-      ref.style.setProperty('--shadow-opacity', shadow.opacity.toString());
+      ref.style.setProperty('--shadow-opacity', shadowOpacity.toString());
     });
 }
 
