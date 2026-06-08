@@ -33,23 +33,36 @@ export function Frameloop() {
   const slug = isArticle ? (params?.slug ?? '') : '';
 
   useAnimationFrame(() => {
+    // Time
     updateTime(world);
+
+    // Input
     updateDragging(world);
+
+    // Simulation
     applyGravity(world);
     applyBreeze(world);
     applyVelocity(world);
     applyAngularVelocity(world);
+
+    // Physics
     resolveBodyCollisions(world);
     resolveRestingBody(world);
     restackDeskPlaneItems(world);
     activateWallBarrier(world);
     bounceWithinViewport(world);
+
+    // Post-simulation
     dampVelocity(world);
     updateRotation(world);
+
+    // App state
     syncOpenState(world);
     detectOffScreen(world);
     syncArticle(world);
     updateArticleMotion(world);
+
+    // View
     syncPaperToDOM(world);
     syncPolaroidToDOM(world);
     syncBookToDOM(world);
