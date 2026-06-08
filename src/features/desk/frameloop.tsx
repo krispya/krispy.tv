@@ -13,6 +13,7 @@ import {
   detectOffScreen,
   resolveBodyCollisions,
   resolveRestingBody,
+  restackDeskPlaneItems,
   syncArticle,
   syncBookToDOM,
   syncOpenState,
@@ -38,8 +39,9 @@ export function Frameloop() {
     applyBreeze(world);
     applyVelocity(world);
     applyAngularVelocity(world);
-    resolveRestingBody(world);
     resolveBodyCollisions(world);
+    resolveRestingBody(world);
+    restackDeskPlaneItems(world);
     activateWallBarrier(world);
     bounceWithinViewport(world);
     dampVelocity(world);

@@ -28,6 +28,7 @@ type DeskConfigOverrides = Partial<{
   wallGutter: number;
   wallGutterMin: number;
   wallGutterMax: number;
+  restackThreshold: number;
 }>;
 
 type KinematicBodyConfig = Partial<{
@@ -116,6 +117,7 @@ export const actions = createActions((world) => ({
     if (resolved) {
       deskEntity.set(Desk, {
         wallGutter: clamp(resolved.wallGutter, resolved.wallGutterMin, resolved.wallGutterMax),
+        restackThreshold: Math.max(0, resolved.restackThreshold),
       });
     }
     return deskEntity;

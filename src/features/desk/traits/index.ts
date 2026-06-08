@@ -12,11 +12,15 @@ export const DeskConfig = trait({
   wallGutterMin: 48,
   /** Pixels. */
   wallGutterMax: 200,
+  /** Meters above the desk plane where descending items join the resting stack layer. */
+  restackThreshold: 0.01,
 });
 
 export const Desk = trait({
   /** Pixels. */
   wallGutter: 200,
+  /** Meters. */
+  restackThreshold: 0.02,
   wallBounce: 0.85,
   wallFriction: 0.68,
   lastThrowCol: -1,

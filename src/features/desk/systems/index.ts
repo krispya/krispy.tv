@@ -8,6 +8,7 @@ export { dampVelocity } from './damp-velocity.js';
 export { detectOffScreen } from './detect-off-screen.js';
 export { resolveBodyCollisions } from './resolve-body-collisions.js';
 export { resolveRestingBody } from './resolve-resting-body.js';
+export { restackDeskPlaneItems } from './restack-desk-plane-items.js';
 export { syncArticle } from './sync-article.js';
 export { syncBookToDOM } from './sync-book-to-dom.js';
 export { syncOpenState } from './sync-open-state.js';
