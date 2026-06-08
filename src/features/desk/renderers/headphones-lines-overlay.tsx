@@ -2,9 +2,9 @@ import type { CSSProperties } from 'react';
 import {
   getHeadphonesBoilPhaseOffset,
   getHeadphonesBoilStartFrame,
+  getHeadphonesLineMaskStyle,
   getHeadphonesLineSrc,
   getHeadphonesLineVariant,
-  getHeadphonesMaskStyle,
   HEADPHONES_LINE_COUNT,
 } from '../presentation/headphones-lines.js';
 
@@ -32,7 +32,7 @@ export function HeadphonesLinesOverlay({
           <div
             key={frameIndex}
             className={`paper-lines-boil-frame paper-lines-boil-frame--${frameIndex} absolute`}
-            style={getHeadphonesMaskStyle(src, lineColor, 0.92)}
+            style={getHeadphonesLineMaskStyle(src, lineColor, 0.92)}
           />
         );
       })}

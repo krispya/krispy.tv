@@ -20,7 +20,7 @@ export function Startup() {
 
   useEffect(() => {
     const desk = spawnDesk();
-    const headphones = spawnHeadphones({ width: 440, rotation: -34 });
+    const headphones = spawnHeadphones({ width: 500, rotation: -34 });
 
     const articles = articlesCatalog.map((article) => ({
       id: article.slug,

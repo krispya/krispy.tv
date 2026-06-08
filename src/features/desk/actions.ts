@@ -287,7 +287,8 @@ export const actions = createActions((world) => ({
     const visibleRect = getVisibleDeskRectForWorld(world);
     const headphonesSize = getHeadphonesSize(config);
     const lineColor =
-      config.lineColor ?? (config.fillColor !== undefined ? shade(config.fillColor, -92) : undefined);
+      config.lineColor ??
+      (config.fillColor !== undefined ? shade(config.fillColor, -132) : undefined);
 
     const entity = world.spawn(
       Headphones({

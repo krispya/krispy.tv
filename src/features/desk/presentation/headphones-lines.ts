@@ -4,6 +4,12 @@ import { shade } from '../utils/color.js';
 export const HEADPHONES_LINE_COUNT = 3;
 export const HEADPHONES_BOIL_CYCLE_SECONDS = 0.36;
 
+const HEADPHONES_FILL_IMAGE_WIDTH = 1646;
+const HEADPHONES_FILL_IMAGE_HEIGHT = 731;
+const HEADPHONES_LINE_IMAGE_WIDTH = 1700;
+const HEADPHONES_LINE_IMAGE_HEIGHT = 760;
+const HEADPHONES_LINE_OFFSET_X = 10;
+const HEADPHONES_LINE_OFFSET_Y = 0;
 const HEADPHONES_ASSET_PATH = 'lines/headphones';
 const HEADPHONES_ASSET_NAME = 'heaphones';
 
@@ -67,6 +73,23 @@ export function getHeadphonesMaskStyle(
     maskPosition: 'center',
     WebkitMaskRepeat: 'no-repeat',
     maskRepeat: 'no-repeat',
+  };
+}
+
+export function getHeadphonesLineMaskStyle(
+  src: string,
+  backgroundColor: string,
+  opacity = 1
+): CSSProperties {
+  return {
+    ...getHeadphonesMaskStyle(src, backgroundColor, opacity),
+    inset: undefined,
+    left: '50%',
+    top: '50%',
+    width: `${(HEADPHONES_LINE_IMAGE_WIDTH / HEADPHONES_FILL_IMAGE_WIDTH) * 100}%`,
+    height: `${(HEADPHONES_LINE_IMAGE_HEIGHT / HEADPHONES_FILL_IMAGE_HEIGHT) * 100}%`,
+    transform: `translate(calc(-50% + ${HEADPHONES_LINE_OFFSET_X}px), calc(-50% + ${HEADPHONES_LINE_OFFSET_Y}px))`,
+    transformOrigin: 'center center',
   };
 }
 

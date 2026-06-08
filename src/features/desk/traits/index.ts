@@ -63,7 +63,7 @@ export const HEADPHONES_ASPECT_RATIO = 1646 / 731;
 export const Headphones = trait({
   id: 'desk-headphones',
   fillColor: color.accent.sky,
-  lineColor: shade(color.accent.sky, -92),
+  lineColor: shade(color.accent.sky, -132),
   /** Pixels. */
   width: 560,
   /** Pixels. */
