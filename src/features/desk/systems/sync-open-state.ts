@@ -2,6 +2,7 @@ import type { World } from 'koota';
 import {
   ActiveSlug,
   AngularVelocity,
+  Camera,
   Dragging,
   IsControlled,
   IsOffScreen,
@@ -18,6 +19,7 @@ import {
 import { actions } from '../actions.js';
 import { cssPixelsToMeters } from '../utils/physics-units.js';
 import { clamp, randomInRange } from '../utils/math.js';
+import { getVisibleDeskRect } from '../utils/camera.js';
 
 const EXIT_SPEED = 1.3;
 
@@ -28,6 +30,8 @@ export function syncOpenState(world: World) {
 
   const { slug } = route;
   const viewport = world.get(Viewport);
+  const camera = world.get(Camera);
+  const visibleRect = getVisibleDeskRect(viewport, camera);
 
   world.query(Paper).readEach(([paper], entity) => {
     if (slug && paper.id === slug) {
@@ -44,8 +48,6 @@ export function syncOpenState(world: World) {
 
       raiseDeskItem(entity);
 
-      const viewportWidth = viewport?.width || window.innerWidth;
-      const viewportHeight = viewport?.height || window.innerHeight;
       const ref = entity.get(Ref);
       const width = ref?.offsetWidth ?? paper.width;
       const height = ref?.offsetHeight ?? paper.height;
@@ -53,9 +55,13 @@ export function syncOpenState(world: World) {
       // Reposition just below viewport edge, biased toward the least-covered quadrant
       entity.set(Position, {
         x: cssPixelsToMeters(
-          clamp(getLeastCoveredX(entity), width * 0.5, viewportWidth - width * 0.5)
+          clamp(
+            getLeastCoveredX(entity),
+            visibleRect.x + width * 0.5,
+            visibleRect.right - width * 0.5
+          )
         ),
-        y: cssPixelsToMeters(viewportHeight + height / 2 + randomInRange(8, 24)),
+        y: cssPixelsToMeters(visibleRect.bottom + height / 2 + randomInRange(8, 24)),
         z: randomInRange(0.03, 0.06),
       });
 

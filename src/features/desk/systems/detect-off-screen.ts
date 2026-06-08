@@ -1,5 +1,6 @@
 import type { World } from 'koota';
-import { IsOffScreen, IsOpen, Position, Ref, Viewport } from '../traits/index.js';
+import { Camera, IsOffScreen, IsOpen, Position, Ref, Viewport } from '../traits/index.js';
+import { getVisibleDeskRect } from '../utils/camera.js';
 import { metersToCssPixels } from '../utils/physics-units.js';
 
 /**
@@ -11,13 +12,15 @@ import { metersToCssPixels } from '../utils/physics-units.js';
  */
 export function detectOffScreen(world: World) {
   const viewport = world.get(Viewport);
-  if (!viewport || viewport.height <= 0) return;
+  const camera = world.get(Camera);
+  const visibleRect = getVisibleDeskRect(viewport, camera);
+  if (visibleRect.height <= 0) return;
 
   world.query(IsOpen, Position, Ref).readEach(([position, ref], entity) => {
     if (entity.has(IsOffScreen)) return;
 
     const height = ref.offsetHeight;
-    if (metersToCssPixels(position.y) - height / 2 > viewport.height) {
+    if (metersToCssPixels(position.y) - height / 2 > visibleRect.bottom) {
       entity.add(IsOffScreen);
     }
   });

@@ -4,6 +4,7 @@ import {
   AngularVelocity,
   Book,
   BoundingBox,
+  Camera,
   Desk,
   DeskConfig,
   Dragging,
@@ -29,6 +30,7 @@ import {
 import { getBookDepthMeters } from './utils/resting-height.js';
 import { cssPixelsToMeters, metersToCssPixels } from './utils/physics-units.js';
 import { clamp, randomInRange } from './utils/math.js';
+import { getVisibleDeskRect, type VisibleDeskRect } from './utils/camera.js';
 
 const POLAROID_FOCUS_Z_M = 0.26;
 const POLAROID_FOCUS_CURVE_M = 0.055;
@@ -110,15 +112,16 @@ function getOffScreenThrowPosition(
   width: number,
   height: number,
   config: ThrowOntoDeskConfig,
-  viewportWidth: number,
-  viewportHeight: number,
+  visibleRect: VisibleDeskRect,
   wallGutter: number
 ) {
   return {
     x: cssPixelsToMeters(
-      config.centered ? viewportWidth / 2 : randomInRange(width * 0.5, viewportWidth - width * 0.5)
+      config.centered
+        ? visibleRect.x + visibleRect.width / 2
+        : randomInRange(visibleRect.x + width * 0.5, visibleRect.right - width * 0.5)
     ),
-    y: cssPixelsToMeters(viewportHeight + height / 2 + randomInRange(24, wallGutter)),
+    y: cssPixelsToMeters(visibleRect.bottom + height / 2 + randomInRange(24, wallGutter)),
     z: randomInRange(0.055, 0.09),
   };
 }
@@ -141,11 +144,11 @@ function getStablePolaroidSign(id: string) {
   return hash % 2 === 0 ? 1 : -1;
 }
 
-function getPolaroidFocusTarget(entity: Entity, viewportWidth: number, viewportHeight: number) {
+function getPolaroidFocusTarget(entity: Entity, visibleRect: VisibleDeskRect) {
   const polaroid = entity.get(Polaroid);
   const position = entity.get(Position) ?? { x: 0, y: 0, z: 0 };
-  const centerX = cssPixelsToMeters(viewportWidth / 2);
-  const centerY = cssPixelsToMeters(viewportHeight / 2);
+  const centerX = cssPixelsToMeters(visibleRect.x + visibleRect.width / 2);
+  const centerY = cssPixelsToMeters(visibleRect.y + visibleRect.height / 2);
   const sourceSide = position.x < centerX ? -1 : 1;
   const stableSign = getStablePolaroidSign(polaroid?.id ?? String(entity.id()));
 
@@ -180,11 +183,11 @@ export const actions = createActions((world) => ({
 
   spawnPaper: (config: PaperConfig) => {
     const viewport = world.get(Viewport);
+    const camera = world.get(Camera);
     const desk = world.queryFirst(Desk)?.get(Desk);
     if (!desk) throw new Error('spawnPaper requires a Desk entity. Call spawnDesk() first.');
 
-    const viewportWidth = viewport?.width || window.innerWidth;
-    const viewportHeight = viewport?.height || window.innerHeight;
+    const visibleRect = getVisibleDeskRect(viewport, camera);
 
     const entity = world.spawn(
       Paper({
@@ -210,14 +213,7 @@ export const actions = createActions((world) => ({
     entity.add(KinematicBody({ mass: 1, ...config.physics, depth: paper.thickness }));
     entity.add(
       Position(
-        getOffScreenThrowPosition(
-          paper.width,
-          paper.height,
-          config,
-          viewportWidth,
-          viewportHeight,
-          desk.wallGutter
-        )
+        getOffScreenThrowPosition(paper.width, paper.height, config, visibleRect, desk.wallGutter)
       )
     );
 
@@ -226,11 +222,11 @@ export const actions = createActions((world) => ({
 
   spawnBook: (config: BookConfig) => {
     const viewport = world.get(Viewport);
+    const camera = world.get(Camera);
     const desk = world.queryFirst(Desk)?.get(Desk);
     if (!desk) throw new Error('spawnBook requires a Desk entity. Call spawnDesk() first.');
 
-    const viewportWidth = viewport?.width || window.innerWidth;
-    const viewportHeight = viewport?.height || window.innerHeight;
+    const visibleRect = getVisibleDeskRect(viewport, camera);
 
     const entity = world.spawn(
       Book({
@@ -254,14 +250,7 @@ export const actions = createActions((world) => ({
     entity.add(BoundingBox({ width: book.width, height: book.height }));
     entity.add(
       Position(
-        getOffScreenThrowPosition(
-          book.width,
-          book.height,
-          config,
-          viewportWidth,
-          viewportHeight,
-          desk.wallGutter
-        )
+        getOffScreenThrowPosition(book.width, book.height, config, visibleRect, desk.wallGutter)
       )
     );
     entity.add(KinematicBody({ mass: 8, ...config.physics, depth: getBookDepthMeters(book) }));
@@ -271,11 +260,11 @@ export const actions = createActions((world) => ({
 
   spawnPolaroid: (config: PolaroidConfig) => {
     const viewport = world.get(Viewport);
+    const camera = world.get(Camera);
     const desk = world.queryFirst(Desk)?.get(Desk);
     if (!desk) throw new Error('spawnPolaroid requires a Desk entity. Call spawnDesk() first.');
 
-    const viewportWidth = viewport?.width || window.innerWidth;
-    const viewportHeight = viewport?.height || window.innerHeight;
+    const visibleRect = getVisibleDeskRect(viewport, camera);
 
     const entity = world.spawn(
       Polaroid({
@@ -302,8 +291,7 @@ export const actions = createActions((world) => ({
           polaroid.width,
           polaroid.height,
           config,
-          viewportWidth,
-          viewportHeight,
+          visibleRect,
           desk.wallGutter
         )
       )
@@ -389,9 +377,8 @@ export const actions = createActions((world) => ({
     });
 
     const viewport = world.get(Viewport);
-    const viewportWidth = viewport?.width || window.innerWidth;
-    const viewportHeight = viewport?.height || window.innerHeight;
-    const target = getPolaroidFocusTarget(entity, viewportWidth, viewportHeight);
+    const camera = world.get(Camera);
+    const target = getPolaroidFocusTarget(entity, getVisibleDeskRect(viewport, camera));
 
     entity.remove(Dragging, Pressed, Selected, IsResting);
     entity.set(Velocity, { x: 0, y: 0, z: 0 });
@@ -522,16 +509,17 @@ export const actions = createActions((world) => ({
 
   getLeastCoveredX: (exclude?: Entity) => {
     const viewport = world.get(Viewport);
-    const viewportWidth = viewport?.width || window.innerWidth;
+    const camera = world.get(Camera);
+    const visibleRect = getVisibleDeskRect(viewport, camera);
     const desk = world.queryFirst(Desk)?.get(Desk);
     const NUM_COLS = 4;
-    const colWidth = viewportWidth / NUM_COLS;
+    const colWidth = visibleRect.width / NUM_COLS;
     const coverage = Array.from<number>({ length: NUM_COLS }).fill(0);
 
     world.query(Paper, Position, Not(IsOpen), Not(IsOffScreen)).readEach(([_paper, pos], entity) => {
       if (entity === exclude) return;
       const col = Math.min(
-        Math.max(Math.floor(metersToCssPixels(pos.x) / colWidth), 0),
+        Math.max(Math.floor((metersToCssPixels(pos.x) - visibleRect.x) / colWidth), 0),
         NUM_COLS - 1
       );
       coverage[col]++;
@@ -557,8 +545,8 @@ export const actions = createActions((world) => ({
     if (desk) desk.lastThrowCol = chosen;
 
     return randomInRange(
-      chosen * colWidth + colWidth * 0.2,
-      (chosen + 1) * colWidth - colWidth * 0.2
+      visibleRect.x + chosen * colWidth + colWidth * 0.2,
+      visibleRect.x + (chosen + 1) * colWidth - colWidth * 0.2
     );
   },
 

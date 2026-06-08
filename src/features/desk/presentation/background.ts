@@ -3,6 +3,7 @@ import { color } from '../../../color.js';
 
 /** Public asset path (under `public/`). */
 export const DESK_FOAM_IMAGE = 'foam-splash.jpg';
+export const DESK_FOAM_TILE_SIZE_PX = 1480;
 
 export type DeskBackgroundBase =
   | { type: 'color'; value: string }
@@ -59,9 +60,9 @@ export function getDeskBaseStyle(): CSSProperties {
   if (base.type === 'gradient') {
     return {
       backgroundImage: base.value,
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      backgroundRepeat: 'no-repeat',
+      backgroundSize: 'auto',
+      backgroundPosition: '0 0',
+      backgroundRepeat: 'repeat',
     };
   }
 
@@ -77,9 +78,9 @@ export function getDeskFoamLayerStyle(): CSSProperties | null {
   return {
     backgroundImage: `url(${getDeskFoamUrl()})`,
     mixBlendMode: foam.blendMode,
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-    backgroundRepeat: 'no-repeat',
+    backgroundSize: `${DESK_FOAM_TILE_SIZE_PX}px ${DESK_FOAM_TILE_SIZE_PX}px`,
+    backgroundPosition: '0 0',
+    backgroundRepeat: 'repeat',
     opacity: foam.opacityPercent / 100,
     ...(filter && { filter }),
   };

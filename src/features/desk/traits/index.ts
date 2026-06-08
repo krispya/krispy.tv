@@ -4,6 +4,7 @@ import { color } from '../../../color.js';
 export const Time = trait({ last: 0, delta: 0 });
 export const Pointer = trait({ x: 0, y: 0 });
 export const Viewport = trait({ width: 0, height: 0 });
+export const Camera = trait({ x: 720, y: 450, zoom: 1 });
 
 export const DeskConfig = trait({
   /** Pixels. Off-screen throw margin. */

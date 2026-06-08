@@ -1,5 +1,6 @@
 import type { World } from 'koota';
 import {
+  Camera,
   Dragging,
   IsResting,
   KinematicBody,
@@ -7,18 +8,22 @@ import {
   Position,
   Time,
   Velocity,
+  Viewport,
 } from '../traits/index.js';
 import { DRAG_LIFT_MAX_M } from '../utils/height.js';
 import { dampedLerp } from '../utils/math.js';
-import { cssPixelsToMeters } from '../utils/physics-units.js';
+import { screenPointToDeskMeters } from '../utils/camera.js';
 
 const LIFT_DAMPING = 0.18;
 
 export function updateDragging(world: World) {
   const pointer = world.get(Pointer);
   const time = world.get(Time);
+  const viewport = world.get(Viewport);
+  const camera = world.get(Camera);
 
   if (!pointer || !time) return;
+  const deskPoint = screenPointToDeskMeters(pointer.x, pointer.y, viewport, camera);
 
   world
     .query(Position, Velocity, Dragging, KinematicBody)
@@ -29,8 +34,8 @@ export function updateDragging(world: World) {
       const oldX = position.x;
       const oldY = position.y;
 
-      position.x = cssPixelsToMeters(pointer.x) - dragging.offset.x;
-      position.y = cssPixelsToMeters(pointer.y) - dragging.offset.y;
+      position.x = deskPoint.x - dragging.offset.x;
+      position.y = deskPoint.y - dragging.offset.y;
       position.z = DRAG_LIFT_MAX_M * dragging.liftProgress;
 
       const invDelta = time.delta > 0 ? 1 / time.delta : 0;

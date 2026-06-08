@@ -1,5 +1,6 @@
 export {
   DESK_FOAM_IMAGE,
+  DESK_FOAM_TILE_SIZE_PX,
   deskBackground,
   getDeskBaseStyle,
   getDeskFoamLayerStyle,

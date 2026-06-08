@@ -1,8 +1,9 @@
 import type { Entity } from 'koota';
-import { useActions, useQuery, useTrait } from 'koota/react';
+import { useActions, useQuery, useTrait, useWorld } from 'koota/react';
 import { actions } from '../actions.js';
 import { getInverseStageTiltTransform } from '../presentation/stage.js';
-import { IsOpen, Polaroid, PolaroidFocusMotion } from '../traits/index.js';
+import { Camera, IsOpen, Polaroid, PolaroidFocusMotion, Viewport } from '../traits/index.js';
+import { getVisibleDeskRect } from '../utils/camera.js';
 import { clamp01, easeInOutCubic, easeOutCubic } from '../utils/math.js';
 
 const BACKDROP_Z_INDEX = 1500;
@@ -18,17 +19,26 @@ export function PolaroidFocusBackdrop() {
 }
 
 function PolaroidFocusBackdropSurface({ entity }: { entity: Entity }) {
+  const world = useWorld();
+  const viewport = useTrait(world, Viewport);
+  const camera = useTrait(world, Camera);
   const motion = useTrait(entity, PolaroidFocusMotion);
   const { closeOpenPolaroid } = useActions(actions);
   const opacity = getBackdropOpacity(motion);
+  const rect = getVisibleDeskRect(viewport, camera);
 
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-auto absolute inset-0 bg-stone-950 backdrop-blur-[2px] will-change-[opacity,transform]"
+      className="pointer-events-auto absolute bg-stone-950 backdrop-blur-[2px] will-change-[opacity,transform]"
       style={{
+        left: rect.x,
+        top: rect.y,
+        width: rect.width,
+        height: rect.height,
         opacity,
         transform: `${getInverseStageTiltTransform()} scale(${BACKDROP_SCALE})`,
+        transformOrigin: 'center center',
         zIndex: BACKDROP_Z_INDEX,
       }}
       onPointerDown={(event) => {

@@ -1,5 +1,5 @@
 import type { Entity } from 'koota';
-import { useActions, useHas, useQuery, useTrait } from 'koota/react';
+import { useActions, useHas, useQuery, useTrait, useWorld } from 'koota/react';
 import { useCallback, type CSSProperties } from 'react';
 import { BoundingBoxDebug, useDebug } from '../../debug/index.js';
 import { actions } from '../actions.js';
@@ -19,7 +19,7 @@ import {
   Selected,
   Velocity,
 } from '../traits/index.js';
-import { cssPixelsToMeters } from '../utils/physics-units.js';
+import { screenPointToDeskMetersForWorld } from '../utils/camera.js';
 import { hashSeed, SketchOutline } from './sketch-outline.js';
 
 const DRAG_THRESHOLD_PX = 5;
@@ -48,6 +48,7 @@ export function PolaroidRenderer() {
 
 function PolaroidView({ entity }: { entity: Entity }) {
   const polaroid = useTrait(entity, Polaroid);
+  const world = useWorld();
   const isDragging = useHas(entity, Dragging);
   const isFocusSpinning = useHas(entity, PolaroidFocusSpin);
   const isOpen = useHas(entity, IsOpen);
@@ -84,9 +85,10 @@ function PolaroidView({ entity }: { entity: Entity }) {
       }
 
       const position = entity.get(Position) ?? { x: 0, y: 0, z: 0 };
+      const deskPoint = screenPointToDeskMetersForWorld(world, event.clientX, event.clientY);
       const offset = {
-        x: cssPixelsToMeters(event.clientX) - position.x,
-        y: cssPixelsToMeters(event.clientY) - position.y,
+        x: deskPoint.x - position.x,
+        y: deskPoint.y - position.y,
       };
       const rotation = entity.get(Rotation) ?? { x: 0, y: 0, z: 0 };
 
@@ -108,7 +110,7 @@ function PolaroidView({ entity }: { entity: Entity }) {
       entity.add(Selected);
       event.currentTarget.setPointerCapture(event.pointerId);
     },
-    [entity, startPolaroidFocusSpin]
+    [entity, startPolaroidFocusSpin, world]
   );
 
   const handlePointerMove = useCallback(

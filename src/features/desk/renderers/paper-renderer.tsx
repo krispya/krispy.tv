@@ -1,5 +1,5 @@
 import type { Entity } from 'koota';
-import { useActions, useHas, useQuery, useTrait } from 'koota/react';
+import { useActions, useHas, useQuery, useTrait, useWorld } from 'koota/react';
 import { useCallback, type CSSProperties } from 'react';
 import { useLocation } from 'wouter';
 import { routes } from '../../../routes.js';
@@ -18,7 +18,7 @@ import {
   Selected,
   Velocity,
 } from '../traits/index.js';
-import { cssPixelsToMeters } from '../utils/physics-units.js';
+import { screenPointToDeskMetersForWorld } from '../utils/camera.js';
 import { PaperLinesOverlay } from './paper-lines-overlay.js';
 
 const DRAG_THRESHOLD_PX = 5;
@@ -65,6 +65,7 @@ export function PaperRenderer() {
 
 function PaperView({ entity }: { entity: Entity }) {
   const paper = useTrait(entity, Paper);
+  const world = useWorld();
   const isDragging = useHas(entity, Dragging);
   const isSelected = useHas(entity, Selected);
   const { raiseDeskItem } = useActions(actions);
@@ -90,9 +91,10 @@ function PaperView({ entity }: { entity: Entity }) {
       if (event.pointerType === 'mouse' && event.button !== 0) return;
 
       const position = entity.get(Position) ?? { x: 0, y: 0, z: 0 };
+      const deskPoint = screenPointToDeskMetersForWorld(world, event.clientX, event.clientY);
       const offset = {
-        x: cssPixelsToMeters(event.clientX) - position.x,
-        y: cssPixelsToMeters(event.clientY) - position.y,
+        x: deskPoint.x - position.x,
+        y: deskPoint.y - position.y,
       };
       const rotation = entity.get(Rotation) ?? { x: 0, y: 0, z: 0 };
 
@@ -114,7 +116,7 @@ function PaperView({ entity }: { entity: Entity }) {
       entity.add(Selected);
       event.currentTarget.setPointerCapture(event.pointerId);
     },
-    [entity]
+    [entity, world]
   );
 
   const handlePointerMove = useCallback(
