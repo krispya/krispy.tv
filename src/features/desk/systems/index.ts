@@ -1,11 +1,11 @@
-export { activateWallBarrier } from './activate-wall-barrier.js';
+export { activateVisibleDeskBarrier } from './activate-visible-desk-barrier.js';
 export { applyAngularVelocity } from './apply-angular-velocity.js';
 export { applyBreeze } from './apply-breeze.js';
 export { applyGravity } from './apply-gravity.js';
 export { applyVelocity } from './apply-velocity.js';
-export { bounceWithinViewport } from './bounce-within-viewport.js';
+export { bounceWithinVisibleDesk } from './bounce-within-visible-desk.js';
 export { dampVelocity } from './damp-velocity.js';
-export { detectOffScreen } from './detect-off-screen.js';
+export { detectPastVisibleDesk } from './detect-past-visible-desk.js';
 export { resolveBodyCollisions } from './resolve-body-collisions.js';
 export { resolveRestingBody } from './resolve-resting-body.js';
 export { restackDeskPlaneItems } from './restack-desk-plane-items.js';

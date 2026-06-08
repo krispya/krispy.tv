@@ -2,31 +2,27 @@ import { Not, type World } from 'koota';
 import {
   AngularVelocity,
   BoundingBox,
-  Camera,
   Desk,
   IsEnteringDesk,
   IsOpen,
   KinematicBody,
   Position,
   Velocity,
-  Viewport,
 } from '../traits/index.js';
 import {
   applyBarrierBounceSpin,
   getBounceSpinBias,
   reflectVelocityOnBarrier,
 } from '../utils/barrier-bounce.js';
+import { getVisibleDeskRectForWorld } from '../utils/camera.js';
 import { getViewportRange } from '../utils/math.js';
 import { cssPixelsToMeters } from '../utils/physics-units.js';
-import { getVisibleDeskRect } from '../utils/camera.js';
 
-export function bounceWithinViewport(world: World) {
-  const viewport = world.get(Viewport);
-  const camera = world.get(Camera);
+export function bounceWithinVisibleDesk(world: World) {
   const desk = world.queryFirst(Desk)?.get(Desk);
   if (!desk) return;
 
-  const visibleRect = getVisibleDeskRect(viewport, camera);
+  const visibleRect = getVisibleDeskRectForWorld(world);
   if (visibleRect.width <= 0 || visibleRect.height <= 0) return;
 
   world

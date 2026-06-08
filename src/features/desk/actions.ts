@@ -4,7 +4,6 @@ import {
   AngularVelocity,
   Book,
   BoundingBox,
-  Camera,
   Desk,
   DeskConfig,
   Dragging,
@@ -25,12 +24,11 @@ import {
   IsStackable,
   StackIndex,
   Velocity,
-  Viewport,
 } from './traits/index.js';
 import { getBookDepthMeters } from './utils/resting-height.js';
 import { cssPixelsToMeters, metersToCssPixels } from './utils/physics-units.js';
 import { clamp, randomInRange } from './utils/math.js';
-import { getVisibleDeskRect, type VisibleDeskRect } from './utils/camera.js';
+import { getVisibleDeskRectForWorld, type VisibleDeskRect } from './utils/camera.js';
 
 const POLAROID_FOCUS_Z_M = 0.26;
 const POLAROID_FOCUS_CURVE_M = 0.055;
@@ -182,12 +180,10 @@ export const actions = createActions((world) => ({
   },
 
   spawnPaper: (config: PaperConfig) => {
-    const viewport = world.get(Viewport);
-    const camera = world.get(Camera);
     const desk = world.queryFirst(Desk)?.get(Desk);
     if (!desk) throw new Error('spawnPaper requires a Desk entity. Call spawnDesk() first.');
 
-    const visibleRect = getVisibleDeskRect(viewport, camera);
+    const visibleRect = getVisibleDeskRectForWorld(world);
 
     const entity = world.spawn(
       Paper({
@@ -221,12 +217,10 @@ export const actions = createActions((world) => ({
   },
 
   spawnBook: (config: BookConfig) => {
-    const viewport = world.get(Viewport);
-    const camera = world.get(Camera);
     const desk = world.queryFirst(Desk)?.get(Desk);
     if (!desk) throw new Error('spawnBook requires a Desk entity. Call spawnDesk() first.');
 
-    const visibleRect = getVisibleDeskRect(viewport, camera);
+    const visibleRect = getVisibleDeskRectForWorld(world);
 
     const entity = world.spawn(
       Book({
@@ -259,12 +253,10 @@ export const actions = createActions((world) => ({
   },
 
   spawnPolaroid: (config: PolaroidConfig) => {
-    const viewport = world.get(Viewport);
-    const camera = world.get(Camera);
     const desk = world.queryFirst(Desk)?.get(Desk);
     if (!desk) throw new Error('spawnPolaroid requires a Desk entity. Call spawnDesk() first.');
 
-    const visibleRect = getVisibleDeskRect(viewport, camera);
+    const visibleRect = getVisibleDeskRectForWorld(world);
 
     const entity = world.spawn(
       Polaroid({
@@ -376,9 +368,7 @@ export const actions = createActions((world) => ({
       candidate.remove(IsOpen, IsControlled, PolaroidFocusMotion);
     });
 
-    const viewport = world.get(Viewport);
-    const camera = world.get(Camera);
-    const target = getPolaroidFocusTarget(entity, getVisibleDeskRect(viewport, camera));
+    const target = getPolaroidFocusTarget(entity, getVisibleDeskRectForWorld(world));
 
     entity.remove(Dragging, Pressed, Selected, IsResting);
     entity.set(Velocity, { x: 0, y: 0, z: 0 });
@@ -508,9 +498,7 @@ export const actions = createActions((world) => ({
   },
 
   getLeastCoveredX: (exclude?: Entity) => {
-    const viewport = world.get(Viewport);
-    const camera = world.get(Camera);
-    const visibleRect = getVisibleDeskRect(viewport, camera);
+    const visibleRect = getVisibleDeskRectForWorld(world);
     const desk = world.queryFirst(Desk)?.get(Desk);
     const NUM_COLS = 4;
     const colWidth = visibleRect.width / NUM_COLS;

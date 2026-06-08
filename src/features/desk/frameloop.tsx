@@ -3,14 +3,14 @@ import { useEffect } from 'react';
 import { useRoute } from 'wouter';
 import { routes } from '../../routes.js';
 import {
-  activateWallBarrier,
+  activateVisibleDeskBarrier,
   applyAngularVelocity,
   applyBreeze,
   applyGravity,
   applyVelocity,
-  bounceWithinViewport,
+  bounceWithinVisibleDesk,
   dampVelocity,
-  detectOffScreen,
+  detectPastVisibleDesk,
   resolveBodyCollisions,
   resolveRestingBody,
   restackDeskPlaneItems,
@@ -50,8 +50,8 @@ export function Frameloop() {
     resolveBodyCollisions(world);
     resolveRestingBody(world);
     restackDeskPlaneItems(world);
-    activateWallBarrier(world);
-    bounceWithinViewport(world);
+    activateVisibleDeskBarrier(world);
+    bounceWithinVisibleDesk(world);
 
     // Post-simulation
     dampVelocity(world);
@@ -59,7 +59,7 @@ export function Frameloop() {
 
     // App state
     syncOpenState(world);
-    detectOffScreen(world);
+    detectPastVisibleDesk(world);
     syncArticle(world);
     updateArticleMotion(world);
     updatePolaroidFocus(world);

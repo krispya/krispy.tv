@@ -2,7 +2,6 @@ import type { World } from 'koota';
 import {
   ActiveSlug,
   AngularVelocity,
-  Camera,
   Dragging,
   IsControlled,
   IsOffScreen,
@@ -14,12 +13,11 @@ import {
   Ref,
   Selected,
   Velocity,
-  Viewport,
 } from '../traits/index.js';
 import { actions } from '../actions.js';
 import { cssPixelsToMeters } from '../utils/physics-units.js';
 import { clamp, randomInRange } from '../utils/math.js';
-import { getVisibleDeskRect } from '../utils/camera.js';
+import { getVisibleDeskRectForWorld } from '../utils/camera.js';
 
 const EXIT_SPEED = 1.3;
 
@@ -29,9 +27,7 @@ export function syncOpenState(world: World) {
   if (!route) return;
 
   const { slug } = route;
-  const viewport = world.get(Viewport);
-  const camera = world.get(Camera);
-  const visibleRect = getVisibleDeskRect(viewport, camera);
+  const visibleRect = getVisibleDeskRectForWorld(world);
 
   world.query(Paper).readEach(([paper], entity) => {
     if (slug && paper.id === slug) {

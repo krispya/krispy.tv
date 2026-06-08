@@ -1,24 +1,14 @@
-import { type World } from 'koota';
-import {
-  BoundingBox,
-  Camera,
-  Desk,
-  IsEnteringDesk,
-  KinematicBody,
-  Position,
-  Viewport,
-} from '../traits/index.js';
+import type { World } from 'koota';
+import { BoundingBox, Desk, IsEnteringDesk, KinematicBody, Position } from '../traits/index.js';
+import { getVisibleDeskRectForWorld } from '../utils/camera.js';
 import { getViewportRange } from '../utils/math.js';
 import { cssPixelsToMeters } from '../utils/physics-units.js';
-import { getVisibleDeskRect } from '../utils/camera.js';
 
-export function activateWallBarrier(world: World) {
-  const viewport = world.get(Viewport);
-  const camera = world.get(Camera);
+export function activateVisibleDeskBarrier(world: World) {
   const desk = world.queryFirst(Desk)?.get(Desk);
   if (!desk) return;
 
-  const visibleRect = getVisibleDeskRect(viewport, camera);
+  const visibleRect = getVisibleDeskRectForWorld(world);
   if (visibleRect.height <= 0) return;
 
   world
@@ -32,6 +22,9 @@ export function activateWallBarrier(world: World) {
         cssPixelsToMeters(visibleRect.height),
         cssPixelsToMeters(desk.wallGutter)
       );
-      if (position.y <= cssPixelsToMeters(visibleRect.y) + rangeY.max) entity.remove(IsEnteringDesk);
+
+      if (position.y <= cssPixelsToMeters(visibleRect.y) + rangeY.max) {
+        entity.remove(IsEnteringDesk);
+      }
     });
 }

@@ -31,18 +31,3 @@ export function getStageTiltTransform(tiltDeg = STAGE_TILT_DEG) {
 export function getInverseStageTiltTransform(tiltDeg = STAGE_TILT_DEG) {
   return tiltDeg ? `rotateX(${-tiltDeg}deg)` : 'none';
 }
-
-/** Extra scale beyond geometric cover so the desk plane clears viewport edges with perspective. */
-export const STAGE_FILL_OVERSCAN = 1.12;
-
-/** Scale applied only to the desk background (not items) to cover the viewport when tilted. */
-export function getStageFillScale(tiltDeg = STAGE_TILT_DEG, overscan = STAGE_FILL_OVERSCAN) {
-  if (!tiltDeg) return overscan;
-  const rad = (tiltDeg * Math.PI) / 180;
-  return (1 / Math.cos(rad)) * overscan;
-}
-
-export function getStageFillTransform(tiltDeg = STAGE_TILT_DEG) {
-  const scale = getStageFillScale(tiltDeg);
-  return scale === 1 ? 'none' : `scale(${scale})`;
-}

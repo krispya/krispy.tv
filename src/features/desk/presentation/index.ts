@@ -6,6 +6,7 @@ export {
   getDeskFoamLayerStyle,
   type DeskBackgroundBase,
 } from './background.js';
+export { DeskProjection } from './desk-projection.js';
 export {
   getSupportZPx,
   MESH_LIFT_SCALE_MAX,
@@ -38,13 +39,10 @@ export {
   type PolaroidGlossPath,
 } from './polaroid.js';
 export {
-  getStageFillScale,
-  getStageFillTransform,
   getInverseStageTiltTransform,
   getStagePerspective,
   getStagePerspectiveOrigin,
   getStageTiltTransform,
-  STAGE_FILL_OVERSCAN,
   STAGE_PERSPECTIVE_ENABLED,
   STAGE_PERSPECTIVE_ORIGIN_Y,
   STAGE_PERSPECTIVE_PX,
