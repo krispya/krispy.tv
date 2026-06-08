@@ -12,6 +12,7 @@ export function Startup() {
     destroyPolaroids,
     spawnBook,
     spawnDesk,
+    spawnHeadphones,
     spawnPaper,
     spawnPolaroid,
     throwOntoDesk: throwPaperOntoDesk,
@@ -19,6 +20,7 @@ export function Startup() {
 
   useEffect(() => {
     const desk = spawnDesk();
+    const headphones = spawnHeadphones({ width: 440, rotation: -34 });
 
     const articles = articlesCatalog.map((article) => ({
       id: article.slug,
@@ -66,6 +68,7 @@ export function Startup() {
     return () => {
       destroyPapers();
       destroyPolaroids();
+      headphones.destroy();
       book.destroy();
       desk.destroy();
     };

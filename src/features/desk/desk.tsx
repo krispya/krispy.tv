@@ -5,6 +5,7 @@ import { DeskProjection } from './presentation/desk-projection.js';
 import { ArticleRenderer } from './renderers/article-renderer.js';
 import { BookRenderer } from './renderers/book-renderer.js';
 import { DeskRenderer } from './renderers/desk-renderer.js';
+import { HeadphonesRenderer } from './renderers/headphones-renderer.js';
 import { PaperRenderer } from './renderers/paper-renderer.js';
 import { PolaroidFocusBackdrop } from './renderers/polaroid-focus-backdrop.js';
 import { PolaroidRenderer } from './renderers/polaroid-renderer.js';
@@ -21,6 +22,7 @@ export function Desk() {
 
       <DeskProjection>
         <DeskRenderer />
+        <HeadphonesRenderer />
         <PaperRenderer />
         <PolaroidFocusBackdrop />
         <PolaroidRenderer />

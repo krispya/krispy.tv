@@ -4,7 +4,7 @@ import { color } from '../../../color.js';
 export const Time = trait({ last: 0, delta: 0 });
 export const Pointer = trait({ x: 0, y: 0 });
 export const Viewport = trait({ width: 0, height: 0 });
-export const Camera = trait({ x: 720, y: 450, zoom: 1 });
+export const Camera = trait({ x: 720, y: 450, zoom: 0.8 });
 
 export const DeskConfig = trait({
   /** Pixels. Off-screen throw margin. */
@@ -55,6 +55,22 @@ export const Book = trait({
   pageThickness: 0.0001,
   /** Meters. */
   coverThickness: 0.002,
+});
+
+export const HEADPHONES_ASPECT_RATIO = 1646 / 731;
+
+export const Headphones = trait({
+  id: 'desk-headphones',
+  fillColor: color.accent.sky,
+  lineColor: color.line.ink,
+  /** Pixels. */
+  width: 560,
+  /** Pixels. */
+  height: 249,
+  /** Width-to-height ratio. */
+  aspectRatio: HEADPHONES_ASPECT_RATIO,
+  /** Meters. */
+  thickness: 0.004,
 });
 
 export const Polaroid = trait({
@@ -159,6 +175,7 @@ export const IsOffScreen = trait();
 export const IsEnteringDesk = trait();
 export const IsPreloading = trait();
 export const IsResting = trait();
+export const IsBoundary = trait();
 export const ActiveSlug = trait({ slug: '' });
 export const ArticleOf = relation({ exclusive: true, autoDestroy: 'orphan' });
 export const StackIndex = trait({ value: 0 });

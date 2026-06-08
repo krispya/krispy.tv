@@ -11,6 +11,7 @@ export { resolveRestingBody } from './resolve-resting-body.js';
 export { restackDeskPlaneItems } from './restack-desk-plane-items.js';
 export { syncArticle } from './sync-article.js';
 export { syncBookToDOM } from './sync-book-to-dom.js';
+export { syncHeadphonesToDOM } from './sync-headphones-to-dom.js';
 export { syncOpenState } from './sync-open-state.js';
 export { syncPaperToDOM } from './sync-paper-to-dom.js';
 export { syncPolaroidToDOM } from './sync-polaroid-to-dom.js';

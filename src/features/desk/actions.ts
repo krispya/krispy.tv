@@ -7,6 +7,9 @@ import {
   Desk,
   DeskConfig,
   Dragging,
+  HEADPHONES_ASPECT_RATIO,
+  Headphones,
+  IsBoundary,
   IsControlled,
   IsEnteringDesk,
   IsOffScreen,
@@ -44,6 +47,9 @@ const POLAROID_SPIN_ROTATION_Y_PER_PX = 0.55;
 const POLAROID_SPIN_ROTATION_X_PER_PX = 0.12;
 const POLAROID_SPIN_ROTATION_X_MIN = -18;
 const POLAROID_SPIN_ROTATION_X_MAX = 12;
+const HEADPHONES_CORNER_OVERLAP_X_PX = 62;
+const HEADPHONES_CORNER_OVERLAP_Y_PX = 26;
+const HEADPHONES_MASS = 120;
 
 type DeskConfigOverrides = Partial<{
   wallGutter: number;
@@ -90,6 +96,21 @@ export type BookConfig = {
   pageCount?: number;
   pageThickness?: number;
   coverThickness?: number;
+  physics?: KinematicBodyConfig;
+};
+
+export type HeadphonesConfig = {
+  id?: string;
+  fillColor?: string;
+  lineColor?: string;
+  width?: number;
+  height?: number;
+  aspectRatio?: number;
+  stackIndex?: number;
+  thickness?: number;
+  rotation?: number;
+  cornerOverlapX?: number;
+  cornerOverlapY?: number;
   physics?: KinematicBodyConfig;
 };
 
@@ -164,6 +185,15 @@ function getPolaroidFocusTarget(entity: Entity, visibleRect: VisibleDeskRect) {
     curveOffset: POLAROID_FOCUS_CURVE_M * stableSign,
     sideTilt: POLAROID_FOCUS_ROTATION_Y * -sourceSide,
   };
+}
+
+function getHeadphonesSize(config: HeadphonesConfig) {
+  const aspectRatio = config.aspectRatio ?? HEADPHONES_ASPECT_RATIO;
+  const width =
+    config.width ?? (config.height !== undefined ? config.height * aspectRatio : undefined);
+  const height = config.height ?? (width !== undefined ? width / aspectRatio : undefined);
+
+  return { aspectRatio, width, height };
 }
 
 export const actions = createActions((world) => ({
@@ -248,6 +278,52 @@ export const actions = createActions((world) => ({
       )
     );
     entity.add(KinematicBody({ mass: 8, ...config.physics, depth: getBookDepthMeters(book) }));
+
+    return entity;
+  },
+
+  spawnHeadphones: (config: HeadphonesConfig = {}) => {
+    const visibleRect = getVisibleDeskRectForWorld(world);
+    const headphonesSize = getHeadphonesSize(config);
+
+    const entity = world.spawn(
+      Headphones({
+        ...(config.id !== undefined && { id: config.id }),
+        ...(config.fillColor !== undefined && { fillColor: config.fillColor }),
+        ...(config.lineColor !== undefined && { lineColor: config.lineColor }),
+        ...(headphonesSize.width !== undefined && { width: headphonesSize.width }),
+        ...(headphonesSize.height !== undefined && { height: headphonesSize.height }),
+        aspectRatio: headphonesSize.aspectRatio,
+        ...(config.thickness !== undefined && { thickness: config.thickness }),
+      }),
+      Rotation({ x: 0, y: 0, z: config.rotation ?? -14 }),
+      Velocity,
+      AngularVelocity,
+      StackIndex({ value: config.stackIndex ?? 0 }),
+      IsBoundary,
+      IsResting
+    );
+
+    const headphones = entity.get(Headphones)!;
+    const cornerOverlapX = config.cornerOverlapX ?? HEADPHONES_CORNER_OVERLAP_X_PX;
+    const cornerOverlapY = config.cornerOverlapY ?? HEADPHONES_CORNER_OVERLAP_Y_PX;
+    entity.add(BoundingBox({ width: headphones.width, height: headphones.height }));
+    entity.add(
+      Position({
+        x: cssPixelsToMeters(visibleRect.x + headphones.width / 2 - cornerOverlapX),
+        y: cssPixelsToMeters(visibleRect.y + headphones.height / 2 - cornerOverlapY),
+        z: 0,
+      })
+    );
+    entity.add(
+      KinematicBody({
+        mass: HEADPHONES_MASS,
+        friction: 0.72,
+        stopSpeed: 0,
+        ...config.physics,
+        depth: headphones.thickness,
+      })
+    );
 
     return entity;
   },

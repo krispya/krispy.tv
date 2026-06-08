@@ -3,6 +3,7 @@ import {
   AngularVelocity,
   BoundingBox,
   Desk,
+  IsBoundary,
   IsControlled,
   IsEnteringDesk,
   IsOpen,
@@ -19,6 +20,8 @@ import { clamp, dot, perpendicular, scale, type Vector2 } from '../utils/math.js
 import { getOBBCollision, type OrientedBox } from '../utils/obb-collision.js';
 import { cssPixelsToMeters } from '../utils/physics-units.js';
 
+type SpinBias = 1 | -1;
+
 type Body = OrientedBox & {
   entity: Entity;
   position: Vector2 & { z: number };
@@ -28,6 +31,7 @@ type Body = OrientedBox & {
   restingHeight: number;
   resting: boolean;
   stackable: boolean;
+  boundary: boolean;
   inverseMass: number;
   positionDirty: boolean;
   velocityDirty: boolean;
@@ -74,7 +78,8 @@ export function resolveBodyCollisions(world: World) {
         restingHeight: 0,
         resting: entity.has(IsResting),
         stackable: entity.has(IsStackable),
-        inverseMass: 1 / Math.max(body.mass, MIN_MASS),
+        boundary: entity.has(IsBoundary),
+        inverseMass: getInverseMass(body.mass),
         positionDirty: false,
         velocityDirty: false,
         angularVelocityDirty: false,
@@ -118,7 +123,9 @@ export function resolveBodyCollisions(world: World) {
       const next = resolved.get(entity);
       if (!next) return;
 
-      entity.remove(IsResting);
+      if (next.positionDirty || next.velocityDirty || next.angularVelocityDirty) {
+        entity.remove(IsResting);
+      }
 
       if (next.positionDirty) {
         position.x = next.position.x;
@@ -151,7 +158,14 @@ function resolveBodyPair(a: Body, b: Body, bounce: number, friction: number) {
   applyCollisionImpulse(a, b, collision.normal, collision.overlap, bounce, friction);
 }
 
+function getInverseMass(mass: number) {
+  if (mass === Number.POSITIVE_INFINITY) return 0;
+  return 1 / Math.max(mass, MIN_MASS);
+}
+
 function shouldResolveCollision(a: Body, b: Body) {
+  if (a.boundary || b.boundary) return true;
+
   if (a.stackIndex === b.stackIndex) {
     return !a.stackable || !b.stackable || isActive(a) || isActive(b);
   }
@@ -178,12 +192,16 @@ function applyCollisionImpulse(
 
   const correction = (Math.max(overlap - POSITION_SLOP, 0) * POSITION_CORRECTION) / inverseMassSum;
   if (correction > 0) {
-    a.position.x += normal.x * correction * a.inverseMass;
-    a.position.y += normal.y * correction * a.inverseMass;
-    b.position.x -= normal.x * correction * b.inverseMass;
-    b.position.y -= normal.y * correction * b.inverseMass;
-    a.positionDirty = true;
-    b.positionDirty = true;
+    applyPositionCorrection(
+      a,
+      normal.x * correction * a.inverseMass,
+      normal.y * correction * a.inverseMass
+    );
+    applyPositionCorrection(
+      b,
+      -normal.x * correction * b.inverseMass,
+      -normal.y * correction * b.inverseMass
+    );
   }
 
   const velocityBeforeA = { x: a.velocity.x, y: a.velocity.y };
@@ -200,8 +218,10 @@ function applyCollisionImpulse(
 
   if (normalImpulse <= 0) return;
 
-  applyImpulse(a, normal, normalImpulse * a.inverseMass);
-  applyImpulse(b, normal, -normalImpulse * b.inverseMass);
+  const normalImpulseA = normalImpulse * a.inverseMass;
+  const normalImpulseB = -normalImpulse * b.inverseMass;
+  applyImpulse(a, normal, normalImpulseA);
+  applyImpulse(b, normal, normalImpulseB);
 
   const tangent = perpendicular(normal);
   const nextRelativeVelocity = {
@@ -221,27 +241,35 @@ function applyCollisionImpulse(
   }
 
   const spinBias = getBounceSpinBias(normal);
-  applyBounceSpin(
-    a.angularVelocity,
-    normal,
-    velocityBeforeA,
-    normalImpulse * a.inverseMass,
-    spinBias
-  );
-  applyBounceSpin(
-    b.angularVelocity,
-    scale(normal, -1),
-    velocityBeforeB,
-    normalImpulse * b.inverseMass,
-    invertSpinBias(spinBias)
-  );
-  a.velocityDirty = true;
-  b.velocityDirty = true;
-  a.angularVelocityDirty = true;
-  b.angularVelocityDirty = true;
+  applySpinImpulse(a, normal, velocityBeforeA, normalImpulseA, spinBias);
+  applySpinImpulse(b, scale(normal, -1), velocityBeforeB, -normalImpulseB, invertSpinBias(spinBias));
+}
+
+function applyPositionCorrection(body: Body, dx: number, dy: number) {
+  if (dx === 0 && dy === 0) return;
+
+  body.position.x += dx;
+  body.position.y += dy;
+  body.positionDirty = true;
 }
 
 function applyImpulse(body: Body, normal: Vector2, speedDelta: number) {
+  if (speedDelta === 0) return;
+
   body.velocity.x += normal.x * speedDelta;
   body.velocity.y += normal.y * speedDelta;
+  body.velocityDirty = true;
+}
+
+function applySpinImpulse(
+  body: Body,
+  normal: Vector2,
+  velocityBefore: Vector2,
+  normalImpulse: number,
+  spinBias: SpinBias
+) {
+  if (normalImpulse === 0) return;
+
+  applyBounceSpin(body.angularVelocity, normal, velocityBefore, normalImpulse, spinBias);
+  body.angularVelocityDirty = true;
 }

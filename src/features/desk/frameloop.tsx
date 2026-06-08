@@ -16,6 +16,7 @@ import {
   restackDeskPlaneItems,
   syncArticle,
   syncBookToDOM,
+  syncHeadphonesToDOM,
   syncOpenState,
   syncPaperToDOM,
   syncPolaroidToDOM,
@@ -68,6 +69,7 @@ export function Frameloop() {
     syncPaperToDOM(world);
     syncPolaroidToDOM(world);
     syncBookToDOM(world);
+    syncHeadphonesToDOM(world);
   });
 
   useEffect(() => {
