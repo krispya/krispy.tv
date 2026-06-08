@@ -1,10 +1,19 @@
 import type { CSSProperties } from 'react';
+import { shade } from '../utils/color.js';
 
 export const HEADPHONES_LINE_COUNT = 3;
 export const HEADPHONES_BOIL_CYCLE_SECONDS = 0.36;
 
 const HEADPHONES_ASSET_PATH = 'lines/headphones';
 const HEADPHONES_ASSET_NAME = 'heaphones';
+
+export const HEADPHONES_FILL_TONES = [
+  { name: 'light', shade: 34 },
+  { name: 'mid', shade: -8 },
+  { name: 'dark', shade: -52 },
+] as const;
+
+type HeadphonesFillTone = (typeof HEADPHONES_FILL_TONES)[number]['name'];
 
 function hashString(value: string): number {
   let hash = 0;
@@ -26,6 +35,15 @@ export function getHeadphonesLineVariant(frame: number): number {
 
 export function getHeadphonesFillSrc(): string {
   return `${import.meta.env.BASE_URL}${HEADPHONES_ASSET_PATH}/${HEADPHONES_ASSET_NAME}-fill.png`;
+}
+
+export function getHeadphonesFillToneSrc(tone: HeadphonesFillTone): string {
+  return `${import.meta.env.BASE_URL}${HEADPHONES_ASSET_PATH}/${HEADPHONES_ASSET_NAME}-fill-tone-${tone}.png`;
+}
+
+export function getHeadphonesFillToneColor(fillColor: string, tone: HeadphonesFillTone): string {
+  const fillTone = HEADPHONES_FILL_TONES.find((candidate) => candidate.name === tone);
+  return shade(fillColor, fillTone?.shade ?? 0);
 }
 
 export function getHeadphonesLineSrc(variant: number): string {

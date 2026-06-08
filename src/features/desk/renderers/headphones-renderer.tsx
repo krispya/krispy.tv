@@ -3,7 +3,13 @@ import { useQuery, useTrait } from 'koota/react';
 import type { CSSProperties } from 'react';
 import { BoundingBoxDebug, useDebug } from '../../debug/index.js';
 import { Headphones, Position, Ref, Rotation } from '../traits/index.js';
-import { getHeadphonesFillSrc, getHeadphonesMaskStyle } from '../presentation/headphones-lines.js';
+import {
+  getHeadphonesFillSrc,
+  getHeadphonesFillToneColor,
+  getHeadphonesFillToneSrc,
+  getHeadphonesMaskStyle,
+  HEADPHONES_FILL_TONES,
+} from '../presentation/headphones-lines.js';
 import { HeadphonesLinesOverlay } from './headphones-lines-overlay.js';
 
 type HeadphonesStyle = CSSProperties & Record<`--${string}`, string>;
@@ -59,10 +65,16 @@ function HeadphonesView({ entity }: { entity: Entity }) {
           transform: 'translateZ(var(--headphones-z)) rotateZ(var(--headphones-rotate-z))',
         }}
       >
-        <div
-          className="pointer-events-none absolute"
-          style={getHeadphonesMaskStyle(getHeadphonesFillSrc(), headphones.fillColor)}
-        />
+        {HEADPHONES_FILL_TONES.map((tone) => (
+          <div
+            key={tone.name}
+            className="pointer-events-none absolute"
+            style={getHeadphonesMaskStyle(
+              getHeadphonesFillToneSrc(tone.name),
+              getHeadphonesFillToneColor(headphones.fillColor, tone.name)
+            )}
+          />
+        ))}
         <HeadphonesLinesOverlay headphonesId={headphones.id} lineColor={headphones.lineColor} />
       </div>
     </div>
