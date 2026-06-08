@@ -20,6 +20,47 @@ export function clamp01(value: number) {
   return clamp(value, 0, 1);
 }
 
+export function lerp(start: number, end: number, amount: number) {
+  return start + (end - start) * amount;
+}
+
+export function easeOutCubic(value: number) {
+  const inverse = 1 - clamp01(value);
+  return 1 - inverse * inverse * inverse;
+}
+
+export function easeInOutCubic(value: number) {
+  const t = clamp01(value);
+  if (t < 0.5) return 4 * t * t * t;
+
+  const inverse = -2 * t + 2;
+  return 1 - (inverse * inverse * inverse) / 2;
+}
+
+export function quadraticBezier(start: number, control: number, end: number, amount: number) {
+  const t = clamp01(amount);
+  const inverse = 1 - t;
+
+  return inverse * inverse * start + 2 * inverse * t * control + t * t * end;
+}
+
+export function stepSpring(
+  value: number,
+  velocity: number,
+  target: number,
+  stiffness: number,
+  damping: number,
+  delta: number
+) {
+  const acceleration = (target - value) * stiffness - velocity * damping;
+  const nextVelocity = velocity + acceleration * delta;
+
+  return {
+    value: value + nextVelocity * delta,
+    velocity: nextVelocity,
+  };
+}
+
 export function dampedLerp(current: number, target: number, damping: number, delta: number) {
   const alpha = 1 - Math.pow(1 - damping, delta * 60);
 

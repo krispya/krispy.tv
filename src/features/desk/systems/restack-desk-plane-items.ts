@@ -1,7 +1,7 @@
 import { Not, createAdded, type Entity, type World } from 'koota';
 import {
   Desk,
-  Dragging,
+  IsControlled,
   IsEnteringDesk,
   IsOpen,
   IsResting,
@@ -33,7 +33,7 @@ export function restackDeskPlaneItems(world: World) {
         Velocity,
         StackIndex,
         Not(IsResting),
-        Not(Dragging),
+        Not(IsControlled),
         Not(IsEnteringDesk),
         Not(IsOpen)
       )

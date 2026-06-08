@@ -3,7 +3,7 @@ import {
   AngularVelocity,
   BoundingBox,
   Desk,
-  Dragging,
+  IsControlled,
   IsEnteringDesk,
   IsOpen,
   IsResting,
@@ -56,7 +56,7 @@ export function resolveBodyCollisions(world: World) {
       BoundingBox,
       StackIndex,
       KinematicBody,
-      Not(Dragging),
+      Not(IsControlled),
       Not(IsEnteringDesk),
       Not(IsOpen)
     )
@@ -113,7 +113,7 @@ export function resolveBodyCollisions(world: World) {
   if (resolved.size === 0) return;
 
   world
-    .query(Position, Velocity, AngularVelocity, Not(Dragging), Not(IsEnteringDesk), Not(IsOpen))
+    .query(Position, Velocity, AngularVelocity, Not(IsControlled), Not(IsEnteringDesk), Not(IsOpen))
     .updateEach(([position, velocity, angularVelocity], entity) => {
       const next = resolved.get(entity);
       if (!next) return;

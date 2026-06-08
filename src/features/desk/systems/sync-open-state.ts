@@ -3,6 +3,7 @@ import {
   ActiveSlug,
   AngularVelocity,
   Dragging,
+  IsControlled,
   IsOffScreen,
   IsOpen,
   IsResting,
@@ -34,7 +35,7 @@ export function syncOpenState(world: World) {
 
       // Initiate exit — fly downward off the desk
       entity.add(IsOpen);
-      entity.remove(Dragging, Pressed, Selected, IsResting);
+      entity.remove(Dragging, IsControlled, Pressed, Selected, IsResting);
       entity.set(Velocity, { x: 0, y: EXIT_SPEED, z: 0 });
       entity.set(AngularVelocity, { x: 0, y: 0, z: 0 });
     } else if (entity.has(IsOpen)) {

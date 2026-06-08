@@ -28,6 +28,10 @@ export function getStageTiltTransform(tiltDeg = STAGE_TILT_DEG) {
   return tiltDeg ? `rotateX(${tiltDeg}deg)` : 'none';
 }
 
+export function getInverseStageTiltTransform(tiltDeg = STAGE_TILT_DEG) {
+  return tiltDeg ? `rotateX(${-tiltDeg}deg)` : 'none';
+}
+
 /** Extra scale beyond geometric cover so the desk plane clears viewport edges with perspective. */
 export const STAGE_FILL_OVERSCAN = 1.12;
 

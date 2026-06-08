@@ -1,6 +1,7 @@
 import type { Entity } from 'koota';
 import {
   Dragging,
+  IsControlled,
   IsEnteringDesk,
   IsOpen,
   IsResting,
@@ -72,7 +73,7 @@ export function getDeskPlaneInsertIndex(item: StackOrderItem, items: StackOrderI
 
 export function isThresholdItem(entity: Entity, restackThreshold: number) {
   if (restackThreshold <= 0) return false;
-  if (entity.has(Dragging) || entity.has(IsEnteringDesk) || entity.has(IsOpen)) return false;
+  if (entity.has(IsControlled) || entity.has(IsEnteringDesk) || entity.has(IsOpen)) return false;
 
   const position = entity.get(Position);
   const velocity = entity.get(Velocity);

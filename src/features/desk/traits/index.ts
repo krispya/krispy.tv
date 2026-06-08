@@ -108,6 +108,38 @@ export const Dragging = trait({
   liftProgress: 0,
 });
 
+export type PolaroidFocusPhase = 'opening' | 'closing';
+
+export const PolaroidFocusMotion = trait({
+  phase: 'opening' as PolaroidFocusPhase,
+  progress: 0,
+  progressVelocity: 0,
+  /** Meters. */
+  fromPosition: () => ({ x: 0, y: 0, z: 0 }),
+  /** Degrees. */
+  fromRotation: () => ({ x: 0, y: 0, z: 0 }),
+  /** Meters. */
+  toPosition: () => ({ x: 0, y: 0, z: 0 }),
+  /** Degrees. */
+  toRotation: () => ({ x: 0, y: 0, z: 0 }),
+  /** Meters per second. */
+  positionVelocity: () => ({ x: 0, y: 0, z: 0 }),
+  /** Degrees per second. */
+  rotationVelocity: () => ({ x: 0, y: 0, z: 0 }),
+  /** Meters. */
+  curveOffset: 0,
+  /** Degrees. */
+  sideTilt: 0,
+});
+
+export const PolaroidFocusSpin = trait({
+  pointerId: 0,
+  /** CSS pixels. */
+  origin: () => ({ x: 0, y: 0 }),
+  /** Degrees. */
+  rotation: () => ({ x: 0, y: 0, z: 0 }),
+});
+
 export const Pressed = trait({
   pointerId: 0,
   /** CSS pixels. */
@@ -119,6 +151,7 @@ export const Pressed = trait({
 
 export const Selected = trait();
 
+export const IsControlled = trait();
 export const IsStackable = trait();
 export const IsOpen = trait();
 export const IsOffScreen = trait();

@@ -21,6 +21,7 @@ import {
   syncPolaroidToDOM,
   updateArticleMotion,
   updateDragging,
+  updatePolaroidFocus,
   updateRotation,
   updateTime,
 } from './systems/index.js';
@@ -61,6 +62,7 @@ export function Frameloop() {
     detectOffScreen(world);
     syncArticle(world);
     updateArticleMotion(world);
+    updatePolaroidFocus(world);
 
     // View
     syncPaperToDOM(world);

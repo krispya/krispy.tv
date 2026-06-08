@@ -1,5 +1,5 @@
 import { Not, type World } from 'koota';
-import { Dragging, IsResting, KinematicBody, Time, Velocity } from '../traits/index.js';
+import { IsControlled, IsResting, KinematicBody, Time, Velocity } from '../traits/index.js';
 import { GRAVITY_METERS_PER_SECOND_SQUARED } from '../utils/physics-units.js';
 
 export function applyGravity(world: World) {
@@ -7,7 +7,7 @@ export function applyGravity(world: World) {
   if (!time) return;
 
   // Only apply gravity to physical entities
-  world.query(Velocity, KinematicBody, Not(Dragging), Not(IsResting)).updateEach(([velocity]) => {
+  world.query(Velocity, KinematicBody, Not(IsControlled), Not(IsResting)).updateEach(([velocity]) => {
     velocity.z -= GRAVITY_METERS_PER_SECOND_SQUARED * time.delta;
   });
 }

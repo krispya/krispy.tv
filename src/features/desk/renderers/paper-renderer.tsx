@@ -8,6 +8,7 @@ import { actions } from '../actions.js';
 import {
   AngularVelocity,
   Dragging,
+  IsControlled,
   IsResting,
   Paper,
   Pressed,
@@ -136,6 +137,7 @@ function PaperView({ entity }: { entity: Entity }) {
       entity.remove(Pressed, IsResting);
       entity.remove(Selected);
       raiseDeskItem(entity);
+      entity.add(IsControlled);
       entity.add(
         Dragging({
           offset: pressed.offset,
@@ -162,7 +164,7 @@ function PaperView({ entity }: { entity: Entity }) {
       }
 
       if (dragging) {
-        entity.remove(Dragging);
+        entity.remove(Dragging, IsControlled);
       }
 
       if (event.currentTarget.hasPointerCapture(event.pointerId)) {
@@ -175,7 +177,7 @@ function PaperView({ entity }: { entity: Entity }) {
   const handlePointerCancel = useCallback(() => {
     entity.remove(Pressed);
     entity.remove(Selected);
-    entity.remove(Dragging);
+    entity.remove(Dragging, IsControlled);
   }, [entity]);
 
   const handleLostPointerCapture = useCallback(
@@ -183,7 +185,7 @@ function PaperView({ entity }: { entity: Entity }) {
       if (event.buttons === 0) {
         entity.remove(Pressed);
         entity.remove(Selected);
-        entity.remove(Dragging);
+        entity.remove(Dragging, IsControlled);
       }
     },
     [entity]

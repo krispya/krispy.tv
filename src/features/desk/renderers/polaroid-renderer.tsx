@@ -7,8 +7,11 @@ import { PolaroidGlossOverlay } from './polaroid-gloss-overlay.js';
 import {
   AngularVelocity,
   Dragging,
+  IsControlled,
+  IsOpen,
   IsResting,
   Polaroid,
+  PolaroidFocusSpin,
   Pressed,
   Position,
   Ref,
@@ -33,6 +36,8 @@ const POLAROID_INITIAL_STYLE = {
   '--shadow-offset-y': '3px',
   '--shadow-scale-x': '1',
   '--shadow-scale-y': '1',
+  '--shadow-rotation-scale-x': '1',
+  '--shadow-rotation-scale-y': '1',
   '--shadow-opacity': '0.2',
 } satisfies PolaroidStyle;
 
@@ -44,8 +49,16 @@ export function PolaroidRenderer() {
 function PolaroidView({ entity }: { entity: Entity }) {
   const polaroid = useTrait(entity, Polaroid);
   const isDragging = useHas(entity, Dragging);
+  const isFocusSpinning = useHas(entity, PolaroidFocusSpin);
+  const isOpen = useHas(entity, IsOpen);
   const isSelected = useHas(entity, Selected);
-  const { raiseDeskItem } = useActions(actions);
+  const {
+    endPolaroidFocusSpin,
+    openPolaroid,
+    raiseDeskItem,
+    startPolaroidFocusSpin,
+    updatePolaroidFocusSpin,
+  } = useActions(actions);
 
   const { enabled: isDebug } = useDebug();
 
@@ -63,6 +76,12 @@ function PolaroidView({ entity }: { entity: Entity }) {
   const handlePointerDown = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
       if (event.pointerType === 'mouse' && event.button !== 0) return;
+
+      if (entity.has(IsOpen)) {
+        startPolaroidFocusSpin(entity, event.pointerId, event.clientX, event.clientY);
+        event.currentTarget.setPointerCapture(event.pointerId);
+        return;
+      }
 
       const position = entity.get(Position) ?? { x: 0, y: 0, z: 0 };
       const offset = {
@@ -89,11 +108,16 @@ function PolaroidView({ entity }: { entity: Entity }) {
       entity.add(Selected);
       event.currentTarget.setPointerCapture(event.pointerId);
     },
-    [entity]
+    [entity, startPolaroidFocusSpin]
   );
 
   const handlePointerMove = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
+      if (entity.has(IsOpen)) {
+        updatePolaroidFocusSpin(entity, event.pointerId, event.clientX, event.clientY);
+        return;
+      }
+
       const pressed = entity.get(Pressed);
 
       if (!pressed || pressed.pointerId !== event.pointerId) return;
@@ -112,6 +136,7 @@ function PolaroidView({ entity }: { entity: Entity }) {
       entity.remove(Pressed, IsResting);
       entity.remove(Selected);
       raiseDeskItem(entity);
+      entity.add(IsControlled);
       entity.add(
         Dragging({
           offset: pressed.offset,
@@ -120,7 +145,7 @@ function PolaroidView({ entity }: { entity: Entity }) {
         })
       );
     },
-    [entity, raiseDeskItem]
+    [entity, raiseDeskItem, updatePolaroidFocusSpin]
   );
 
   const handlePointerUp = useCallback(
@@ -128,37 +153,58 @@ function PolaroidView({ entity }: { entity: Entity }) {
       const pressed = entity.get(Pressed);
       const dragging = entity.get(Dragging);
 
+      if (entity.has(IsOpen)) {
+        endPolaroidFocusSpin(entity, event.pointerId);
+
+        if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+          event.currentTarget.releasePointerCapture(event.pointerId);
+        }
+        return;
+      }
+
       if (pressed && pressed.pointerId === event.pointerId) {
-        entity.remove(Pressed);
-        entity.remove(Selected);
+        openPolaroid(entity);
       }
 
       if (dragging) {
-        entity.remove(Dragging);
+        entity.remove(Dragging, IsControlled);
       }
 
       if (event.currentTarget.hasPointerCapture(event.pointerId)) {
         event.currentTarget.releasePointerCapture(event.pointerId);
       }
     },
-    [entity]
+    [endPolaroidFocusSpin, entity, openPolaroid]
   );
 
-  const handlePointerCancel = useCallback(() => {
+  const handlePointerCancel = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      endPolaroidFocusSpin(entity, event.pointerId);
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
+
+      entity.remove(Pressed);
+      entity.remove(Selected);
+      if (entity.has(Dragging)) entity.remove(Dragging, IsControlled);
+    },
+    [endPolaroidFocusSpin, entity]
+  );
+
+  const clearPointerState = useCallback(() => {
     entity.remove(Pressed);
     entity.remove(Selected);
-    entity.remove(Dragging);
+    if (entity.has(Dragging)) entity.remove(Dragging, IsControlled);
   }, [entity]);
 
   const handleLostPointerCapture = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
       if (event.buttons === 0) {
-        entity.remove(Pressed);
-        entity.remove(Selected);
-        entity.remove(Dragging);
+        endPolaroidFocusSpin(entity, event.pointerId);
+        clearPointerState();
       }
     },
-    [entity]
+    [clearPointerState, endPolaroidFocusSpin, entity]
   );
 
   if (!polaroid) return null;
@@ -168,7 +214,7 @@ function PolaroidView({ entity }: { entity: Entity }) {
   return (
     <div
       ref={handleInit}
-      className="absolute top-0 left-0 isolate will-change-transform [transform-style:preserve-3d]"
+      className="absolute top-0 left-0 isolate will-change-transform"
       style={{
         ...POLAROID_INITIAL_STYLE,
         width: polaroid.width,
@@ -187,21 +233,48 @@ function PolaroidView({ entity }: { entity: Entity }) {
         onPointerCancel={handlePointerCancel}
         onLostPointerCapture={handleLostPointerCapture}
         onDragStart={(event) => event.preventDefault()}
-        className={`absolute inset-0 cursor-grab touch-none rounded-[3px] select-none [-webkit-user-drag:none] ${
+        className={`absolute inset-0 touch-none rounded-[3px] select-none [-webkit-user-drag:none] ${
+          isOpen ? (isFocusSpinning ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-grab'
+        } ${
           isDragging ? 'cursor-grabbing' : ''
         } ${isSelected || isDragging ? 'outline-3 outline-offset-2 outline-blue-500' : ''}`}
         style={{
           transform:
-            'translateZ(var(--paper-z)) rotateX(var(--paper-rotate-x)) rotateY(var(--paper-rotate-y)) rotateZ(var(--paper-rotate-z)) scale(var(--paper-lift-scale))',
+            'translateZ(var(--paper-z)) rotateZ(var(--paper-rotate-z)) scale(var(--paper-lift-scale))',
         }}
       >
-        <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[3px] bg-[#f8f6f0] p-3 shadow-inner">
-          <PolaroidPhoto id={polaroid.id} imageSrc={polaroid.imageSrc} imageSize={imageSize} />
-          {polaroid.caption ? (
-            <p className="mt-2 text-center text-sm text-stone-700">{polaroid.caption}</p>
-          ) : null}
+        <div className="pointer-events-none absolute inset-0 [perspective:520px]">
+          <div
+            className="absolute inset-0 will-change-transform [transform-style:preserve-3d]"
+            style={{
+              transform: 'rotateX(var(--paper-rotate-x)) rotateY(var(--paper-rotate-y))',
+            }}
+          >
+            <div className="absolute inset-0 [transform:translateZ(0.5px)] overflow-hidden rounded-[3px] bg-[#f8f6f0] p-3 shadow-inner [backface-visibility:hidden]">
+              <PolaroidPhoto id={polaroid.id} imageSrc={polaroid.imageSrc} imageSize={imageSize} />
+              {polaroid.caption ? (
+                <p className="mt-2 text-center text-sm text-stone-700">{polaroid.caption}</p>
+              ) : null}
+              <SketchOutline
+                width={polaroid.width}
+                height={polaroid.height}
+                seed={hashSeed(polaroid.id)}
+              />
+            </div>
+            <div className="absolute inset-0 [transform:rotateY(180deg)_translateZ(0.5px)] overflow-hidden rounded-[3px] bg-[#eee7da] p-4 shadow-inner [backface-visibility:hidden]">
+              <div className="absolute inset-3 rounded-[2px] border border-stone-300/70" />
+              <div className="absolute inset-x-8 top-8 h-px bg-stone-300/70" />
+              <div className="absolute inset-x-8 top-[52px] h-px bg-stone-300/50" />
+              <div className="absolute inset-x-8 top-[72px] h-px bg-stone-300/40" />
+              <div className="absolute right-6 bottom-6 h-8 w-14 rounded-[2px] border border-stone-300/70" />
+              <SketchOutline
+                width={polaroid.width}
+                height={polaroid.height}
+                seed={hashSeed(`${polaroid.id}:back`)}
+              />
+            </div>
+          </div>
         </div>
-        <SketchOutline width={polaroid.width} height={polaroid.height} seed={hashSeed(polaroid.id)} />
       </div>
     </div>
   );
@@ -236,7 +309,7 @@ function PolaroidShadow() {
       style={{
         opacity: 'var(--shadow-opacity)',
         transform:
-          'translate(var(--shadow-offset-x), var(--shadow-offset-y)) rotate(var(--paper-rotate-z)) scale(var(--shadow-scale-x), var(--shadow-scale-y))',
+          'translate(var(--shadow-offset-x), var(--shadow-offset-y)) rotate(var(--paper-rotate-z)) scale(calc(var(--shadow-scale-x) * var(--shadow-rotation-scale-x)), calc(var(--shadow-scale-y) * var(--shadow-rotation-scale-y)))',
       }}
     />
   );

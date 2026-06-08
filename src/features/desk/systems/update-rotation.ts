@@ -2,6 +2,7 @@ import { Not, type World } from 'koota';
 import {
   AngularVelocity,
   Dragging,
+  IsControlled,
   IsResting,
   KinematicBody,
   Position,
@@ -20,37 +21,44 @@ export function updateRotation(world: World) {
   if (!time) return;
 
   world
-    .query(Velocity, Position, Rotation, AngularVelocity, KinematicBody, Not(IsResting))
-    .updateEach(([_velocity, position, rotation, angularVelocity], entity) => {
-      const dragging = entity.get(Dragging);
+    .query(Rotation, AngularVelocity, Dragging)
+    .updateEach(([rotation, angularVelocity, dragging]) => {
+      const pickupRotationScale = 1 - PICKUP_STRAIGHTNESS;
 
-      if (dragging) {
-        const pickupRotationScale = 1 - PICKUP_STRAIGHTNESS;
+      angularVelocity.x = 0;
+      angularVelocity.y = 0;
+      angularVelocity.z = 0;
+      rotation.x = dampedLerp(
+        rotation.x,
+        dragging.rotation.x * pickupRotationScale,
+        STRAIGHTEN_DAMPING,
+        time.delta
+      );
+      rotation.y = dampedLerp(
+        rotation.y,
+        dragging.rotation.y * pickupRotationScale,
+        STRAIGHTEN_DAMPING,
+        time.delta
+      );
+      rotation.z = dampedLerp(
+        rotation.z,
+        dragging.rotation.z * pickupRotationScale,
+        STRAIGHTEN_DAMPING,
+        time.delta
+      );
+    });
 
-        angularVelocity.x = 0;
-        angularVelocity.y = 0;
-        angularVelocity.z = 0;
-        rotation.x = dampedLerp(
-          rotation.x,
-          dragging.rotation.x * pickupRotationScale,
-          STRAIGHTEN_DAMPING,
-          time.delta
-        );
-        rotation.y = dampedLerp(
-          rotation.y,
-          dragging.rotation.y * pickupRotationScale,
-          STRAIGHTEN_DAMPING,
-          time.delta
-        );
-        rotation.z = dampedLerp(
-          rotation.z,
-          dragging.rotation.z * pickupRotationScale,
-          STRAIGHTEN_DAMPING,
-          time.delta
-        );
-        return;
-      }
-
+  world
+    .query(
+      Velocity,
+      Position,
+      Rotation,
+      AngularVelocity,
+      KinematicBody,
+      Not(IsControlled),
+      Not(IsResting)
+    )
+    .updateEach(([_velocity, position, rotation]) => {
       if (position.z <= LANDING_EPSILON_M) {
         rotation.x = dampedLerp(rotation.x, 0, LANDING_FLATTEN_DAMPING, time.delta);
         rotation.y = dampedLerp(rotation.y, 0, LANDING_FLATTEN_DAMPING, time.delta);

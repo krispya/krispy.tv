@@ -1,7 +1,7 @@
 import { Not, type World } from 'koota';
 import {
   AngularVelocity,
-  Dragging,
+  IsControlled,
   IsResting,
   KinematicBody,
   Position,
@@ -21,7 +21,7 @@ export function resolveRestingBody(world: World) {
       Velocity,
       AngularVelocity,
       KinematicBody,
-      Not(Dragging),
+      Not(IsControlled),
       Not(IsResting)
     )
     .updateEach(([position, rotation, velocity, angularVelocity, body], entity) => {

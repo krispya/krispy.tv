@@ -39,6 +39,7 @@ export {
 export {
   getStageFillScale,
   getStageFillTransform,
+  getInverseStageTiltTransform,
   getStagePerspective,
   getStagePerspectiveOrigin,
   getStageTiltTransform,

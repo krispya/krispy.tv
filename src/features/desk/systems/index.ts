@@ -16,5 +16,6 @@ export { syncPaperToDOM } from './sync-paper-to-dom.js';
 export { syncPolaroidToDOM } from './sync-polaroid-to-dom.js';
 export { updateArticleMotion } from './update-article-motion.js';
 export { updateDragging } from './update-dragging.js';
+export { updatePolaroidFocus } from './update-polaroid-focus.js';
 export { updateRotation } from './update-rotation.js';
 export { updateTime } from './update-time.js';
