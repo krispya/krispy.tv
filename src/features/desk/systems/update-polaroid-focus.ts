@@ -3,6 +3,7 @@ import {
   IsControlled,
   IsOpen,
   PolaroidFocusMotion,
+  PolaroidFocusSpin,
   Position,
   Rotation,
   Time,
@@ -15,6 +16,8 @@ const CLOSE_POSITION_STIFFNESS = 150;
 const CLOSE_POSITION_DAMPING = 26;
 const ROTATION_STIFFNESS = 130;
 const ROTATION_DAMPING = 21;
+const SPIN_ROTATION_STIFFNESS = 220;
+const SPIN_ROTATION_DAMPING = 18;
 const PROGRESS_STIFFNESS = 110;
 const PROGRESS_DAMPING = 20;
 const MAX_SPRING_DELTA = 1 / 30;
@@ -54,9 +57,37 @@ export function updatePolaroidFocus(world: World) {
         delta,
       });
 
-      stepRotationAxis(rotation, motion.rotationVelocity, 'x', motion.toRotation.x, delta);
-      stepRotationAxis(rotation, motion.rotationVelocity, 'y', motion.toRotation.y, delta);
-      stepRotationAxis(rotation, motion.rotationVelocity, 'z', motion.toRotation.z, delta);
+      const isSpinning = entity.has(PolaroidFocusSpin);
+      const rotationStiffness = isSpinning ? SPIN_ROTATION_STIFFNESS : ROTATION_STIFFNESS;
+      const rotationDamping = isSpinning ? SPIN_ROTATION_DAMPING : ROTATION_DAMPING;
+
+      stepRotationAxis(
+        rotation,
+        motion.rotationVelocity,
+        'x',
+        motion.toRotation.x,
+        delta,
+        rotationStiffness,
+        rotationDamping
+      );
+      stepRotationAxis(
+        rotation,
+        motion.rotationVelocity,
+        'y',
+        motion.toRotation.y,
+        delta,
+        rotationStiffness,
+        rotationDamping
+      );
+      stepRotationAxis(
+        rotation,
+        motion.rotationVelocity,
+        'z',
+        motion.toRotation.z,
+        delta,
+        rotationStiffness,
+        rotationDamping
+      );
 
       const nextProgress = stepSpring(
         motion.progress,
@@ -124,16 +155,11 @@ function stepRotationAxis(
   velocity: { x: number; y: number; z: number },
   axis: Axis,
   target: number,
-  delta: number
+  delta: number,
+  stiffness: number,
+  damping: number
 ) {
-  const next = stepSpring(
-    rotation[axis],
-    velocity[axis],
-    target,
-    ROTATION_STIFFNESS,
-    ROTATION_DAMPING,
-    delta
-  );
+  const next = stepSpring(rotation[axis], velocity[axis], target, stiffness, damping, delta);
   rotation[axis] = next.value;
   velocity[axis] = next.velocity;
 }

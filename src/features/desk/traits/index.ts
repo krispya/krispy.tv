@@ -150,8 +150,10 @@ export const PolaroidFocusMotion = trait({
 
 export const PolaroidFocusSpin = trait({
   pointerId: 0,
+  pointerType: 'mouse',
   /** CSS pixels. */
-  origin: () => ({ x: 0, y: 0 }),
+  lastClient: () => ({ x: 0, y: 0 }),
+  lastTimeMs: 0,
   /** Degrees. */
   rotation: () => ({ x: 0, y: 0, z: 0 }),
 });

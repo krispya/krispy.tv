@@ -47,11 +47,14 @@ const POLAROID_FOCUS_SIDE_VELOCITY_SCALE = 10;
 const POLAROID_FOCUS_UPWARD_VELOCITY = 0.48;
 const POLAROID_FOCUS_ROTATION_X_VELOCITY = -120;
 const POLAROID_FOCUS_ROTATION_Y_VELOCITY = 80;
-const POLAROID_SPIN_DRAG_THRESHOLD_PX = 5;
 const POLAROID_SPIN_ROTATION_Y_PER_PX = 0.55;
 const POLAROID_SPIN_ROTATION_X_PER_PX = 0.12;
 const POLAROID_SPIN_ROTATION_X_MIN = -18;
 const POLAROID_SPIN_ROTATION_X_MAX = 12;
+const POLAROID_SPIN_TOUCH_SENSITIVITY = 2.5;
+const POLAROID_SPIN_VELOCITY_SCALE = 1;
+const POLAROID_SPIN_MAX_VELOCITY_DEG = 750;
+const POLAROID_SPIN_MIN_DELTA_MS = 8;
 const HEADPHONES_CORNER_OVERLAP_X_PX = 62;
 const HEADPHONES_CORNER_OVERLAP_Y_PX = 26;
 const HEADPHONES_MASS = 120;
@@ -506,45 +509,93 @@ export const actions = createActions((world) => ({
     });
   },
 
-  startPolaroidFocusSpin: (entity: Entity, pointerId: number, x: number, y: number) => {
+  startPolaroidFocusSpin: (
+    entity: Entity,
+    pointerId: number,
+    x: number,
+    y: number,
+    timeMs: number,
+    pointerType: string
+  ) => {
     if (!entity.has(IsOpen)) return;
 
     const rotation = entity.get(Rotation);
     const motion = entity.get(PolaroidFocusMotion);
     if (!rotation || !motion || motion.phase === 'closing') return;
 
+    const currentRotation = { x: rotation.x, y: rotation.y, z: rotation.z };
+
+    entity.set(PolaroidFocusMotion, {
+      ...motion,
+      toRotation: currentRotation,
+      rotationVelocity: { x: 0, y: 0, z: 0 },
+    });
     entity.add(
       PolaroidFocusSpin({
         pointerId,
-        origin: { x, y },
-        rotation: { x: rotation.x, y: rotation.y, z: rotation.z },
+        pointerType,
+        lastClient: { x, y },
+        lastTimeMs: timeMs,
+        rotation: currentRotation,
       })
     );
   },
 
-  updatePolaroidFocusSpin: (entity: Entity, pointerId: number, x: number, y: number) => {
+  updatePolaroidFocusSpin: (
+    entity: Entity,
+    pointerId: number,
+    x: number,
+    y: number,
+    timeMs: number
+  ) => {
     const spin = entity.get(PolaroidFocusSpin);
     const motion = entity.get(PolaroidFocusMotion);
     if (!spin || !motion || spin.pointerId !== pointerId || motion.phase === 'closing') return;
 
-    const dx = x - spin.origin.x;
-    const dy = y - spin.origin.y;
-    const distance = Math.hypot(dx, dy);
-    if (distance < POLAROID_SPIN_DRAG_THRESHOLD_PX) return;
+    const dx = x - spin.lastClient.x;
+    const dy = y - spin.lastClient.y;
+    if (dx === 0 && dy === 0) return;
 
-    const targetRotation = {
+    const sensitivity = spin.pointerType === 'touch' ? POLAROID_SPIN_TOUCH_SENSITIVITY : 1;
+    const deltaRotationX = -dy * POLAROID_SPIN_ROTATION_X_PER_PX * sensitivity;
+    const deltaRotationY = dx * POLAROID_SPIN_ROTATION_Y_PER_PX * sensitivity;
+    const nextRotation = {
       x: clamp(
-        spin.rotation.x - dy * POLAROID_SPIN_ROTATION_X_PER_PX,
+        spin.rotation.x + deltaRotationX,
         POLAROID_SPIN_ROTATION_X_MIN,
         POLAROID_SPIN_ROTATION_X_MAX
       ),
-      y: spin.rotation.y + dx * POLAROID_SPIN_ROTATION_Y_PER_PX,
+      y: spin.rotation.y + deltaRotationY,
       z: spin.rotation.z,
     };
 
+    const deltaMs = timeMs - spin.lastTimeMs;
+    const nextRotationVelocity = { ...motion.rotationVelocity };
+
+    if (deltaMs >= POLAROID_SPIN_MIN_DELTA_MS) {
+      const deltaSeconds = deltaMs / 1000;
+      nextRotationVelocity.x = clamp(
+        (deltaRotationX / deltaSeconds) * POLAROID_SPIN_VELOCITY_SCALE,
+        -POLAROID_SPIN_MAX_VELOCITY_DEG,
+        POLAROID_SPIN_MAX_VELOCITY_DEG
+      );
+      nextRotationVelocity.y = clamp(
+        (deltaRotationY / deltaSeconds) * POLAROID_SPIN_VELOCITY_SCALE,
+        -POLAROID_SPIN_MAX_VELOCITY_DEG,
+        POLAROID_SPIN_MAX_VELOCITY_DEG
+      );
+    }
+
+    entity.set(PolaroidFocusSpin, {
+      ...spin,
+      lastClient: { x, y },
+      lastTimeMs: timeMs,
+      rotation: nextRotation,
+    });
     entity.set(PolaroidFocusMotion, {
       ...motion,
-      toRotation: targetRotation,
+      toRotation: nextRotation,
+      rotationVelocity: nextRotationVelocity,
     });
   },
 

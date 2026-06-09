@@ -84,7 +84,14 @@ function PolaroidView({ entity }: { entity: Entity }) {
       if (event.pointerType === 'mouse' && event.button !== 0) return;
 
       if (entity.has(IsOpen)) {
-        startPolaroidFocusSpin(entity, event.pointerId, event.clientX, event.clientY);
+        startPolaroidFocusSpin(
+          entity,
+          event.pointerId,
+          event.clientX,
+          event.clientY,
+          event.timeStamp,
+          event.pointerType
+        );
         event.currentTarget.setPointerCapture(event.pointerId);
         return;
       }
@@ -121,7 +128,13 @@ function PolaroidView({ entity }: { entity: Entity }) {
   const handlePointerMove = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
       if (entity.has(IsOpen)) {
-        updatePolaroidFocusSpin(entity, event.pointerId, event.clientX, event.clientY);
+        updatePolaroidFocusSpin(
+          entity,
+          event.pointerId,
+          event.clientX,
+          event.clientY,
+          event.timeStamp
+        );
         return;
       }
 
