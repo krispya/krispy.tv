@@ -8,8 +8,8 @@ import {
   Rotation,
   Velocity,
 } from '../traits/index.js';
+import { DESK_PLANE_CONTACT_EPSILON_M } from '../utils/height.js';
 
-const CONTACT_EPSILON_M = 0.001;
 const ROTATION_REST_EPSILON = 0.01;
 const ANGULAR_REST_SPEED = 0.001;
 
@@ -25,7 +25,7 @@ export function resolveRestingBody(world: World) {
       Not(IsResting)
     )
     .updateEach(([position, rotation, velocity, angularVelocity, body], entity) => {
-      if (position.z > CONTACT_EPSILON_M) return;
+      if (position.z > DESK_PLANE_CONTACT_EPSILON_M) return;
 
       position.z = 0;
       if (velocity.z < 0) velocity.z = 0;

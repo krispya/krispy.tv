@@ -10,10 +10,10 @@ import {
   Time,
   Velocity,
 } from '../traits/index.js';
+import { DESK_PLANE_CONTACT_EPSILON_M } from '../utils/height.js';
 import { clamp, dampedLerp } from '../utils/math.js';
 const PICKUP_STRAIGHTNESS = 0.82;
 const STRAIGHTEN_DAMPING = 0.28;
-const LANDING_EPSILON_M = 0.001;
 const LANDING_FLATTEN_DAMPING = 0.2;
 
 export function updateRotation(world: World) {
@@ -59,7 +59,7 @@ export function updateRotation(world: World) {
       Not(IsResting)
     )
     .updateEach(([_velocity, position, rotation]) => {
-      if (position.z <= LANDING_EPSILON_M) {
+      if (position.z <= DESK_PLANE_CONTACT_EPSILON_M) {
         rotation.x = dampedLerp(rotation.x, 0, LANDING_FLATTEN_DAMPING, time.delta);
         rotation.y = dampedLerp(rotation.y, 0, LANDING_FLATTEN_DAMPING, time.delta);
       }
