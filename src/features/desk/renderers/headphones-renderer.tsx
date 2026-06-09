@@ -6,7 +6,9 @@ import { Headphones, Position, Ref, Rotation } from '../traits/index.js';
 import {
   getHeadphonesFillSrc,
   getHeadphonesFillToneColor,
+  getHeadphonesFillToneOpacity,
   getHeadphonesFillToneSrc,
+  getHeadphonesLineColor,
   getHeadphonesMaskStyle,
   HEADPHONES_FILL_TONES,
 } from '../presentation/headphones-lines.js';
@@ -80,11 +82,15 @@ function HeadphonesView({ entity }: { entity: Entity }) {
             className="pointer-events-none absolute"
             style={getHeadphonesMaskStyle(
               getHeadphonesFillToneSrc(tone.name),
-              getHeadphonesFillToneColor(headphones.fillColor, tone.name)
+              getHeadphonesFillToneColor(headphones.fillColor, tone.name),
+              getHeadphonesFillToneOpacity(tone.name)
             )}
           />
         ))}
-        <HeadphonesLinesOverlay headphonesId={headphones.id} lineColor={headphones.lineColor} />
+        <HeadphonesLinesOverlay
+          headphonesId={headphones.id}
+          lineColor={getHeadphonesLineColor(headphones.fillColor)}
+        />
       </div>
     </div>
   );

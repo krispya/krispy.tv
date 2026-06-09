@@ -4,22 +4,36 @@ import { shade } from '../utils/color.js';
 export const HEADPHONES_LINE_COUNT = 3;
 export const HEADPHONES_BOIL_CYCLE_SECONDS = 0.36;
 
-const HEADPHONES_FILL_IMAGE_WIDTH = 1646;
-const HEADPHONES_FILL_IMAGE_HEIGHT = 731;
-const HEADPHONES_LINE_IMAGE_WIDTH = 1700;
-const HEADPHONES_LINE_IMAGE_HEIGHT = 760;
+const HEADPHONES_FILL_RENDER_WIDTH = 1646;
+const HEADPHONES_FILL_RENDER_HEIGHT = 731;
+const HEADPHONES_LINE_RENDER_WIDTH = 1700;
+const HEADPHONES_LINE_RENDER_HEIGHT = 760;
 const HEADPHONES_LINE_OFFSET_X = 10;
 const HEADPHONES_LINE_OFFSET_Y = 4;
 const HEADPHONES_ASSET_PATH = 'lines/headphones';
 const HEADPHONES_ASSET_NAME = 'heaphones';
 
+type HeadphonesFillToneConfig = {
+  name: 'light' | 'mid' | 'dark';
+  shade: number;
+  opacity?: number;
+};
+
 export const HEADPHONES_FILL_TONES = [
-  // { name: 'light', shade: 34 },
-  { name: 'mid', shade: -8 },
-  { name: 'dark', shade: -52 },
-] as const;
+  { name: 'light', shade: 0, opacity: 0.45 },
+  { name: 'mid', shade: -8, opacity: 1 },
+  { name: 'dark', shade: -52, opacity: 1 },
+] as const satisfies readonly HeadphonesFillToneConfig[];
+
+const HEADPHONES_LINE_SHADE = -88;
 
 type HeadphonesFillTone = (typeof HEADPHONES_FILL_TONES)[number]['name'];
+
+function getHeadphonesFillTone(tone: HeadphonesFillTone): HeadphonesFillToneConfig | undefined {
+  return (HEADPHONES_FILL_TONES as readonly HeadphonesFillToneConfig[]).find(
+    (candidate) => candidate.name === tone
+  );
+}
 
 function hashString(value: string): number {
   let hash = 0;
@@ -48,8 +62,17 @@ export function getHeadphonesFillToneSrc(tone: HeadphonesFillTone): string {
 }
 
 export function getHeadphonesFillToneColor(fillColor: string, tone: HeadphonesFillTone): string {
-  const fillTone = HEADPHONES_FILL_TONES.find((candidate) => candidate.name === tone);
+  const fillTone = getHeadphonesFillTone(tone);
   return shade(fillColor, fillTone?.shade ?? 0);
+}
+
+export function getHeadphonesFillToneOpacity(tone: HeadphonesFillTone): number {
+  const fillTone = getHeadphonesFillTone(tone);
+  return fillTone?.opacity ?? 1;
+}
+
+export function getHeadphonesLineColor(fillColor: string): string {
+  return shade(fillColor, HEADPHONES_LINE_SHADE);
 }
 
 export function getHeadphonesLineSrc(variant: number): string {
@@ -86,8 +109,8 @@ export function getHeadphonesLineMaskStyle(
     inset: undefined,
     left: '50%',
     top: '50%',
-    width: `${(HEADPHONES_LINE_IMAGE_WIDTH / HEADPHONES_FILL_IMAGE_WIDTH) * 100}%`,
-    height: `${(HEADPHONES_LINE_IMAGE_HEIGHT / HEADPHONES_FILL_IMAGE_HEIGHT) * 100}%`,
+    width: `${(HEADPHONES_LINE_RENDER_WIDTH / HEADPHONES_FILL_RENDER_WIDTH) * 100}%`,
+    height: `${(HEADPHONES_LINE_RENDER_HEIGHT / HEADPHONES_FILL_RENDER_HEIGHT) * 100}%`,
     transform: `translate(calc(-50% + ${HEADPHONES_LINE_OFFSET_X}px), calc(-50% + ${HEADPHONES_LINE_OFFSET_Y}px))`,
     transformOrigin: 'center center',
   };

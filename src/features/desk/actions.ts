@@ -29,7 +29,6 @@ import {
   Velocity,
 } from './traits/index.js';
 import { getBookDepthMeters } from './utils/resting-height.js';
-import { shade } from './utils/color.js';
 import { cssPixelsToMeters, metersToCssPixels } from './utils/physics-units.js';
 import { clamp, randomInRange } from './utils/math.js';
 import { getVisibleDeskRectForWorld, type VisibleDeskRect } from './utils/camera.js';
@@ -103,7 +102,6 @@ export type BookConfig = {
 export type HeadphonesConfig = {
   id?: string;
   fillColor?: string;
-  lineColor?: string;
   width?: number;
   height?: number;
   aspectRatio?: number;
@@ -286,15 +284,11 @@ export const actions = createActions((world) => ({
   spawnHeadphones: (config: HeadphonesConfig = {}) => {
     const visibleRect = getVisibleDeskRectForWorld(world);
     const headphonesSize = getHeadphonesSize(config);
-    const lineColor =
-      config.lineColor ??
-      (config.fillColor !== undefined ? shade(config.fillColor, -132) : undefined);
 
     const entity = world.spawn(
       Headphones({
         ...(config.id !== undefined && { id: config.id }),
         ...(config.fillColor !== undefined && { fillColor: config.fillColor }),
-        ...(lineColor !== undefined && { lineColor }),
         ...(headphonesSize.width !== undefined && { width: headphonesSize.width }),
         ...(headphonesSize.height !== undefined && { height: headphonesSize.height }),
         aspectRatio: headphonesSize.aspectRatio,

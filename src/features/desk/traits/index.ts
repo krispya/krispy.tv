@@ -1,6 +1,5 @@
 import { relation, trait } from 'koota';
 import { color } from '../../../color.js';
-import { shade } from '../utils/color.js';
 
 export const Time = trait({ last: 0, delta: 0 });
 export const Pointer = trait({ x: 0, y: 0 });
@@ -63,7 +62,6 @@ export const HEADPHONES_ASPECT_RATIO = 1646 / 731;
 export const Headphones = trait({
   id: 'desk-headphones',
   fillColor: color.accent.sky,
-  lineColor: shade(color.accent.sky, -132),
   /** Pixels. */
   width: 560,
   /** Pixels. */
