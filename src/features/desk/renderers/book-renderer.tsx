@@ -18,6 +18,11 @@ import {
   Velocity,
 } from '../traits/index.js';
 import { color } from '../../../color.js';
+import {
+  getShadowBoilFrameStyle,
+  getShadowBoilPhaseOffset,
+  SHADOW_BOIL_FRAME_COUNT,
+} from '../presentation/shadow.js';
 import { metersToCssPixels } from '../utils/physics-units.js';
 import { getBookDepthMeters } from '../utils/resting-height.js';
 import { hashSeed, SketchOutline } from './sketch-outline.js';
@@ -195,7 +200,7 @@ function BookView({ entity }: { entity: Entity }) {
       }}
     >
       {isDebug && <BoundingBoxDebug entity={entity} />}
-      <BookShadow />
+      <BookShadow bookId={book.id} />
       <div
         aria-label={title}
         role="img"
@@ -294,21 +299,36 @@ function BookView({ entity }: { entity: Entity }) {
   );
 }
 
-function BookShadow() {
+function BookShadow({ bookId }: { bookId: string }) {
+  const phaseOffset = getShadowBoilPhaseOffset(bookId);
+
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none absolute top-1/2 left-1/2 bg-stone-950 will-change-transform"
-      style={{
-        width: 'var(--book-shadow-size)',
-        height: 'var(--book-shadow-size)',
-        marginLeft: 'calc(var(--book-shadow-size) / -2)',
-        marginTop: 'calc(var(--book-shadow-size) / -2)',
-        transform: 'var(--book-shadow-lift)',
-        opacity: 'var(--book-shadow-opacity)',
-        clipPath: 'var(--book-shadow-clip)',
-      }}
-    />
+      className="pointer-events-none absolute top-1/2 left-1/2 will-change-transform"
+      style={
+        {
+          '--boil-phase': `${phaseOffset}s`,
+          width: 'var(--book-shadow-size)',
+          height: 'var(--book-shadow-size)',
+          marginLeft: 'calc(var(--book-shadow-size) / -2)',
+          marginTop: 'calc(var(--book-shadow-size) / -2)',
+          transform: 'var(--book-shadow-lift)',
+          opacity: 'var(--book-shadow-opacity)',
+        } as CSSProperties
+      }
+    >
+      {Array.from({ length: SHADOW_BOIL_FRAME_COUNT }, (_, frameIndex) => (
+        <div
+          key={frameIndex}
+          className={`shadow-boil-frame shadow-boil-frame--${frameIndex} absolute inset-0 bg-stone-950`}
+          style={{
+            ...getShadowBoilFrameStyle(frameIndex, false),
+            clipPath: 'var(--book-shadow-clip)',
+          }}
+        />
+      ))}
+    </div>
   );
 }
 

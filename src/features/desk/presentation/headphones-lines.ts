@@ -14,7 +14,7 @@ const HEADPHONES_ASSET_PATH = 'lines/headphones';
 const HEADPHONES_ASSET_NAME = 'heaphones';
 
 export const HEADPHONES_FILL_TONES = [
-  { name: 'light', shade: 34 },
+  // { name: 'light', shade: 34 },
   { name: 'mid', shade: -8 },
   { name: 'dark', shade: -52 },
 ] as const;

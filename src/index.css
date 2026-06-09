@@ -267,6 +267,75 @@
     }
   }
 
+  @keyframes shadow-boil-slot-0 {
+    0%,
+    33.333% {
+      visibility: visible;
+    }
+    33.334%,
+    100% {
+      visibility: hidden;
+    }
+  }
+
+  @keyframes shadow-boil-slot-1 {
+    0%,
+    33.333% {
+      visibility: hidden;
+    }
+    33.334%,
+    66.666% {
+      visibility: visible;
+    }
+    66.667%,
+    100% {
+      visibility: hidden;
+    }
+  }
+
+  @keyframes shadow-boil-slot-2 {
+    0%,
+    66.666% {
+      visibility: hidden;
+    }
+    66.667%,
+    100% {
+      visibility: visible;
+    }
+  }
+
+  .shadow-boil-frame {
+    visibility: hidden;
+    animation-duration: 0.36s;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    animation-delay: var(--boil-phase);
+    transform-origin: center center;
+  }
+
+  .shadow-boil-frame--0 {
+    animation-name: shadow-boil-slot-0;
+  }
+
+  .shadow-boil-frame--1 {
+    animation-name: shadow-boil-slot-1;
+  }
+
+  .shadow-boil-frame--2 {
+    animation-name: shadow-boil-slot-2;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .shadow-boil-frame {
+      animation: none !important;
+      visibility: hidden;
+    }
+
+    .shadow-boil-frame--0 {
+      visibility: visible;
+    }
+  }
+
   .article-sheet-viewport {
     bottom: calc(0px - env(safe-area-inset-bottom, 0px));
   }

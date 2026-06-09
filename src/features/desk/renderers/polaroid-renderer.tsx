@@ -21,6 +21,11 @@ import {
   Velocity,
 } from '../traits/index.js';
 import { screenPointToDeskMetersForWorld } from '../utils/camera.js';
+import {
+  getShadowBoilFrameStyle,
+  getShadowBoilPhaseOffset,
+  SHADOW_BOIL_FRAME_COUNT,
+} from '../presentation/shadow.js';
 import { hashSeed, SketchOutline } from './sketch-outline.js';
 
 const DRAG_THRESHOLD_PX = 5;
@@ -234,7 +239,7 @@ function PolaroidView({ entity }: { entity: Entity }) {
       }}
     >
       {isDebug && <BoundingBoxDebug entity={entity} />}
-      <PolaroidShadow />
+      <PolaroidShadow polaroidId={polaroid.id} />
       <div
         aria-label="Photo"
         onPointerDown={handlePointerDown}
@@ -311,16 +316,29 @@ function PolaroidPhoto({
   );
 }
 
-function PolaroidShadow() {
+function PolaroidShadow({ polaroidId }: { polaroidId: string }) {
+  const phaseOffset = getShadowBoilPhaseOffset(polaroidId);
+
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none absolute inset-0 rounded-[3px] bg-stone-950 will-change-transform"
-      style={{
-        opacity: 'var(--shadow-opacity)',
-        transform:
-          'translate(var(--shadow-offset-x), var(--shadow-offset-y)) rotate(var(--paper-rotate-z)) scale(calc(var(--shadow-scale-x) * var(--shadow-rotation-scale-x) * var(--paper-lift-scale)), calc(var(--shadow-scale-y) * var(--shadow-rotation-scale-y) * var(--paper-lift-scale)))',
-      }}
-    />
+      className="pointer-events-none absolute inset-0 will-change-transform"
+      style={
+        {
+          '--boil-phase': `${phaseOffset}s`,
+          opacity: 'var(--shadow-opacity)',
+          transform:
+            'translate(var(--shadow-offset-x), var(--shadow-offset-y)) rotate(var(--paper-rotate-z)) scale(calc(var(--shadow-scale-x) * var(--shadow-rotation-scale-x) * var(--paper-lift-scale)), calc(var(--shadow-scale-y) * var(--shadow-rotation-scale-y) * var(--paper-lift-scale)))',
+        } as CSSProperties
+      }
+    >
+      {Array.from({ length: SHADOW_BOIL_FRAME_COUNT }, (_, frameIndex) => (
+        <div
+          key={frameIndex}
+          className={`shadow-boil-frame shadow-boil-frame--${frameIndex} absolute inset-0 rounded-[3px] bg-stone-950`}
+          style={getShadowBoilFrameStyle(frameIndex)}
+        />
+      ))}
+    </div>
   );
 }

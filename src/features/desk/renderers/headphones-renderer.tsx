@@ -10,6 +10,11 @@ import {
   getHeadphonesMaskStyle,
   HEADPHONES_FILL_TONES,
 } from '../presentation/headphones-lines.js';
+import {
+  getShadowBoilFrameStyle,
+  getShadowBoilPhaseOffset,
+  SHADOW_BOIL_FRAME_COUNT,
+} from '../presentation/shadow.js';
 import { HeadphonesLinesOverlay } from './headphones-lines-overlay.js';
 
 type HeadphonesStyle = CSSProperties & Record<`--${string}`, string>;
@@ -57,7 +62,7 @@ function HeadphonesView({ entity }: { entity: Entity }) {
       }}
     >
       {isDebug && <BoundingBoxDebug entity={entity} />}
-      <HeadphonesShadow />
+      <HeadphonesShadow headphonesId={headphones.id} />
       <div
         aria-hidden="true"
         className="absolute inset-0 overflow-visible"
@@ -85,16 +90,29 @@ function HeadphonesView({ entity }: { entity: Entity }) {
   );
 }
 
-function HeadphonesShadow() {
+function HeadphonesShadow({ headphonesId }: { headphonesId: string }) {
+  const phaseOffset = getShadowBoilPhaseOffset(headphonesId);
+
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none absolute top-[58%] left-[56%] aspect-square w-[72%] rounded-full bg-stone-950 will-change-transform"
-      style={{
-        opacity: 'var(--shadow-opacity)',
-        transform:
-          'translate(-50%, -50%) translate(var(--shadow-offset-x), var(--shadow-offset-y)) scale(var(--shadow-scale-x), var(--shadow-scale-y))',
-      }}
-    />
+      className="pointer-events-none absolute top-[58%] left-[56%] aspect-square w-[72%] will-change-transform"
+      style={
+        {
+          '--boil-phase': `${phaseOffset}s`,
+          opacity: 'var(--shadow-opacity)',
+          transform:
+            'translate(-50%, -50%) translate(var(--shadow-offset-x), var(--shadow-offset-y)) scale(var(--shadow-scale-x), var(--shadow-scale-y))',
+        } as CSSProperties
+      }
+    >
+      {Array.from({ length: SHADOW_BOIL_FRAME_COUNT }, (_, frameIndex) => (
+        <div
+          key={frameIndex}
+          className={`shadow-boil-frame shadow-boil-frame--${frameIndex} absolute inset-0 rounded-full bg-stone-950`}
+          style={getShadowBoilFrameStyle(frameIndex, false)}
+        />
+      ))}
+    </div>
   );
 }
