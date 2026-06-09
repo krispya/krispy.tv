@@ -8,6 +8,7 @@ import {
   Book,
   Dragging,
   IsControlled,
+  IsDroppedFromDragging,
   IsResting,
   Position,
   Pressed,
@@ -85,7 +86,7 @@ function BookView({ entity }: { entity: Entity }) {
     };
     const rotation = entity.get(Rotation) ?? { x: 0, y: 0, z: 0 };
 
-    entity.remove(Dragging, IsResting);
+    entity.remove(Dragging, IsDroppedFromDragging, IsResting);
     entity.set(Velocity, { x: 0, y: 0, z: 0 });
     entity.set(AngularVelocity, { x: 0, y: 0, z: 0 });
     entity.add(
@@ -144,6 +145,7 @@ function BookView({ entity }: { entity: Entity }) {
 
     if (dragging) {
       entity.remove(Dragging, IsControlled);
+      entity.add(IsDroppedFromDragging);
     }
 
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
@@ -154,6 +156,7 @@ function BookView({ entity }: { entity: Entity }) {
   function handlePointerCancel() {
     entity.remove(Pressed);
     entity.remove(Selected);
+    if (entity.has(Dragging)) entity.add(IsDroppedFromDragging);
     entity.remove(Dragging, IsControlled);
   }
 
@@ -161,6 +164,7 @@ function BookView({ entity }: { entity: Entity }) {
     if (event.buttons === 0) {
       entity.remove(Pressed);
       entity.remove(Selected);
+      if (entity.has(Dragging)) entity.add(IsDroppedFromDragging);
       entity.remove(Dragging, IsControlled);
     }
   }

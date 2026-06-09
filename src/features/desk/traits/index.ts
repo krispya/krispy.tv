@@ -170,6 +170,7 @@ export const Pressed = trait({
 export const Selected = trait();
 
 export const IsControlled = trait();
+export const IsDroppedFromDragging = trait();
 export const IsStackable = trait();
 export const IsOpen = trait();
 export const IsOffScreen = trait();

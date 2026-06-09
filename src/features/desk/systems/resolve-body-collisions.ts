@@ -5,6 +5,7 @@ import {
   Desk,
   IsBoundary,
   IsControlled,
+  IsDroppedFromDragging,
   IsEnteringDesk,
   IsOpen,
   IsResting,
@@ -32,6 +33,8 @@ type Body = OrientedBox & {
   resting: boolean;
   stackable: boolean;
   boundary: boolean;
+  droppedFromDragging: boolean;
+  activeDropCollision: boolean;
   inverseMass: number;
   positionDirty: boolean;
   velocityDirty: boolean;
@@ -40,10 +43,39 @@ type Body = OrientedBox & {
 
 const MIN_MASS = 0.001;
 const RESTING_EPSILON_M = 0.001;
-const POSITION_SLOP = cssPixelsToMeters(0.5);
-const POSITION_CORRECTION = 0.9;
+const POSITION_SLOP = 0;
+const POSITION_CORRECTION = 1;
+const DROP_POSITION_SLOP = cssPixelsToMeters(0.5);
+const DROP_POSITION_CORRECTION = 0.18;
+const MAX_DROP_POSITION_CORRECTION = cssPixelsToMeters(14);
 const PENETRATION_BIAS_SECONDS = 0.08;
 const MAX_PENETRATION_BIAS_SPEED = cssPixelsToMeters(900);
+const DROP_PENETRATION_BIAS_SECONDS = 0.045;
+const MAX_DROP_PENETRATION_BIAS_SPEED = cssPixelsToMeters(1300);
+
+type CollisionResponse = {
+  positionSlop: number;
+  positionCorrection: number;
+  maxPositionCorrection: number;
+  penetrationBiasSeconds: number;
+  maxPenetrationBiasSpeed: number;
+};
+
+const DEFAULT_COLLISION_RESPONSE: CollisionResponse = {
+  positionSlop: POSITION_SLOP,
+  positionCorrection: POSITION_CORRECTION,
+  maxPositionCorrection: Number.POSITIVE_INFINITY,
+  penetrationBiasSeconds: PENETRATION_BIAS_SECONDS,
+  maxPenetrationBiasSpeed: MAX_PENETRATION_BIAS_SPEED,
+};
+
+const DROP_COLLISION_RESPONSE: CollisionResponse = {
+  positionSlop: DROP_POSITION_SLOP,
+  positionCorrection: DROP_POSITION_CORRECTION,
+  maxPositionCorrection: MAX_DROP_POSITION_CORRECTION,
+  penetrationBiasSeconds: DROP_PENETRATION_BIAS_SECONDS,
+  maxPenetrationBiasSpeed: MAX_DROP_PENETRATION_BIAS_SPEED,
+};
 
 export function resolveBodyCollisions(world: World) {
   const desk = world.queryFirst(Desk)?.get(Desk);
@@ -79,6 +111,8 @@ export function resolveBodyCollisions(world: World) {
         resting: entity.has(IsResting),
         stackable: entity.has(IsStackable),
         boundary: entity.has(IsBoundary),
+        droppedFromDragging: entity.has(IsDroppedFromDragging),
+        activeDropCollision: false,
         inverseMass: getInverseMass(body.mass),
         positionDirty: false,
         velocityDirty: false,
@@ -89,6 +123,12 @@ export function resolveBodyCollisions(world: World) {
   for (let aIndex = 0; aIndex < bodies.length; aIndex++) {
     for (let bIndex = aIndex + 1; bIndex < bodies.length; bIndex++) {
       resolveBodyPair(bodies[aIndex], bodies[bIndex], desk.wallBounce, desk.wallFriction);
+    }
+  }
+
+  for (const body of bodies) {
+    if (body.droppedFromDragging && !body.activeDropCollision) {
+      body.entity.remove(IsDroppedFromDragging);
     }
   }
 
@@ -155,7 +195,13 @@ function resolveBodyPair(a: Body, b: Body, bounce: number, friction: number) {
     return;
   }
 
-  applyCollisionImpulse(a, b, collision.normal, collision.overlap, bounce, friction);
+  const dropBody = getDroppedSolidCollisionBody(a, b);
+  const response = dropBody ? DROP_COLLISION_RESPONSE : DEFAULT_COLLISION_RESPONSE;
+  if (dropBody) {
+    dropBody.activeDropCollision = true;
+  }
+
+  applyCollisionImpulse(a, b, collision.normal, collision.overlap, bounce, friction, response);
 }
 
 function getInverseMass(mass: number) {
@@ -175,6 +221,17 @@ function shouldResolveCollision(a: Body, b: Body) {
   return !lower.stackable;
 }
 
+function getDroppedSolidCollisionBody(a: Body, b: Body) {
+  if (a.droppedFromDragging && isSolidDropTarget(b)) return a;
+  if (b.droppedFromDragging && isSolidDropTarget(a)) return b;
+
+  return undefined;
+}
+
+function isSolidDropTarget(body: Body) {
+  return body.boundary || !body.stackable;
+}
+
 function isActive(body: Body) {
   return body.position.z > body.restingHeight + RESTING_EPSILON_M;
 }
@@ -185,12 +242,17 @@ function applyCollisionImpulse(
   normal: Vector2,
   overlap: number,
   bounce: number,
-  friction: number
+  friction: number,
+  response: CollisionResponse
 ) {
   const inverseMassSum = a.inverseMass + b.inverseMass;
   if (overlap <= 0 || inverseMassSum <= 0) return;
 
-  const correction = (Math.max(overlap - POSITION_SLOP, 0) * POSITION_CORRECTION) / inverseMassSum;
+  const correctionDistance = Math.min(
+    Math.max(overlap - response.positionSlop, 0) * response.positionCorrection,
+    response.maxPositionCorrection
+  );
+  const correction = correctionDistance / inverseMassSum;
   if (correction > 0) {
     applyPositionCorrection(
       a,
@@ -212,7 +274,10 @@ function applyCollisionImpulse(
   };
   const normalSpeed = dot(relativeVelocity, normal);
   const bounceSpeed = normalSpeed < 0 ? -normalSpeed * bounce : 0;
-  const penetrationBias = Math.min(overlap / PENETRATION_BIAS_SECONDS, MAX_PENETRATION_BIAS_SPEED);
+  const penetrationBias = Math.min(
+    overlap / response.penetrationBiasSeconds,
+    response.maxPenetrationBiasSpeed
+  );
   const targetNormalSpeed = Math.max(bounceSpeed, penetrationBias);
   const normalImpulse = Math.max(targetNormalSpeed - normalSpeed, 0) / inverseMassSum;
 

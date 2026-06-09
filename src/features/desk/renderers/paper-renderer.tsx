@@ -9,6 +9,7 @@ import {
   AngularVelocity,
   Dragging,
   IsControlled,
+  IsDroppedFromDragging,
   IsResting,
   Paper,
   Pressed,
@@ -98,7 +99,7 @@ function PaperView({ entity }: { entity: Entity }) {
       };
       const rotation = entity.get(Rotation) ?? { x: 0, y: 0, z: 0 };
 
-      entity.remove(Dragging, IsResting);
+      entity.remove(Dragging, IsDroppedFromDragging, IsResting);
       entity.set(Velocity, { x: 0, y: 0, z: 0 });
       entity.set(AngularVelocity, { x: 0, y: 0, z: 0 });
       entity.add(
@@ -167,6 +168,7 @@ function PaperView({ entity }: { entity: Entity }) {
 
       if (dragging) {
         entity.remove(Dragging, IsControlled);
+        entity.add(IsDroppedFromDragging);
       }
 
       if (event.currentTarget.hasPointerCapture(event.pointerId)) {
@@ -179,6 +181,7 @@ function PaperView({ entity }: { entity: Entity }) {
   const handlePointerCancel = useCallback(() => {
     entity.remove(Pressed);
     entity.remove(Selected);
+    if (entity.has(Dragging)) entity.add(IsDroppedFromDragging);
     entity.remove(Dragging, IsControlled);
   }, [entity]);
 
@@ -187,6 +190,7 @@ function PaperView({ entity }: { entity: Entity }) {
       if (event.buttons === 0) {
         entity.remove(Pressed);
         entity.remove(Selected);
+        if (entity.has(Dragging)) entity.add(IsDroppedFromDragging);
         entity.remove(Dragging, IsControlled);
       }
     },

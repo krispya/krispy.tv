@@ -8,6 +8,7 @@ import {
   AngularVelocity,
   Dragging,
   IsControlled,
+  IsDroppedFromDragging,
   IsOpen,
   IsResting,
   Polaroid,
@@ -92,7 +93,7 @@ function PolaroidView({ entity }: { entity: Entity }) {
       };
       const rotation = entity.get(Rotation) ?? { x: 0, y: 0, z: 0 };
 
-      entity.remove(Dragging, IsResting);
+      entity.remove(Dragging, IsDroppedFromDragging, IsResting);
       entity.set(Velocity, { x: 0, y: 0, z: 0 });
       entity.set(AngularVelocity, { x: 0, y: 0, z: 0 });
       entity.add(
@@ -170,6 +171,7 @@ function PolaroidView({ entity }: { entity: Entity }) {
 
       if (dragging) {
         entity.remove(Dragging, IsControlled);
+        entity.add(IsDroppedFromDragging);
       }
 
       if (event.currentTarget.hasPointerCapture(event.pointerId)) {
@@ -188,7 +190,10 @@ function PolaroidView({ entity }: { entity: Entity }) {
 
       entity.remove(Pressed);
       entity.remove(Selected);
-      if (entity.has(Dragging)) entity.remove(Dragging, IsControlled);
+      if (entity.has(Dragging)) {
+        entity.add(IsDroppedFromDragging);
+        entity.remove(Dragging, IsControlled);
+      }
     },
     [endPolaroidFocusSpin, entity]
   );
@@ -196,7 +201,10 @@ function PolaroidView({ entity }: { entity: Entity }) {
   const clearPointerState = useCallback(() => {
     entity.remove(Pressed);
     entity.remove(Selected);
-    if (entity.has(Dragging)) entity.remove(Dragging, IsControlled);
+    if (entity.has(Dragging)) {
+      entity.add(IsDroppedFromDragging);
+      entity.remove(Dragging, IsControlled);
+    }
   }, [entity]);
 
   const handleLostPointerCapture = useCallback(
