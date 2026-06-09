@@ -20,7 +20,6 @@ export function Startup() {
 
   useEffect(() => {
     const desk = spawnDesk();
-    const headphones = spawnHeadphones({ width: 500, rotation: -34 });
 
     const articles = articlesCatalog.map((article) => ({
       id: article.slug,
@@ -37,8 +36,7 @@ export function Startup() {
 
     items.forEach(({ id, openable }, index) => {
       const centered = index === 0;
-      const stackIndex = items.length - index - 1;
-      const paper = spawnPaper({ id, openable, stackIndex, centered });
+      const paper = spawnPaper({ id, openable, centered });
 
       throwPaperOntoDesk(paper, { centered });
     });
@@ -47,23 +45,21 @@ export function Startup() {
       id: 'desk-css-book',
       title: 'Book',
       pageCount: 260,
-      stackIndex: items.length,
     });
 
     throwPaperOntoDesk(book);
 
-    let polaroidStackIndex = items.length + 1;
     for (const polaroid of polaroidsCatalog) {
       const entity = spawnPolaroid({
         id: polaroid.slug,
         imageSrc: polaroid.imageSrc,
         caption: polaroid.caption,
-        stackIndex: polaroidStackIndex,
       });
 
       throwPaperOntoDesk(entity);
-      polaroidStackIndex++;
     }
+
+    const headphones = spawnHeadphones({ width: 500, rotation: -34 });
 
     return () => {
       destroyPapers();

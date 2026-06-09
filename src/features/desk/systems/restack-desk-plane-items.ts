@@ -11,6 +11,8 @@ import {
 } from '../traits/index.js';
 import {
   getDeskPlaneInsertIndex,
+  getStackIndexedItems,
+  renumberStackIndices,
   sortByStackIndex,
   toStackOrderItem,
   type StackOrderItem,
@@ -51,13 +53,9 @@ export function restackDeskPlaneItems(world: World) {
 }
 
 function restackDeskPlaneItem(world: World, entity: Entity, deskPlaneRestackThreshold: number) {
-  const items: StackOrderItem[] = [];
-
-  world.query(StackIndex).readEach(([stackIndex], entity) => {
-    items.push(toStackOrderItem(entity, stackIndex.value, deskPlaneRestackThreshold));
-  });
-
-  sortByStackIndex(items);
+  const items: StackOrderItem[] = getStackIndexedItems(world).map((item) =>
+    toStackOrderItem(item.entity, item.stackIndex, deskPlaneRestackThreshold)
+  );
 
   const itemIndex = items.findIndex((item) => item.entity === entity);
   if (itemIndex === -1) return;
@@ -69,8 +67,5 @@ function restackDeskPlaneItem(world: World, entity: Entity, deskPlaneRestackThre
 
   items.splice(insertIndex, 0, item);
 
-  items.forEach((item, index) => {
-    if (item.stackIndex === index) return;
-    item.entity.set(StackIndex, { value: index });
-  });
+  renumberStackIndices(items);
 }

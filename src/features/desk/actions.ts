@@ -32,6 +32,11 @@ import { getBookDepthMeters } from './utils/resting-height.js';
 import { cssPixelsToMeters, metersToCssPixels } from './utils/physics-units.js';
 import { clamp, randomInRange } from './utils/math.js';
 import { getVisibleDeskRectForWorld, type VisibleDeskRect } from './utils/camera.js';
+import {
+  getNextStackIndex,
+  getStackIndexedItems,
+  renumberStackIndices,
+} from './utils/stack-order.js';
 
 const POLAROID_FOCUS_Z_M = 0.26;
 const POLAROID_FOCUS_CURVE_M = 0.055;
@@ -78,7 +83,6 @@ export type PaperConfig = {
   height?: number;
   aspectRatio?: number;
   centered?: boolean;
-  stackIndex?: number;
   thickness?: number;
   physics?: KinematicBodyConfig;
 };
@@ -92,7 +96,6 @@ export type BookConfig = {
   height?: number;
   aspectRatio?: number;
   centered?: boolean;
-  stackIndex?: number;
   pageCount?: number;
   pageThickness?: number;
   coverThickness?: number;
@@ -105,7 +108,6 @@ export type HeadphonesConfig = {
   width?: number;
   height?: number;
   aspectRatio?: number;
-  stackIndex?: number;
   thickness?: number;
   rotation?: number;
   cornerOverlapX?: number;
@@ -121,7 +123,6 @@ export type PolaroidConfig = {
   height?: number;
   aspectRatio?: number;
   centered?: boolean;
-  stackIndex?: number;
   thickness?: number;
   physics?: KinematicBodyConfig;
 };
@@ -230,7 +231,7 @@ export const actions = createActions((world) => ({
       Velocity,
       AngularVelocity,
       IsStackable,
-      StackIndex({ value: config.stackIndex ?? 0 })
+      StackIndex({ value: getNextStackIndex(world) })
     );
 
     const paper = entity.get(Paper)!;
@@ -266,7 +267,7 @@ export const actions = createActions((world) => ({
       Rotation(getThrowRotation(config.centered)),
       Velocity,
       AngularVelocity,
-      StackIndex({ value: config.stackIndex ?? 0 })
+      StackIndex({ value: getNextStackIndex(world) })
     );
 
     const book = entity.get(Book)!;
@@ -297,7 +298,7 @@ export const actions = createActions((world) => ({
       Rotation({ x: 0, y: 0, z: config.rotation ?? -14 }),
       Velocity,
       AngularVelocity,
-      StackIndex({ value: config.stackIndex ?? 0 }),
+      StackIndex({ value: getNextStackIndex(world) }),
       IsBoundary,
       IsResting
     );
@@ -345,7 +346,7 @@ export const actions = createActions((world) => ({
       Rotation(getThrowRotation(config.centered)),
       Velocity,
       AngularVelocity,
-      StackIndex({ value: config.stackIndex ?? 0 }),
+      StackIndex({ value: getNextStackIndex(world) }),
       IsStackable
     );
 
@@ -394,16 +395,7 @@ export const actions = createActions((world) => ({
   },
 
   raiseDeskItem: (entity: Entity) => {
-    const items: Array<{ entity: Entity; stackIndex: number }> = [];
-
-    world.query(StackIndex).forEach((item) => {
-      const stackIndex = item.get(StackIndex);
-      if (!stackIndex) return;
-
-      items.push({ entity: item, stackIndex: stackIndex.value });
-    });
-
-    items.sort((a, b) => a.stackIndex - b.stackIndex || a.entity.id() - b.entity.id());
+    const items = getStackIndexedItems(world);
 
     const entityIndex = items.findIndex((item) => item.entity === entity);
     if (entityIndex === -1) return;
@@ -411,9 +403,7 @@ export const actions = createActions((world) => ({
     const [raisedItem] = items.splice(entityIndex, 1);
     items.push(raisedItem);
 
-    items.forEach((item, index) => {
-      item.entity.set(StackIndex, { value: index });
-    });
+    renumberStackIndices(items);
   },
 
   openPolaroid: (entity: Entity) => {

@@ -1,4 +1,4 @@
-import type { Entity } from 'koota';
+import type { Entity, World } from 'koota';
 import {
   Dragging,
   IsControlled,
@@ -7,6 +7,7 @@ import {
   IsResting,
   IsStackable,
   Position,
+  StackIndex,
   Velocity,
 } from '../traits/index.js';
 
@@ -24,6 +25,36 @@ export type StackIndexedEntity = {
 
 export function sortByStackIndex<T extends StackIndexedEntity>(items: T[]) {
   items.sort((a, b) => a.stackIndex - b.stackIndex || a.entity.id() - b.entity.id());
+}
+
+export function getStackIndexedItems(world: World): StackIndexedEntity[] {
+  const items: StackIndexedEntity[] = [];
+
+  world.query(StackIndex).readEach(([stackIndex], entity) => {
+    items.push({ entity, stackIndex: stackIndex.value });
+  });
+
+  sortByStackIndex(items);
+  return items;
+}
+
+export function getNextStackIndex(world: World) {
+  let nextStackIndex = 0;
+
+  world.query(StackIndex).readEach(([stackIndex]) => {
+    nextStackIndex = Math.max(nextStackIndex, stackIndex.value + 1);
+  });
+
+  return nextStackIndex;
+}
+
+export function renumberStackIndices(items: StackIndexedEntity[]) {
+  items.forEach((item, index) => {
+    if (item.stackIndex === index) return;
+
+    item.entity.set(StackIndex, { value: index });
+    item.stackIndex = index;
+  });
 }
 
 export function toStackOrderItem(
