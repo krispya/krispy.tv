@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { color } from '../../../color.js';
 import { shade } from '../utils/color.js';
 
 export const HEADPHONES_LINE_COUNT = 3;
@@ -9,9 +10,17 @@ const HEADPHONES_FILL_RENDER_HEIGHT = 731;
 const HEADPHONES_LINE_RENDER_WIDTH = 1700;
 const HEADPHONES_LINE_RENDER_HEIGHT = 760;
 const HEADPHONES_LINE_OFFSET_X = 10;
-const HEADPHONES_LINE_OFFSET_Y = 4;
+const HEADPHONES_LINE_OFFSET_Y = 2;
+
+const HEADPHONES_STAND_SCALE = 1.7;
+const HEADPHONES_STAND_OFFSET_X = 12;
+const HEADPHONES_STAND_OFFSET_Y = -44;
+const HEADPHONES_STAND_RENDER_WIDTH = 515;
+const HEADPHONES_STAND_RENDER_HEIGHT = 752;
+
 const HEADPHONES_ASSET_PATH = 'lines/headphones';
 const HEADPHONES_ASSET_NAME = 'heaphones';
+const HEADPHONES_STAND_ASSET_PATH = 'lines/stand';
 
 type HeadphonesFillToneConfig = {
   name: 'light' | 'mid' | 'dark';
@@ -20,12 +29,14 @@ type HeadphonesFillToneConfig = {
 };
 
 export const HEADPHONES_FILL_TONES = [
-  { name: 'light', shade: 0, opacity: 0.45 },
   { name: 'mid', shade: -8, opacity: 1 },
   { name: 'dark', shade: -52, opacity: 1 },
 ] as const satisfies readonly HeadphonesFillToneConfig[];
 
 const HEADPHONES_LINE_SHADE = -88;
+const HEADPHONES_STAND_FILL_COLOR = color.accent.wood;
+const HEADPHONES_STAND_FILL_SHADE = 0;
+const HEADPHONES_STAND_LINE_SHADE = -40;
 
 type HeadphonesFillTone = (typeof HEADPHONES_FILL_TONES)[number]['name'];
 
@@ -79,6 +90,22 @@ export function getHeadphonesLineSrc(variant: number): string {
   return `${import.meta.env.BASE_URL}${HEADPHONES_ASSET_PATH}/${HEADPHONES_ASSET_NAME}-line-${variant}.png`;
 }
 
+export function getHeadphonesStandFillSrc(): string {
+  return `${import.meta.env.BASE_URL}${HEADPHONES_STAND_ASSET_PATH}/stand-fill.png`;
+}
+
+export function getHeadphonesStandFillColor(): string {
+  return shade(HEADPHONES_STAND_FILL_COLOR, HEADPHONES_STAND_FILL_SHADE);
+}
+
+export function getHeadphonesStandLineColor(): string {
+  return shade(HEADPHONES_STAND_FILL_COLOR, HEADPHONES_STAND_LINE_SHADE);
+}
+
+export function getHeadphonesStandLineSrc(variant: number): string {
+  return `${import.meta.env.BASE_URL}${HEADPHONES_STAND_ASSET_PATH}/stand-line-${variant}.png`;
+}
+
 export function getHeadphonesMaskStyle(
   src: string,
   backgroundColor: string,
@@ -113,6 +140,23 @@ export function getHeadphonesLineMaskStyle(
     height: `${(HEADPHONES_LINE_RENDER_HEIGHT / HEADPHONES_FILL_RENDER_HEIGHT) * 100}%`,
     transform: `translate(calc(-50% + ${HEADPHONES_LINE_OFFSET_X}px), calc(-50% + ${HEADPHONES_LINE_OFFSET_Y}px))`,
     transformOrigin: 'center center',
+  };
+}
+
+export function getHeadphonesStandMaskStyle(
+  src: string,
+  backgroundColor: string,
+  opacity = 1
+): CSSProperties {
+  return {
+    ...getHeadphonesMaskStyle(src, backgroundColor, opacity),
+    inset: undefined,
+    left: '50%',
+    top: 0,
+    width: `${((HEADPHONES_STAND_RENDER_WIDTH * HEADPHONES_STAND_SCALE) / HEADPHONES_FILL_RENDER_WIDTH) * 100}%`,
+    height: `${((HEADPHONES_STAND_RENDER_HEIGHT * HEADPHONES_STAND_SCALE) / HEADPHONES_FILL_RENDER_HEIGHT) * 100}%`,
+    transform: `translate(calc(-50% + ${HEADPHONES_STAND_OFFSET_X}px), ${HEADPHONES_STAND_OFFSET_Y}px)`,
+    transformOrigin: 'top center',
   };
 }
 

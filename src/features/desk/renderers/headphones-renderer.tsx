@@ -4,13 +4,21 @@ import type { CSSProperties } from 'react';
 import { BoundingBoxDebug, useDebug } from '../../debug/index.js';
 import { Headphones, Position, Ref, Rotation } from '../traits/index.js';
 import {
-  getHeadphonesFillSrc,
+  getHeadphonesBoilPhaseOffset,
+  getHeadphonesBoilStartFrame,
   getHeadphonesFillToneColor,
   getHeadphonesFillToneOpacity,
   getHeadphonesFillToneSrc,
   getHeadphonesLineColor,
+  getHeadphonesLineVariant,
   getHeadphonesMaskStyle,
+  getHeadphonesStandFillColor,
+  getHeadphonesStandFillSrc,
+  getHeadphonesStandLineColor,
+  getHeadphonesStandLineSrc,
+  getHeadphonesStandMaskStyle,
   HEADPHONES_FILL_TONES,
+  HEADPHONES_LINE_COUNT,
 } from '../presentation/headphones-lines.js';
 import {
   getShadowBoilFrameStyle,
@@ -72,6 +80,7 @@ function HeadphonesView({ entity }: { entity: Entity }) {
           transform: 'translateZ(var(--headphones-z)) rotateZ(var(--headphones-rotate-z))',
         }}
       >
+        <HeadphonesStand headphonesId={headphones.id} />
         {HEADPHONES_FILL_TONES.map((tone) => (
           <div
             key={tone.name}
@@ -87,6 +96,41 @@ function HeadphonesView({ entity }: { entity: Entity }) {
           headphonesId={headphones.id}
           lineColor={getHeadphonesLineColor(headphones.fillColor)}
         />
+      </div>
+    </div>
+  );
+}
+
+function HeadphonesStand({ headphonesId }: { headphonesId: string }) {
+  const phaseOffset = getHeadphonesBoilPhaseOffset(headphonesId);
+  const startFrame = getHeadphonesBoilStartFrame(headphonesId);
+  const standLineColor = getHeadphonesStandLineColor();
+
+  return (
+    <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-visible">
+      <div
+        className="absolute"
+        style={getHeadphonesStandMaskStyle(
+          getHeadphonesStandFillSrc(),
+          getHeadphonesStandFillColor()
+        )}
+      />
+      <div
+        className="paper-lines-boil pointer-events-none absolute inset-0 overflow-visible"
+        style={{ '--boil-phase': `${phaseOffset}s` } as CSSProperties}
+      >
+        {Array.from({ length: HEADPHONES_LINE_COUNT }, (_, frameIndex) => {
+          const boilFrame = frameIndex + startFrame;
+          const src = getHeadphonesStandLineSrc(getHeadphonesLineVariant(boilFrame));
+
+          return (
+            <div
+              key={frameIndex}
+              className={`paper-lines-boil-frame paper-lines-boil-frame--${frameIndex} absolute`}
+              style={getHeadphonesStandMaskStyle(src, standLineColor, 0.9)}
+            />
+          );
+        })}
       </div>
     </div>
   );
