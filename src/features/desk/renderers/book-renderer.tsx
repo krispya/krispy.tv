@@ -67,7 +67,6 @@ function BookView({ entity }: { entity: Entity }) {
   const book = useTrait(entity, Book);
   const world = useWorld();
   const isDragging = useHas(entity, Dragging);
-  const isSelected = useHas(entity, Selected);
   const { raiseDeskItem } = useActions(actions);
 
   const { enabled: isDebug } = useDebug();
@@ -223,9 +222,7 @@ function BookView({ entity }: { entity: Entity }) {
             width={book.width}
             height={book.height}
             seed={seed + 1}
-            className={`rounded-[6px] ${
-              isSelected || isDragging ? 'outline-4 outline-offset-2 outline-blue-500' : ''
-            }`}
+            className="rounded-[6px]"
             style={{
               backgroundColor: book.color,
               ...(book.coverImage && {

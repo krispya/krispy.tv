@@ -58,7 +58,6 @@ function PolaroidView({ entity }: { entity: Entity }) {
   const isDragging = useHas(entity, Dragging);
   const isFocusSpinning = useHas(entity, PolaroidFocusSpin);
   const isOpen = useHas(entity, IsOpen);
-  const isSelected = useHas(entity, Selected);
   const {
     endPolaroidFocusSpin,
     openPolaroid,
@@ -250,9 +249,7 @@ function PolaroidView({ entity }: { entity: Entity }) {
         onDragStart={(event) => event.preventDefault()}
         className={`absolute inset-0 touch-none rounded-[3px] select-none [-webkit-user-drag:none] ${
           isOpen ? (isFocusSpinning ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-grab'
-        } ${
-          isDragging ? 'cursor-grabbing' : ''
-        } ${isSelected || isDragging ? 'outline-3 outline-offset-2 outline-blue-500' : ''}`}
+        } ${isDragging ? 'cursor-grabbing' : ''}`}
         style={{
           transform:
             'translateZ(var(--paper-z)) rotateZ(var(--paper-rotate-z)) scale(var(--paper-lift-scale))',

@@ -73,7 +73,6 @@ function PaperView({ entity }: { entity: Entity }) {
   const paper = useTrait(entity, Paper);
   const world = useWorld();
   const isDragging = useHas(entity, Dragging);
-  const isSelected = useHas(entity, Selected);
   const { raiseDeskItem } = useActions(actions);
   const [, navigate] = useLocation();
 
@@ -230,7 +229,7 @@ function PaperView({ entity }: { entity: Entity }) {
         onDragStart={(event) => event.preventDefault()}
         className={`absolute inset-0 cursor-grab touch-none rounded-[3px] select-none [-webkit-user-drag:none] ${
           isDragging ? 'cursor-grabbing' : ''
-        } ${isSelected || isDragging ? 'outline-3 outline-offset-2 outline-blue-500' : ''}`}
+        }`}
         style={{
           transform:
             'translateZ(var(--paper-z)) rotateX(var(--paper-rotate-x)) rotateY(var(--paper-rotate-y)) rotateZ(var(--paper-rotate-z)) scale(var(--paper-lift-scale))',
