@@ -20,8 +20,10 @@ const ArticleNotFound = lazy(() =>
 );
 
 export function App() {
+  const debugEnabled = getDebugEnabled();
+
   return (
-    <DebugProvider enabled={false}>
+    <DebugProvider enabled={debugEnabled}>
       <Router base={base}>
         <main className="min-h-screen">
           <Switch>
@@ -47,6 +49,16 @@ export function App() {
       </Router>
     </DebugProvider>
   );
+}
+
+function getDebugEnabled() {
+  if (typeof window === 'undefined') return false;
+
+  const params = new URLSearchParams(window.location.search);
+  if (!params.has('debug')) return false;
+
+  const value = params.get('debug')?.toLowerCase() ?? '';
+  return value === '' || !['0', 'false', 'off'].includes(value);
 }
 
 function RoutePending() {
