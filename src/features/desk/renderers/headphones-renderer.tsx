@@ -72,10 +72,6 @@ function HeadphonesView({ entity }: { entity: Entity }) {
           transform: 'translateZ(var(--headphones-z)) rotateZ(var(--headphones-rotate-z))',
         }}
       >
-        <div
-          className="pointer-events-none absolute"
-          style={getHeadphonesMaskStyle(getHeadphonesFillSrc(), headphones.fillColor)}
-        />
         {HEADPHONES_FILL_TONES.map((tone) => (
           <div
             key={tone.name}
