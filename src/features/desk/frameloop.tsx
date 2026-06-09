@@ -26,7 +26,8 @@ import {
   updateRotation,
   updateTime,
 } from './systems/index.js';
-import { ActiveSlug, Pointer, Viewport } from './traits/index.js';
+import { ActiveSlug, Camera, Pointer, Viewport } from './traits/index.js';
+import { DEFAULT_CAMERA, getResponsiveDeskZoom } from './utils/camera.js';
 import { useAnimationFrame } from '../frameloop/use-animation-frame.js';
 
 export function Frameloop() {
@@ -78,7 +79,16 @@ export function Frameloop() {
 
   useEffect(() => {
     const updateViewport = () => {
-      world.set(Viewport, { width: window.innerWidth, height: window.innerHeight });
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      const camera = world.get(Camera) ?? DEFAULT_CAMERA;
+
+      world.set(Viewport, { width, height });
+      world.set(Camera, {
+        x: camera.x,
+        y: camera.y,
+        zoom: getResponsiveDeskZoom(width),
+      });
     };
 
     updateViewport();

@@ -1,9 +1,14 @@
 import type { TraitRecord, World } from 'koota';
 import { Camera, Viewport } from '../traits/index.js';
+import { clamp01, lerp } from './math.js';
 import { cssPixelsToMeters } from './physics-units.js';
 
 export const DESK_CAMERA_REFERENCE_WIDTH = 1440;
 export const DESK_CAMERA_REFERENCE_HEIGHT = 900;
+export const DESK_CAMERA_MIN_ZOOM = 0.62;
+export const DESK_CAMERA_MAX_ZOOM = 0.92;
+export const DESK_CAMERA_MIN_ZOOM_WIDTH = 390;
+export const DESK_CAMERA_MAX_ZOOM_WIDTH = DESK_CAMERA_REFERENCE_WIDTH;
 
 export type CameraRecord = TraitRecord<typeof Camera>;
 export type ViewportRecord = TraitRecord<typeof Viewport>;
@@ -27,6 +32,15 @@ export const DEFAULT_CAMERA: CameraRecord = {
   y: DESK_CAMERA_REFERENCE_HEIGHT / 2,
   zoom: 1,
 };
+
+export function getResponsiveDeskZoom(viewportWidth: number) {
+  const width = Math.max(0, Number.isFinite(viewportWidth) ? viewportWidth : 0);
+  const amount = clamp01(
+    (width - DESK_CAMERA_MIN_ZOOM_WIDTH) / (DESK_CAMERA_MAX_ZOOM_WIDTH - DESK_CAMERA_MIN_ZOOM_WIDTH)
+  );
+
+  return lerp(DESK_CAMERA_MIN_ZOOM, DESK_CAMERA_MAX_ZOOM, amount);
+}
 
 export function getVisibleDeskRect(
   viewport: ViewportRecord | undefined,
