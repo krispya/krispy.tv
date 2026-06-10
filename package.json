@@ -4,8 +4,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsx scripts/generate-paper-textures.tsx && vite build",
-    "generate:textures": "tsx scripts/generate-paper-textures.tsx",
+    "build": "tsx scripts/generate-paper-textures.tsx && tsx scripts/generate-book-covers.ts && vite build",
+    "generate:book-covers": "tsx scripts/generate-book-covers.ts",
+    "generate:textures": "tsx scripts/generate-paper-textures.tsx && tsx scripts/generate-book-covers.ts",
     "typecheck": "tsc --build --noEmit",
     "typecheck:watch": "tsc --build --watch",
     "lint": "oxlint -c .config/oxlint.json",

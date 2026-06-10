@@ -240,7 +240,7 @@ function PaperView({ entity }: { entity: Entity }) {
           style={{
             backgroundColor: paper.color,
             ...(paper.openable && {
-              backgroundImage: `${getPaperTextureOverlay(paper.id)}, url(${import.meta.env.BASE_URL}images/articles/${paper.id}.png)`,
+              backgroundImage: `${getPaperTextureOverlay(paper.id)}, url(${import.meta.env.BASE_URL}images/articles/${paper.id}.webp)`,
               backgroundBlendMode: 'multiply, normal',
               backgroundSize: 'cover, cover',
               backgroundPosition: 'center, top center',

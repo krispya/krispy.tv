@@ -17,11 +17,21 @@ function toImageSrc(image: string) {
   return `${import.meta.env.BASE_URL}${path}`;
 }
 
+function toGeneratedCoverImage(image: string) {
+  const path = image.startsWith('/') ? image.slice(1) : image;
+  const parts = path.split('/');
+  const filename = parts.pop();
+  if (!filename) throw new Error(`Could not parse cover image path: ${image}`);
+
+  const basename = filename.replace(/\.[^.]+$/, '');
+  return [...parts, 'generated', `${basename}.webp`].join('/');
+}
+
 export const books: Book[] = Object.entries(bookModules)
   .map(([path, book]) => ({
     ...book,
     slug: slugFromPath(path),
-    coverImageSrc: toImageSrc(book.coverImage),
+    coverImageSrc: toImageSrc(toGeneratedCoverImage(book.coverImage)),
   }))
   .sort(
     (first, second) =>

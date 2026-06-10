@@ -22,6 +22,7 @@ import remarkFrontmatter from 'remark-frontmatter';
 import { remark } from 'remark';
 import { render } from 'takumi-js';
 import { parse as parseYaml } from 'yaml';
+import { conformImageToPalette, loadPalette } from './palette-conform.js';
 
 const require = createRequire(import.meta.url);
 const INTER_FONT = require.resolve('@fontsource-variable/inter/files/inter-latin-wght-normal.woff2');
@@ -32,12 +33,16 @@ const FIRA_CODE_FONT =
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, '..');
+const COLOR_SOURCE_PATH = path.join(ROOT, 'src/color.ts');
 
-// US Letter at 96dpi
-const PAPER_W = 816;
-const PAPER_H = 1056;
-const PADDING = 48;
+const PAPER_TEXTURE_SCALE = 2;
+const BASE_PAPER_W = 816;
+const BASE_PAPER_H = 1056;
+const BASE_PADDING = 48;
+const PAPER_W = BASE_PAPER_W * PAPER_TEXTURE_SCALE;
+const PAPER_H = BASE_PAPER_H * PAPER_TEXTURE_SCALE;
 const PAPER_BACKGROUND = '#fffdf7';
+const OUTPUT_QUALITY = 0.94;
 
 const PRIMARY_700 = 'oklch(0.525_0.223_3.958)';
 const PRIMARY_200 = 'oklch(0.899_0.061_343.231)';
@@ -285,6 +290,7 @@ async function main() {
   const interFont = await readFile(INTER_FONT);
   const playfairFont = await readFile(PLAYFAIR_FONT);
   const firaCodeFont = await readFile(FIRA_CODE_FONT);
+  const palette = loadPalette(COLOR_SOURCE_PATH);
 
   const author: Author = JSON.parse(await readFile(path.join(ROOT, 'content/author.json'), 'utf8'));
 
@@ -314,7 +320,7 @@ async function main() {
       }
     }
 
-    const contentWidth = PAPER_W - PADDING * 2;
+    const contentWidth = BASE_PAPER_W - BASE_PADDING * 2;
     const ctx: RenderCtx = { imageInfos, contentWidth };
 
     const png = await render(
@@ -323,45 +329,58 @@ async function main() {
         style={{
           width: PAPER_W,
           height: PAPER_H,
-          padding: PADDING,
           backgroundColor: PAPER_BACKGROUND,
           fontFamily: 'Inter Variable',
+          overflow: 'hidden',
         }}
       >
-        {/* Article header — mirrors article.tsx */}
-        <div tw="flex flex-col mb-10 items-center justify-center">
-          <span
-            tw="mb-6 text-center text-7xl font-black uppercase text-gray-950 leading-none"
-            style={{ fontFamily: 'Playfair Display Variable', letterSpacing: '-0.05em' }}
-          >
-            {fm.title}
-          </span>
-          <span
-            tw="mb-8 text-center text-xl text-gray-700 w-full leading-relaxed"
-            style={{ fontFamily: 'Playfair Display Variable', fontStyle: 'italic' }}
-          >
-            {fm.summary}
-          </span>
-          <div
-            tw="flex flex-row justify-between w-full py-3"
-            style={{
-              borderTop: '2px solid oklch(0.13 0.028 261.692)',
-              borderBottom: '2px solid oklch(0.13 0.028 261.692)',
-            }}
-          >
-            <span tw="text-sm font-bold tracking-widest text-gray-900 uppercase">
-              {formatDate(fm.date)}
+        <div
+          tw="flex flex-col"
+          style={{
+            width: BASE_PAPER_W,
+            height: BASE_PAPER_H,
+            padding: BASE_PADDING,
+            backgroundColor: PAPER_BACKGROUND,
+            fontFamily: 'Inter Variable',
+            transform: `scale(${PAPER_TEXTURE_SCALE})`,
+            transformOrigin: 'top left',
+          }}
+        >
+          {/* Article header — mirrors article.tsx */}
+          <div tw="flex flex-col mb-10 items-center justify-center">
+            <span
+              tw="mb-6 text-center text-7xl font-black uppercase text-gray-950 leading-none"
+              style={{ fontFamily: 'Playfair Display Variable', letterSpacing: '-0.05em' }}
+            >
+              {fm.title}
             </span>
-            <span tw="text-sm font-bold tracking-widest text-gray-900 uppercase">
-              By{' '}
-              <span tw={`text-[${PRIMARY_700}] underline decoration-[${PRIMARY_200}]`}>
-                {author.name}
+            <span
+              tw="mb-8 text-center text-xl text-gray-700 w-full leading-relaxed"
+              style={{ fontFamily: 'Playfair Display Variable', fontStyle: 'italic' }}
+            >
+              {fm.summary}
+            </span>
+            <div
+              tw="flex flex-row justify-between w-full py-3"
+              style={{
+                borderTop: '2px solid oklch(0.13 0.028 261.692)',
+                borderBottom: '2px solid oklch(0.13 0.028 261.692)',
+              }}
+            >
+              <span tw="text-sm font-bold tracking-widest text-gray-900 uppercase">
+                {formatDate(fm.date)}
               </span>
-            </span>
+              <span tw="text-sm font-bold tracking-widest text-gray-900 uppercase">
+                By{' '}
+                <span tw={`text-[${PRIMARY_700}] underline decoration-[${PRIMARY_200}]`}>
+                  {author.name}
+                </span>
+              </span>
+            </div>
           </div>
+          {/* Article body */}
+          <div tw="flex flex-col">{renderBody(ast, ctx)}</div>
         </div>
-        {/* Article body */}
-        <div tw="flex flex-col">{renderBody(ast, ctx)}</div>
       </div>,
       {
         width: PAPER_W,
@@ -374,9 +393,22 @@ async function main() {
       }
     );
 
-    const outPath = path.join(outDir, `${slug}.png`);
-    await writeFile(outPath, png);
-    console.log(`  ✓ ${outPath}`);
+    const conformed = conformImageToPalette({
+      source: Buffer.from(png),
+      sourceMimeType: 'image/png',
+      palette,
+      outputMimeType: 'image/webp',
+      outputQuality: OUTPUT_QUALITY,
+      name: slug,
+    });
+
+    const outPath = path.join(outDir, `${slug}.webp`);
+    await writeFile(outPath, conformed.data);
+    console.log(
+      `  ✓ ${outPath} (${conformed.width}x${conformed.height}, shift ${conformed.averageShift.toFixed(
+        4
+      )})`
+    );
   }
 
   console.log(`\nGenerated ${files.length} paper texture(s).`);
