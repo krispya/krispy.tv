@@ -3,6 +3,7 @@ import { color } from '../../color.js';
 import {
   AngularVelocity,
   Book,
+  type BookStickyNote,
   BoundingBox,
   Desk,
   DeskConfig,
@@ -103,6 +104,7 @@ export type BookConfig = {
   pageCount?: number;
   pageThickness?: number;
   coverThickness?: number;
+  stickyNote?: BookStickyNote;
   physics?: KinematicBodyConfig;
 };
 
@@ -268,6 +270,12 @@ export const actions = createActions((world) => ({
         ...(config.pageCount !== undefined && { pageCount: config.pageCount }),
         ...(config.pageThickness !== undefined && { pageThickness: config.pageThickness }),
         ...(config.coverThickness !== undefined && { coverThickness: config.coverThickness }),
+        ...(config.stickyNote !== undefined && {
+          hasStickyNote: true,
+          stickyNoteText: config.stickyNote.text ?? '',
+          stickyNoteColor: config.stickyNote.color ?? '',
+          stickyNoteRotation: config.stickyNote.rotation ?? -7,
+        }),
       }),
       Rotation(getThrowRotation(config.centered)),
       Velocity,

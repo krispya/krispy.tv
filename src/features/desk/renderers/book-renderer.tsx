@@ -26,7 +26,7 @@ import {
 import { metersToCssPixels } from '../utils/physics-units.js';
 import { getBookDepthMeters } from '../utils/resting-height.js';
 import { hashSeed, SketchOutline } from './sketch-outline.js';
-import { shade } from '../utils/color.js';
+import { shade, withAlpha } from '../utils/color.js';
 import { screenPointToDeskMetersForWorld } from '../utils/camera.js';
 
 const DRAG_THRESHOLD_PX = 5;
@@ -58,6 +58,15 @@ const PAGE_EDGE_HORIZONTAL_LINES = `repeating-linear-gradient(to bottom, ${PAGE_
 // Lines run vertically and repeat across the face (fore-edge).
 const PAGE_EDGE_VERTICAL_LINES = `repeating-linear-gradient(to right, ${PAGE_LINE_LIGHT} 0px, ${PAGE_LINE_LIGHT} 2px, ${PAGE_LINE_DARK} 2px, ${PAGE_LINE_DARK} 3px)`;
 const COVER_SHADOW_CONFORM = color.image.blackConform;
+const STICKY_NOTE_DEFAULT_COLOR = color.accent.gold;
+const STICKY_NOTE_X_PERCENT = 36;
+const STICKY_NOTE_Y_PERCENT = 17;
+const STICKY_NOTE_SIZE_PERCENT = 58;
+const STICKY_NOTE_SHADOW_CLIP_PATHS = [
+  'polygon(0.2% 0%, 99.8% 0%, 113% 108%, -9% 106%)',
+  'polygon(0% 0.3%, 100% 0.1%, 111% 107%, -11% 109%)',
+  'polygon(0.3% 0%, 99.7% 0.2%, 114% 109%, -8% 107%)',
+] as const;
 
 export function BookRenderer() {
   const entities = useQuery(Book, Position, Rotation);
@@ -176,6 +185,13 @@ function BookView({ entity }: { entity: Entity }) {
 
   if (!book) return null;
 
+  const stickyNote = book.hasStickyNote
+    ? {
+        text: book.stickyNoteText,
+        color: book.stickyNoteColor,
+        rotation: book.stickyNoteRotation,
+      }
+    : undefined;
   const depth = metersToCssPixels(getBookDepthMeters(book));
   const halfDepth = depth / 2;
   const halfWidth = book.width / 2;
@@ -183,7 +199,13 @@ function BookView({ entity }: { entity: Entity }) {
   const faceCenterX = (book.width - depth) / 2;
   const faceCenterY = (book.height - depth) / 2;
   const title = book.title || book.id;
-  const accessibleTitle = book.author ? `${title} by ${book.author}` : title;
+  const noteText = stickyNote?.text?.trim();
+  const accessibleTitle = [
+    book.author ? `${title} by ${book.author}` : title,
+    noteText ? `sticky note: ${noteText}` : '',
+  ]
+    .filter(Boolean)
+    .join(', ');
   const spineColor = shade(book.color, -28);
   const sketchEdges = depth >= SKETCH_EDGE_MIN_DEPTH_PX;
   const seed = hashSeed(book.id);
@@ -245,6 +267,14 @@ function BookView({ entity }: { entity: Entity }) {
                 </div>
               </>
             )}
+            {stickyNote && (
+              <StickyNote
+                note={stickyNote}
+                bookId={book.id}
+                bookWidth={book.width}
+                bookHeight={book.height}
+              />
+            )}
           </BookFace>
           <BookFace
             width={book.width}
@@ -302,6 +332,101 @@ function BookView({ entity }: { entity: Entity }) {
     </div>
   );
 }
+
+function StickyNote({
+  note,
+  bookId,
+  bookWidth,
+  bookHeight,
+}: {
+  note: StickyNoteData;
+  bookId: string;
+  bookWidth: number;
+  bookHeight: number;
+}) {
+  const width = (bookWidth * STICKY_NOTE_SIZE_PERCENT) / 100;
+  const height = width;
+  const left = (bookWidth * STICKY_NOTE_X_PERCENT) / 100;
+  const top = (bookHeight * STICKY_NOTE_Y_PERCENT) / 100;
+  const rotation = note.rotation ?? -7;
+  const noteColor = note.color || STICKY_NOTE_DEFAULT_COLOR;
+  const creaseColor = withAlpha(shade(noteColor, -60), 0.24);
+  const highlightColor = withAlpha('#ffffff', 0.32);
+  const text = note.text?.trim();
+  const textSize = Math.max(16, Math.min(22, width * 0.14));
+  const noteSeed = hashSeed(`${bookId}:sticky-note`);
+
+  return (
+    <div
+      aria-hidden="true"
+      className="absolute [transform-style:preserve-3d]"
+      style={{
+        left,
+        top,
+        width,
+        height,
+        transform: `rotate(${rotation}deg) translateZ(2px)`,
+      }}
+    >
+      <StickyNoteShadow shadowId={`${bookId}:sticky-note`} />
+      <div
+        className="absolute inset-0 rounded-[2px]"
+        style={{
+          backgroundColor: noteColor,
+          backgroundImage: `linear-gradient(145deg, ${highlightColor} 0%, transparent 34%), linear-gradient(to bottom, transparent 0%, transparent 78%, ${creaseColor} 100%)`,
+          boxShadow: `0 1px 0 ${withAlpha('#ffffff', 0.42)} inset`,
+        }}
+      >
+        {text && (
+          <div
+            className="absolute inset-x-[12%] top-[14%] font-serif leading-tight text-[#522520]/75"
+            style={{ fontSize: textSize }}
+          >
+            {text}
+          </div>
+        )}
+        <SketchOutline width={width} height={height} seed={noteSeed} />
+      </div>
+    </div>
+  );
+}
+
+function StickyNoteShadow({ shadowId }: { shadowId: string }) {
+  const phaseOffset = getShadowBoilPhaseOffset(shadowId);
+
+  return (
+    <div
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-0 will-change-transform"
+      style={
+        {
+          '--boil-phase': `${phaseOffset}s`,
+          opacity: 0.3,
+          transform: 'scale(1, 1.1)',
+          transformOrigin: 'top center',
+        } as CSSProperties
+      }
+    >
+      {Array.from({ length: SHADOW_BOIL_FRAME_COUNT }, (_, frameIndex) => (
+        <div
+          key={frameIndex}
+          className={`shadow-boil-frame shadow-boil-frame--${frameIndex} absolute inset-0 bg-stone-950`}
+          style={{
+            ...getShadowBoilFrameStyle(frameIndex, false),
+            clipPath:
+              STICKY_NOTE_SHADOW_CLIP_PATHS[frameIndex % STICKY_NOTE_SHADOW_CLIP_PATHS.length],
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+type StickyNoteData = {
+  text: string;
+  color: string;
+  rotation: number;
+};
 
 function BookShadow({ bookId }: { bookId: string }) {
   const phaseOffset = getShadowBoilPhaseOffset(bookId);

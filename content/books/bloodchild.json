@@ -8,5 +8,9 @@
     "height": 7.8,
     "unit": "in"
   },
+  "stickyNote": {
+    "text": "",
+    "rotation": -9
+  },
   "order": 0
 }

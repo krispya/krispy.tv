@@ -59,6 +59,7 @@ export function Startup() {
         pageCount: contentBook.pageCount,
         pageThickness: inchesToDeskMeters(DEFAULT_BOOK_PAGE_THICKNESS_INCHES),
         coverThickness: inchesToDeskMeters(DEFAULT_BOOK_COVER_THICKNESS_INCHES),
+        stickyNote: contentBook.stickyNote,
       });
 
       throwPaperOntoDesk(book);

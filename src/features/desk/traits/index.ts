@@ -42,6 +42,13 @@ export const Paper = trait({
   thickness: 0.0001,
 });
 
+export type BookStickyNote = {
+  text?: string;
+  color?: string;
+  /** Degrees. */
+  rotation?: number;
+};
+
 export const Book = trait({
   id: '',
   title: '',
@@ -57,6 +64,11 @@ export const Book = trait({
   pageThickness: 0.0001,
   /** Meters. */
   coverThickness: 0.002,
+  hasStickyNote: false,
+  stickyNoteText: '',
+  stickyNoteColor: '',
+  /** Degrees. */
+  stickyNoteRotation: 0,
 });
 
 export const HEADPHONES_ASPECT_RATIO = 1646 / 731;
