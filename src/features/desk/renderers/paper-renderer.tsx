@@ -26,12 +26,16 @@ import {
   getShadowBoilPhaseOffset,
   SHADOW_BOIL_FRAME_COUNT,
 } from '../presentation/shadow.js';
+import { ITEM_PERSPECTIVE_PX } from '../presentation/stage.js';
 import { PaperLinesOverlay } from './paper-lines-overlay.js';
 
 const DRAG_THRESHOLD_PX = 5;
 type PaperStyle = CSSProperties & Record<`--${string}`, string>;
 
 const PAPER_INITIAL_STYLE = {
+  '--item-perspective': `${ITEM_PERSPECTIVE_PX}px`,
+  '--item-persp-x': '0px',
+  '--item-persp-y': '0px',
   '--paper-z': '0px',
   '--paper-rotate-x': '0deg',
   '--paper-rotate-y': '0deg',
@@ -234,23 +238,38 @@ function PaperView({ entity }: { entity: Entity }) {
         }`}
         style={{
           transform:
-            'translateZ(var(--paper-z)) rotateX(var(--paper-rotate-x)) rotateY(var(--paper-rotate-y)) rotateZ(var(--paper-rotate-z)) scale(var(--paper-lift-scale))',
+            'translateZ(var(--paper-z)) rotateZ(var(--paper-rotate-z)) scale(var(--paper-lift-scale))',
         }}
       >
         <div
-          className="pointer-events-none absolute inset-0 overflow-hidden rounded-[3px] p-6 text-left text-gray-950"
+          className="pointer-events-none absolute inset-0"
           style={{
-            backgroundColor: paper.color,
-            ...(paper.openable && {
-              backgroundImage: `${getPaperTextureOverlay(paper.id)}, ${PAPER_IMAGE_SHADOW_CONFORM}, url(${import.meta.env.BASE_URL}images/articles/${paper.id}.png)`,
-              backgroundBlendMode: 'multiply, lighten, normal',
-              backgroundSize: 'cover, cover, cover',
-              backgroundPosition: 'center, center, top center',
-              backgroundRepeat: 'no-repeat, no-repeat, no-repeat',
-            }),
+            perspective: 'var(--item-perspective)',
+            perspectiveOrigin: 'calc(50% + var(--item-persp-x)) calc(50% + var(--item-persp-y))',
           }}
-        />
-        <PaperLinesOverlay paperId={paper.id} paused={isDragging} />
+        >
+          <div
+            className="absolute inset-0 will-change-transform [transform-style:preserve-3d]"
+            style={{
+              transform: 'rotateX(var(--paper-rotate-x)) rotateY(var(--paper-rotate-y))',
+            }}
+          >
+            <div
+              className="pointer-events-none absolute inset-0 overflow-hidden rounded-[3px] p-6 text-left text-gray-950"
+              style={{
+                backgroundColor: paper.color,
+                ...(paper.openable && {
+                  backgroundImage: `${getPaperTextureOverlay(paper.id)}, ${PAPER_IMAGE_SHADOW_CONFORM}, url(${import.meta.env.BASE_URL}images/articles/${paper.id}.png)`,
+                  backgroundBlendMode: 'multiply, lighten, normal',
+                  backgroundSize: 'cover, cover, cover',
+                  backgroundPosition: 'center, center, top center',
+                  backgroundRepeat: 'no-repeat, no-repeat, no-repeat',
+                }),
+              }}
+            />
+            <PaperLinesOverlay paperId={paper.id} paused={isDragging} />
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -272,13 +291,28 @@ function PaperShadow({ paperId }: { paperId: string }) {
         } as CSSProperties
       }
     >
-      {Array.from({ length: SHADOW_BOIL_FRAME_COUNT }, (_, frameIndex) => (
+      {/* Same perspective + tilt as the item so the shadow's silhouette
+          skews identically to what the viewer sees. */}
+      <div
+        className="absolute inset-0"
+        style={{
+          perspective: 'var(--item-perspective)',
+          perspectiveOrigin: 'calc(50% + var(--item-persp-x)) calc(50% + var(--item-persp-y))',
+        }}
+      >
         <div
-          key={frameIndex}
-          className={`shadow-boil-frame shadow-boil-frame--${frameIndex} absolute inset-0 rounded-[3px] bg-stone-950`}
-          style={getShadowBoilFrameStyle(frameIndex)}
-        />
-      ))}
+          className="absolute inset-0"
+          style={{ transform: 'rotateX(var(--paper-rotate-x)) rotateY(var(--paper-rotate-y))' }}
+        >
+          {Array.from({ length: SHADOW_BOIL_FRAME_COUNT }, (_, frameIndex) => (
+            <div
+              key={frameIndex}
+              className={`shadow-boil-frame shadow-boil-frame--${frameIndex} absolute inset-0 rounded-[3px] bg-stone-950`}
+              style={getShadowBoilFrameStyle(frameIndex)}
+            />
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

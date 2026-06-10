@@ -26,6 +26,7 @@ import {
   getShadowBoilPhaseOffset,
   SHADOW_BOIL_FRAME_COUNT,
 } from '../presentation/shadow.js';
+import { ITEM_PERSPECTIVE_PX } from '../presentation/stage.js';
 import { hashSeed, SketchOutline } from './sketch-outline.js';
 
 const DRAG_THRESHOLD_PX = 5;
@@ -33,17 +34,17 @@ const FRAME_PADDING_PX = 12;
 type PolaroidStyle = CSSProperties & Record<`--${string}`, string>;
 
 const POLAROID_INITIAL_STYLE = {
+  '--item-perspective': `${ITEM_PERSPECTIVE_PX}px`,
+  '--item-persp-x': '0px',
+  '--item-persp-y': '0px',
   '--paper-z': '0px',
   '--paper-rotate-x': '0deg',
   '--paper-rotate-y': '0deg',
   '--paper-rotate-z': '0deg',
-  '--paper-lift-scale': '1',
   '--shadow-offset-x': '2px',
   '--shadow-offset-y': '3px',
   '--shadow-scale-x': '1',
   '--shadow-scale-y': '1',
-  '--shadow-rotation-scale-x': '1',
-  '--shadow-rotation-scale-y': '1',
   '--shadow-opacity': '0.2',
 } satisfies PolaroidStyle;
 
@@ -264,15 +265,21 @@ function PolaroidView({ entity }: { entity: Entity }) {
           isOpen ? (isFocusSpinning ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-grab'
         } ${isDragging ? 'cursor-grabbing' : ''}`}
         style={{
-          transform:
-            'translateZ(var(--paper-z)) rotateZ(var(--paper-rotate-z)) scale(var(--paper-lift-scale))',
+          transform: 'rotateZ(var(--paper-rotate-z))',
         }}
       >
-        <div className="pointer-events-none absolute inset-0 [perspective:520px]">
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            perspective: 'var(--item-perspective)',
+            perspectiveOrigin: 'calc(50% + var(--item-persp-x)) calc(50% + var(--item-persp-y))',
+          }}
+        >
           <div
             className="absolute inset-0 will-change-transform [transform-style:preserve-3d]"
             style={{
-              transform: 'rotateX(var(--paper-rotate-x)) rotateY(var(--paper-rotate-y))',
+              transform:
+                'translateZ(var(--paper-z)) rotateX(var(--paper-rotate-x)) rotateY(var(--paper-rotate-y))',
             }}
           >
             <div className="absolute inset-0 [transform:translateZ(0.5px)] overflow-hidden rounded-[3px] bg-[#f8f6f0] p-3 shadow-inner [backface-visibility:hidden]">
@@ -338,17 +345,35 @@ function PolaroidShadow({ polaroidId }: { polaroidId: string }) {
           '--boil-phase': `${phaseOffset}s`,
           opacity: 'var(--shadow-opacity)',
           transform:
-            'translate(var(--shadow-offset-x), var(--shadow-offset-y)) rotate(var(--paper-rotate-z)) scale(calc(var(--shadow-scale-x) * var(--shadow-rotation-scale-x) * var(--paper-lift-scale)), calc(var(--shadow-scale-y) * var(--shadow-rotation-scale-y) * var(--paper-lift-scale)))',
+            'translate(var(--shadow-offset-x), var(--shadow-offset-y)) rotate(var(--paper-rotate-z)) scale(var(--shadow-scale-x), var(--shadow-scale-y))',
         } as CSSProperties
       }
     >
-      {Array.from({ length: SHADOW_BOIL_FRAME_COUNT }, (_, frameIndex) => (
+      {/* Same perspective + tilt as the item so the shadow's silhouette
+          skews identically to what the viewer sees. */}
+      <div
+        className="absolute inset-0"
+        style={{
+          perspective: 'var(--item-perspective)',
+          perspectiveOrigin: 'calc(50% + var(--item-persp-x)) calc(50% + var(--item-persp-y))',
+        }}
+      >
         <div
-          key={frameIndex}
-          className={`shadow-boil-frame shadow-boil-frame--${frameIndex} absolute inset-0 rounded-[3px] bg-stone-950`}
-          style={getShadowBoilFrameStyle(frameIndex)}
-        />
-      ))}
+          className="absolute inset-0"
+          style={{
+            transform:
+              'translateZ(var(--paper-z)) rotateX(var(--paper-rotate-x)) rotateY(var(--paper-rotate-y))',
+          }}
+        >
+          {Array.from({ length: SHADOW_BOIL_FRAME_COUNT }, (_, frameIndex) => (
+            <div
+              key={frameIndex}
+              className={`shadow-boil-frame shadow-boil-frame--${frameIndex} absolute inset-0 rounded-[3px] bg-stone-950`}
+              style={getShadowBoilFrameStyle(frameIndex)}
+            />
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

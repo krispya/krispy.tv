@@ -136,6 +136,12 @@ export const Dragging = trait({
   offset: () => ({ x: 0, y: 0 }),
   rotation: () => ({ x: 0, y: 0, z: 0 }),
   liftProgress: 0,
+  /** Meters per second. Previous frame's drag velocity, for acceleration. */
+  lastVelocity: () => ({ x: 0, y: 0 }),
+  /** Degrees. Inertial tilt spring state. */
+  tilt: () => ({ x: 0, y: 0 }),
+  /** Degrees per second. */
+  tiltVelocity: () => ({ x: 0, y: 0 }),
 });
 
 export type PolaroidFocusPhase = 'opening' | 'closing';

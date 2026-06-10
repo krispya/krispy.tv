@@ -2,6 +2,7 @@ import type { World } from 'koota';
 import { getHeightAbovePlaneM } from '../utils/height.js';
 import { toMeshLiftScale, toTranslateZPx } from '../presentation/lift.js';
 import { toShadowStyle } from '../presentation/shadow.js';
+import { setItemPerspectiveVars } from '../presentation/item-perspective.js';
 import { Dragging, Paper, Position, Ref, Rotation, StackIndex } from '../traits/index.js';
 import { metersToCssPixels } from '../utils/physics-units.js';
 
@@ -24,6 +25,7 @@ export function syncPaperToDOM(world: World) {
       ref.style.setProperty('--paper-rotate-x', `${rotation.x}deg`);
       ref.style.setProperty('--paper-rotate-y', `${rotation.y}deg`);
       ref.style.setProperty('--paper-rotate-z', `${rotation.z}deg`);
+      setItemPerspectiveVars(world, ref, position, rotation.z);
       ref.style.setProperty('--shadow-offset-x', `${shadow.offsetX}px`);
       ref.style.setProperty('--shadow-offset-y', `${shadow.offsetY}px`);
       ref.style.setProperty('--shadow-scale-x', shadow.scaleX.toString());

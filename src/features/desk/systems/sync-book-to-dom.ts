@@ -3,6 +3,7 @@ import { Book, Dragging, Position, Ref, Rotation, StackIndex } from '../traits/i
 import { getHeightAbovePlaneM, toLift01 } from '../utils/height.js';
 import { toMeshLiftScale, toTranslateZPx } from '../presentation/lift.js';
 import { toShadowStyle } from '../presentation/shadow.js';
+import { setItemPerspectiveVars } from '../presentation/item-perspective.js';
 import { metersToCssPixels } from '../utils/physics-units.js';
 import { getBookDepthMeters } from '../utils/resting-height.js';
 import { getBookShadowClip, getBookShadowSize } from '../utils/book-shadow.js';
@@ -33,6 +34,7 @@ export function syncBookToDOM(world: World) {
       ref.style.setProperty('--book-rotate-x', `${rotation.x}deg`);
       ref.style.setProperty('--book-rotate-y', `${rotation.y}deg`);
       ref.style.setProperty('--book-rotate-z', `${rotation.z}deg`);
+      setItemPerspectiveVars(world, ref, position, rotation.z);
       ref.style.setProperty('--book-shadow-size', `${size}px`);
       ref.style.setProperty('--book-shadow-clip', clip);
       ref.style.setProperty(

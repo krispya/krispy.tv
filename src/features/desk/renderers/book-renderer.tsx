@@ -28,6 +28,7 @@ import { getBookDepthMeters } from '../utils/resting-height.js';
 import { hashSeed, SketchOutline } from './sketch-outline.js';
 import { shade, withAlpha } from '../utils/color.js';
 import { screenPointToDeskMetersForWorld } from '../utils/camera.js';
+import { ITEM_PERSPECTIVE_PX } from '../presentation/stage.js';
 
 const DRAG_THRESHOLD_PX = 5;
 // Below this depth (px) the spine/page-edge slivers are too thin for a
@@ -36,10 +37,15 @@ const SKETCH_EDGE_MIN_DEPTH_PX = 6;
 // Book lies flat like paper; a tiny tilt reveals just a sliver of the page edges.
 const BASE_BOOK_ROTATE_X = 5;
 const BASE_BOOK_ROTATE_Y = 3;
+const BOOK_VISUAL_DEPTH_SCALE = 1.8;
+const BOOK_VISUAL_DEPTH_MAX_SHORT_SIDE_RATIO = 0.45;
 
 type BookStyle = CSSProperties & Record<`--${string}`, string>;
 
 const BOOK_INITIAL_STYLE = {
+  '--item-perspective': `${ITEM_PERSPECTIVE_PX}px`,
+  '--item-persp-x': '0px',
+  '--item-persp-y': '0px',
   '--book-z': '0px',
   '--book-rotate-x': '0deg',
   '--book-rotate-y': '0deg',
@@ -62,6 +68,10 @@ const STICKY_NOTE_DEFAULT_COLOR = color.accent.gold;
 const STICKY_NOTE_X_PERCENT = 36;
 const STICKY_NOTE_Y_PERCENT = 17;
 const STICKY_NOTE_SIZE_PERCENT = 58;
+/** Pixels above the cover where the note's stuck (top) edge floats. */
+const STICKY_NOTE_LIFT_PX = 3;
+/** Degrees. Peel of the unstuck bottom edge away from the cover. */
+const STICKY_NOTE_PEEL_DEG = 14;
 const STICKY_NOTE_SHADOW_CLIP_PATHS = [
   'polygon(0.2% 0%, 99.8% 0%, 113% 108%, -9% 106%)',
   'polygon(0% 0.3%, 100% 0.1%, 111% 107%, -11% 109%)',
@@ -192,7 +202,8 @@ function BookView({ entity }: { entity: Entity }) {
         rotation: book.stickyNoteRotation,
       }
     : undefined;
-  const depth = metersToCssPixels(getBookDepthMeters(book));
+  const physicalDepth = metersToCssPixels(getBookDepthMeters(book));
+  const depth = getVisualBookDepth(book.width, book.height, physicalDepth);
   const halfDepth = depth / 2;
   const halfWidth = book.width / 2;
   const halfHeight = book.height / 2;
@@ -235,102 +246,122 @@ function BookView({ entity }: { entity: Entity }) {
         className={`absolute inset-0 cursor-grab touch-none select-none ${
           isDragging ? 'cursor-grabbing' : ''
         }`}
+        style={{
+          transform:
+            'translateZ(var(--book-z)) rotateZ(var(--book-rotate-z)) scale(var(--book-lift-scale))',
+        }}
       >
         <div
-          className="absolute inset-0 will-change-transform [transform-style:preserve-3d]"
+          className="pointer-events-none absolute inset-0"
           style={{
-            transform: `translateZ(var(--book-z)) rotateX(calc(var(--book-rotate-x) + ${BASE_BOOK_ROTATE_X}deg)) rotateY(calc(var(--book-rotate-y) - ${BASE_BOOK_ROTATE_Y}deg)) rotateZ(var(--book-rotate-z)) scale(var(--book-lift-scale))`,
+            perspective: 'var(--item-perspective)',
+            perspectiveOrigin: 'calc(50% + var(--item-persp-x)) calc(50% + var(--item-persp-y))',
           }}
         >
-          <BookFace
-            width={book.width}
-            height={book.height}
-            seed={seed + 1}
-            className="rounded-[6px]"
+          <div
+            className="absolute inset-0 will-change-transform [transform-style:preserve-3d]"
             style={{
-              backgroundColor: book.color,
-              ...(book.coverImage && {
-                backgroundImage: `${COVER_SHADOW_CONFORM}, url(${book.coverImage})`,
-                backgroundBlendMode: 'lighten, normal',
-                backgroundSize: 'cover, cover',
-                backgroundPosition: 'center, center',
-              }),
-              transform: `translateZ(${halfDepth}px)`,
+              transform: `rotateX(calc(var(--book-rotate-x) + ${BASE_BOOK_ROTATE_X}deg)) rotateY(calc(var(--book-rotate-y) - ${BASE_BOOK_ROTATE_Y}deg))`,
             }}
           >
-            {!book.coverImage && (
-              <>
-                <div className="absolute inset-x-8 top-10 border-t border-white/35" />
-                <div className="absolute inset-x-8 bottom-10 border-t border-black/20" />
-                <div className="absolute inset-x-8 top-1/2 -translate-y-1/2 text-center font-serif text-3xl leading-tight font-bold tracking-wide text-white uppercase drop-shadow-sm">
-                  {title}
-                </div>
-              </>
-            )}
-            {stickyNote && (
-              <StickyNote
-                note={stickyNote}
-                bookId={book.id}
-                bookWidth={book.width}
-                bookHeight={book.height}
-              />
-            )}
-          </BookFace>
-          <BookFace
-            width={book.width}
-            height={book.height}
-            seed={seed + 2}
-            className="rounded-[6px]"
-            style={{
-              backgroundColor: shade(book.color, -18),
-              transform: `rotateY(180deg) translateZ(${halfDepth}px)`,
-            }}
-          />
-          <BookFace
-            width={depth}
-            height={book.height}
-            seed={sketchEdges ? seed + 3 : undefined}
-            style={{
-              left: faceCenterX,
-              backgroundColor: spineColor,
-              backgroundImage: 'linear-gradient(to right, rgba(0,0,0,0.28), rgba(255,255,255,0.08))',
-              transform: `rotateY(-90deg) translateZ(${halfWidth}px)`,
-            }}
-          />
-          <BookFace
-            width={depth}
-            height={book.height}
-            seed={sketchEdges ? seed + 4 : undefined}
-            style={{
-              left: faceCenterX,
-              background: PAGE_EDGE_VERTICAL_LINES,
-              transform: `rotateY(90deg) translateZ(${halfWidth}px)`,
-            }}
-          />
-          <BookFace
-            width={book.width}
-            height={depth}
-            seed={sketchEdges ? seed + 5 : undefined}
-            style={{
-              top: faceCenterY,
-              background: PAGE_EDGE_HORIZONTAL_LINES,
-              transform: `rotateX(90deg) translateZ(${halfHeight}px)`,
-            }}
-          />
-          <BookFace
-            width={book.width}
-            height={depth}
-            seed={sketchEdges ? seed + 6 : undefined}
-            style={{
-              top: faceCenterY,
-              background: PAGE_EDGE_HORIZONTAL_LINES,
-              transform: `rotateX(-90deg) translateZ(${halfHeight}px)`,
-            }}
-          />
+            {/* preserve-3d keeps the sticky note's lift/peel in the book's 3D
+                context instead of flattening onto the cover. */}
+            <BookFace
+              width={book.width}
+              height={book.height}
+              seed={seed + 1}
+              className="rounded-[6px] [transform-style:preserve-3d]"
+              style={{
+                backgroundColor: book.color,
+                ...(book.coverImage && {
+                  backgroundImage: `${COVER_SHADOW_CONFORM}, url(${book.coverImage})`,
+                  backgroundBlendMode: 'lighten, normal',
+                  backgroundSize: 'cover, cover',
+                  backgroundPosition: 'center, center',
+                }),
+                transform: `translateZ(${halfDepth}px)`,
+              }}
+            >
+              {!book.coverImage && (
+                <>
+                  <div className="absolute inset-x-8 top-10 border-t border-white/35" />
+                  <div className="absolute inset-x-8 bottom-10 border-t border-black/20" />
+                  <div className="absolute inset-x-8 top-1/2 -translate-y-1/2 text-center font-serif text-3xl leading-tight font-bold tracking-wide text-white uppercase drop-shadow-sm">
+                    {title}
+                  </div>
+                </>
+              )}
+              {stickyNote && (
+                <StickyNote
+                  note={stickyNote}
+                  bookId={book.id}
+                  bookWidth={book.width}
+                  bookHeight={book.height}
+                />
+              )}
+            </BookFace>
+            <BookFace
+              width={book.width}
+              height={book.height}
+              seed={seed + 2}
+              className="rounded-[6px]"
+              style={{
+                backgroundColor: shade(book.color, -18),
+                transform: `rotateY(180deg) translateZ(${halfDepth}px)`,
+              }}
+            />
+            <BookFace
+              width={depth}
+              height={book.height}
+              seed={sketchEdges ? seed + 3 : undefined}
+              style={{
+                left: faceCenterX,
+                backgroundColor: spineColor,
+                backgroundImage:
+                  'linear-gradient(to right, rgba(0,0,0,0.28), rgba(255,255,255,0.08))',
+                transform: `rotateY(-90deg) translateZ(${halfWidth}px)`,
+              }}
+            />
+            <BookFace
+              width={depth}
+              height={book.height}
+              seed={sketchEdges ? seed + 4 : undefined}
+              style={{
+                left: faceCenterX,
+                background: PAGE_EDGE_VERTICAL_LINES,
+                transform: `rotateY(90deg) translateZ(${halfWidth}px)`,
+              }}
+            />
+            <BookFace
+              width={book.width}
+              height={depth}
+              seed={sketchEdges ? seed + 5 : undefined}
+              style={{
+                top: faceCenterY,
+                background: PAGE_EDGE_HORIZONTAL_LINES,
+                transform: `rotateX(90deg) translateZ(${halfHeight}px)`,
+              }}
+            />
+            <BookFace
+              width={book.width}
+              height={depth}
+              seed={sketchEdges ? seed + 6 : undefined}
+              style={{
+                top: faceCenterY,
+                background: PAGE_EDGE_HORIZONTAL_LINES,
+                transform: `rotateX(-90deg) translateZ(${halfHeight}px)`,
+              }}
+            />
+          </div>
         </div>
       </div>
     </div>
   );
+}
+
+function getVisualBookDepth(width: number, height: number, physicalDepth: number) {
+  const maxVisualDepth = Math.min(width, height) * BOOK_VISUAL_DEPTH_MAX_SHORT_SIDE_RATIO;
+  return Math.max(physicalDepth, Math.min(physicalDepth * BOOK_VISUAL_DEPTH_SCALE, maxVisualDepth));
 }
 
 function StickyNote({
@@ -372,6 +403,9 @@ function StickyNote({
       <div
         className="absolute inset-0 rounded-[2px]"
         style={{
+          // Stuck along the top edge, bottom edge peeling off the cover.
+          transformOrigin: 'top center',
+          transform: `translateZ(${STICKY_NOTE_LIFT_PX}px) rotateX(${STICKY_NOTE_PEEL_DEG}deg)`,
           backgroundColor: noteColor,
           backgroundImage: `linear-gradient(145deg, ${highlightColor} 0%, transparent 34%), linear-gradient(to bottom, transparent 0%, transparent 78%, ${creaseColor} 100%)`,
           boxShadow: `0 1px 0 ${withAlpha('#ffffff', 0.42)} inset`,
@@ -447,16 +481,31 @@ function BookShadow({ bookId }: { bookId: string }) {
         } as CSSProperties
       }
     >
-      {Array.from({ length: SHADOW_BOIL_FRAME_COUNT }, (_, frameIndex) => (
+      {/* Same perspective + tilt as the book so the shadow's silhouette
+          skews identically to what the viewer sees. */}
+      <div
+        className="absolute inset-0"
+        style={{
+          perspective: 'var(--item-perspective)',
+          perspectiveOrigin: 'calc(50% + var(--item-persp-x)) calc(50% + var(--item-persp-y))',
+        }}
+      >
         <div
-          key={frameIndex}
-          className={`shadow-boil-frame shadow-boil-frame--${frameIndex} absolute inset-0 bg-stone-950`}
-          style={{
-            ...getShadowBoilFrameStyle(frameIndex, false),
-            clipPath: 'var(--book-shadow-clip)',
-          }}
-        />
-      ))}
+          className="absolute inset-0"
+          style={{ transform: 'rotateX(var(--book-rotate-x)) rotateY(var(--book-rotate-y))' }}
+        >
+          {Array.from({ length: SHADOW_BOIL_FRAME_COUNT }, (_, frameIndex) => (
+            <div
+              key={frameIndex}
+              className={`shadow-boil-frame shadow-boil-frame--${frameIndex} absolute inset-0 bg-stone-950`}
+              style={{
+                ...getShadowBoilFrameStyle(frameIndex, false),
+                clipPath: 'var(--book-shadow-clip)',
+              }}
+            />
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

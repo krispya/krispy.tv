@@ -1,7 +1,8 @@
 import type { World } from 'koota';
 import { getHeightAbovePlaneM } from '../utils/height.js';
-import { toMeshLiftScale, toTranslateZPx } from '../presentation/lift.js';
+import { toMeshLiftScale } from '../presentation/lift.js';
 import { toShadowStyle } from '../presentation/shadow.js';
+import { setItemPerspectiveVars, toPerspectiveGrowthZPx } from '../presentation/item-perspective.js';
 import {
   Dragging,
   IsOpen,
@@ -19,8 +20,6 @@ const DRAGGING_STACK_BOOST = 1000;
 const FOCUSED_STACK_BOOST = 2000;
 const FOCUSED_SCALE = 1.34;
 const FOCUSED_SHADOW_OPACITY_MULTIPLIER = 0;
-const MIN_ROTATED_SHADOW_SCALE_X = 0.18;
-const MIN_ROTATED_SHADOW_SCALE_Y = 0.35;
 
 export function syncPolaroidToDOM(world: World) {
   world
@@ -35,7 +34,6 @@ export function syncPolaroidToDOM(world: World) {
       );
       const heightM = getHeightAbovePlaneM(position.z);
       const shadow = toShadowStyle(heightM);
-      const rotatedShadow = getRotatedShadowScale(rotation);
       const liftScale = lerp(toMeshLiftScale(heightM), FOCUSED_SCALE, focusProgress);
       const shadowOpacity = lerp(
         shadow.opacity,
@@ -47,33 +45,23 @@ export function syncPolaroidToDOM(world: World) {
         position.y
       )}px)`;
       ref.style.zIndex = cssZIndex.toString();
-      ref.style.setProperty('--paper-z', `${toTranslateZPx(heightM, entity)}px`);
-      ref.style.setProperty('--paper-lift-scale', liftScale.toString());
+      // Lift/focus growth comes from moving the item toward the per-item
+      // perspective camera instead of a 2D scale, so item and shadow grow
+      // consistently with the projection.
+      ref.style.setProperty('--paper-z', `${toPerspectiveGrowthZPx(world, liftScale).toFixed(1)}px`);
       ref.style.setProperty('--paper-rotate-x', `${rotation.x}deg`);
       ref.style.setProperty('--paper-rotate-y', `${rotation.y}deg`);
       ref.style.setProperty('--paper-rotate-z', `${rotation.z}deg`);
+      setItemPerspectiveVars(world, ref, position, rotation.z);
       ref.style.setProperty('--shadow-offset-x', `${shadow.offsetX}px`);
       ref.style.setProperty('--shadow-offset-y', `${shadow.offsetY}px`);
       ref.style.setProperty('--shadow-scale-x', shadow.scaleX.toString());
       ref.style.setProperty('--shadow-scale-y', shadow.scaleY.toString());
-      ref.style.setProperty('--shadow-rotation-scale-x', rotatedShadow.x.toString());
-      ref.style.setProperty('--shadow-rotation-scale-y', rotatedShadow.y.toString());
       ref.style.setProperty('--shadow-opacity', shadowOpacity.toString());
     });
-}
-
-function getRotatedShadowScale(rotation: { x: number; y: number }) {
-  return {
-    x: Math.max(MIN_ROTATED_SHADOW_SCALE_X, Math.abs(Math.cos(toRadians(rotation.y)))),
-    y: Math.max(MIN_ROTATED_SHADOW_SCALE_Y, Math.abs(Math.cos(toRadians(rotation.x)))),
-  };
 }
 
 function getPolaroidZIndex(stackIndex: { value: number }, isDragging: boolean, isFocused: boolean) {
   if (isFocused) return stackIndex.value + FOCUSED_STACK_BOOST;
   return isDragging ? stackIndex.value + DRAGGING_STACK_BOOST : stackIndex.value;
-}
-
-function toRadians(degrees: number) {
-  return (degrees * Math.PI) / 180;
 }
