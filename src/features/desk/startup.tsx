@@ -16,6 +16,8 @@ import {
 import { waitForStableFrames } from './utils/warmup.js';
 
 const MIN_PAGE_COUNT = 8;
+/** Milliseconds. Lets the loading cover fall most of the way before items toss up. */
+const TOSS_DELAY_MS = 220;
 
 type PendingThrow = {
   entity: Entity;
@@ -123,11 +125,14 @@ export function Startup() {
   useTraitEffect(world, Scene, (scene) => {
     if (scene?.phase !== 'ready') return;
 
-    for (const { entity, centered } of pendingThrowsRef.current.splice(0)) {
-      throwPaperOntoDesk(entity, { centered });
-    }
-
     loadingControl.set('ready');
+
+    // The unmount cleanup empties the pending list, so a late timer is a no-op.
+    setTimeout(() => {
+      for (const { entity, centered } of pendingThrowsRef.current.splice(0)) {
+        throwPaperOntoDesk(entity, { centered });
+      }
+    }, TOSS_DELAY_MS);
   });
 
   return null;

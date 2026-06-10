@@ -1,11 +1,13 @@
 import { useState, useSyncExternalStore } from 'react';
 import { color } from '../../color.js';
 import { loadingControl } from './control.js';
+import { Spinner } from './spinner.js';
 
 /**
  * Single persistent cover for a feature's boot waterfall: chunk load, asset
  * decode and GPU warmup all happen beneath it with no fallback handoff.
- * Fades out and unmounts once a feature reports ready through `loadingControl`.
+ * When a feature reports ready through `loadingControl` the whole cover drops
+ * off the bottom of the viewport (as the desk items throw up) and unmounts.
  */
 export function LoadingScreen() {
   const phase = useSyncExternalStore(loadingControl.subscribe, loadingControl.get);
@@ -14,20 +16,27 @@ export function LoadingScreen() {
 
   if (done) return null;
 
+  const coverClasses = [
+    'loading-cover fixed inset-0 z-3000 flex items-center justify-center',
+    ready && 'loading-cover--exit',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
   return (
     <div
-      className="fixed inset-0 z-3000 flex items-center justify-center transition-opacity duration-300"
-      style={{
-        backgroundColor: color.surface.desk,
-        opacity: ready ? 0 : 1,
-        pointerEvents: ready ? 'none' : undefined,
+      className={coverClasses}
+      style={{ backgroundColor: color.surface.desk }}
+      onAnimationEnd={(event) => {
+        if (ready && event.animationName === 'loading-cover-drop') setDone(true);
       }}
       onTransitionEnd={() => {
+        // Reduced-motion exit is an opacity transition instead of the drop.
         if (ready) setDone(true);
       }}
       aria-hidden={ready ? true : undefined}
     >
-      <p className="text-sm text-gray-500">Loading...</p>
+      <Spinner />
     </div>
   );
 }

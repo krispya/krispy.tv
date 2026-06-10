@@ -337,6 +337,54 @@
     }
   }
 
+  /* Loading spinner: rotation stepped at 12 frames per turn so it reads as
+     hand-animated rather than a smooth CSS spin. The stroke itself boils via
+     the sketch-boil classes. */
+  @keyframes loading-spinner-turn {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .loading-spinner {
+    animation: loading-spinner-turn 1.4s steps(12) infinite;
+  }
+
+  /* Loading cover exit: shoots off the bottom, accelerating the whole way so
+     the desk item throws behind it are revealed almost immediately. */
+  @keyframes loading-cover-drop {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(112%) rotate(1.2deg);
+    }
+  }
+
+  .loading-cover--exit {
+    animation: loading-cover-drop 0.28s cubic-bezier(0.7, 0, 1, 0.6) forwards;
+    pointer-events: none;
+  }
+
+  .loading-cover--exit .loading-spinner {
+    animation-play-state: paused;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .loading-spinner {
+      animation: none;
+    }
+
+    .loading-cover--exit {
+      animation: none;
+      opacity: 0;
+      transition: opacity 0.3s ease-out;
+    }
+  }
+
   .article-sheet-viewport {
     bottom: calc(0px - env(safe-area-inset-bottom, 0px));
   }
