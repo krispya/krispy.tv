@@ -57,6 +57,7 @@ const PAGE_LINE_DARK = color.surface.paperEdge;
 const PAGE_EDGE_HORIZONTAL_LINES = `repeating-linear-gradient(to bottom, ${PAGE_LINE_LIGHT} 0px, ${PAGE_LINE_LIGHT} 2px, ${PAGE_LINE_DARK} 2px, ${PAGE_LINE_DARK} 3px)`;
 // Lines run vertically and repeat across the face (fore-edge).
 const PAGE_EDGE_VERTICAL_LINES = `repeating-linear-gradient(to right, ${PAGE_LINE_LIGHT} 0px, ${PAGE_LINE_LIGHT} 2px, ${PAGE_LINE_DARK} 2px, ${PAGE_LINE_DARK} 3px)`;
+const COVER_SHADOW_CONFORM = color.image.blackConform;
 
 export function BookRenderer() {
   const entities = useQuery(Book, Position, Rotation);
@@ -227,9 +228,10 @@ function BookView({ entity }: { entity: Entity }) {
             style={{
               backgroundColor: book.color,
               ...(book.coverImage && {
-                backgroundImage: `url(${book.coverImage})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
+                backgroundImage: `${COVER_SHADOW_CONFORM}, url(${book.coverImage})`,
+                backgroundBlendMode: 'lighten, normal',
+                backgroundSize: 'cover, cover',
+                backgroundPosition: 'center, center',
               }),
               transform: `translateZ(${halfDepth}px)`,
             }}

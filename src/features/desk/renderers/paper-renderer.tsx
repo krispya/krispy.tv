@@ -3,6 +3,7 @@ import { useActions, useHas, useQuery, useTrait, useWorld } from 'koota/react';
 import { useCallback, type CSSProperties } from 'react';
 import { useLocation } from 'wouter';
 import { routes } from '../../../routes.js';
+import { color } from '../../../color.js';
 import { BoundingBoxDebug, useDebug } from '../../debug/index.js';
 import { actions } from '../actions.js';
 import {
@@ -49,6 +50,7 @@ const PAPER_TEXTURE_OVERLAYS = [
   'linear-gradient(68deg, rgba(56, 67, 38, 0.022), rgba(56, 67, 38, 0.038))',
   'linear-gradient(309deg, rgba(83, 45, 49, 0.02), rgba(83, 45, 49, 0.036))',
 ];
+const PAPER_IMAGE_SHADOW_CONFORM = color.image.blackConform;
 
 function hashString(value: string): number {
   let hash = 0;
@@ -240,11 +242,11 @@ function PaperView({ entity }: { entity: Entity }) {
           style={{
             backgroundColor: paper.color,
             ...(paper.openable && {
-              backgroundImage: `${getPaperTextureOverlay(paper.id)}, url(${import.meta.env.BASE_URL}images/articles/${paper.id}.png)`,
-              backgroundBlendMode: 'multiply, normal',
-              backgroundSize: 'cover, cover',
-              backgroundPosition: 'center, top center',
-              backgroundRepeat: 'no-repeat, no-repeat',
+              backgroundImage: `${getPaperTextureOverlay(paper.id)}, ${PAPER_IMAGE_SHADOW_CONFORM}, url(${import.meta.env.BASE_URL}images/articles/${paper.id}.png)`,
+              backgroundBlendMode: 'multiply, lighten, normal',
+              backgroundSize: 'cover, cover, cover',
+              backgroundPosition: 'center, center, top center',
+              backgroundRepeat: 'no-repeat, no-repeat, no-repeat',
             }),
           }}
         />

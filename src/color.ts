@@ -5,7 +5,7 @@
 // This is the single place to retune the look. The Tailwind `@theme` block
 // in src/index.css mirrors these values for the view layer.
 
-import { shade } from './features/desk/utils/color';
+import { shade, withAlpha } from './features/desk/utils/color';
 
 export const palette = {
   promenade: '#F7F6E1',
@@ -22,6 +22,7 @@ type ColorTokens = {
   surface: { desk: string; paper: string; articlePaper: string; paperEdge: string };
   line: { ink: string; inkSoft: string };
   accent: { gold: string; coral: string; sage: string; sky: string; wood: string };
+  image: { blackConform: string };
 };
 
 // Semantic tokens — scene roles. Retune the mapping here to re-theme the desk.
@@ -44,5 +45,9 @@ export const color: ColorTokens = {
     sage: palette.catnip,
     sky: palette.overTheSky,
     wood: palette.hazel,
+  },
+  image: {
+    // CSS `lighten` image layers map absolute black to this gradient.
+    blackConform: `linear-gradient(145deg, ${withAlpha(shade(palette.rootBeer, -45), 1)} 0%,  ${withAlpha(shade(palette.rootBeer, -45), 0.4)} 100%)`,
   },
 };

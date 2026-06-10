@@ -59,6 +59,7 @@
   --color-accent-coral: #ee7f80;
   --color-accent-sage: #88b094;
   --color-accent-sky: #9ad2e4;
+  --color-image-black-conform: linear-gradient(145deg, #5c2f2a 0%, #7f524d 52%, #763c16 100%);
 }
 
 @layer base {
