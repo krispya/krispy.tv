@@ -53,6 +53,7 @@ export function Startup() {
         id: contentBook.slug,
         title: contentBook.title,
         author: contentBook.author,
+        color: contentBook.color,
         coverImage: contentBook.coverImageSrc,
         width: inchesToDeskPixels(contentBook.dimensions.width),
         height: inchesToDeskPixels(contentBook.dimensions.height),

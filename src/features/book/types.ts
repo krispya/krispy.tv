@@ -14,6 +14,7 @@ export type BookContent = {
   title: string;
   author: string;
   coverImage: string;
+  color?: string;
   pageCount: number;
   dimensions: BookDimensions;
   stickyNote?: BookStickyNote;
