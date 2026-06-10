@@ -1,8 +1,15 @@
 import { useActions } from 'koota/react';
 import { useEffect } from 'react';
 import { articles as articlesCatalog } from '../article/index.js';
+import { books as booksCatalog } from '../book/index.js';
 import { polaroids as polaroidsCatalog } from '../polaroid/index.js';
 import { actions } from './actions.js';
+import {
+  DEFAULT_BOOK_COVER_THICKNESS_INCHES,
+  DEFAULT_BOOK_PAGE_THICKNESS_INCHES,
+  inchesToDeskMeters,
+  inchesToDeskPixels,
+} from './utils/dimensions.js';
 
 const MIN_PAGE_COUNT = 8;
 
@@ -41,13 +48,22 @@ export function Startup() {
       throwPaperOntoDesk(paper, { centered });
     });
 
-    const book = spawnBook({
-      id: 'desk-css-book',
-      title: 'Book',
-      pageCount: 260,
-    });
+    const books = booksCatalog.map((contentBook) => {
+      const book = spawnBook({
+        id: contentBook.slug,
+        title: contentBook.title,
+        author: contentBook.author,
+        coverImage: contentBook.coverImageSrc,
+        width: inchesToDeskPixels(contentBook.dimensions.width),
+        height: inchesToDeskPixels(contentBook.dimensions.height),
+        pageCount: contentBook.pageCount,
+        pageThickness: inchesToDeskMeters(DEFAULT_BOOK_PAGE_THICKNESS_INCHES),
+        coverThickness: inchesToDeskMeters(DEFAULT_BOOK_COVER_THICKNESS_INCHES),
+      });
 
-    throwPaperOntoDesk(book);
+      throwPaperOntoDesk(book);
+      return book;
+    });
 
     for (const polaroid of polaroidsCatalog) {
       const entity = spawnPolaroid({
@@ -65,7 +81,7 @@ export function Startup() {
       destroyPapers();
       destroyPolaroids();
       headphones.destroy();
-      book.destroy();
+      books.forEach((book) => book.destroy());
       desk.destroy();
     };
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- mount-only initial spawn

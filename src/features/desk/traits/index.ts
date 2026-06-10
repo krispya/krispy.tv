@@ -1,5 +1,6 @@
 import { relation, trait } from 'koota';
 import { color } from '../../../color.js';
+import { inchesToDeskPixels, US_LETTER_INCHES } from '../utils/dimensions.js';
 
 export const Time = trait({ last: 0, delta: 0 });
 export const Pointer = trait({ x: 0, y: 0 });
@@ -32,11 +33,11 @@ export const Paper = trait({
   openable: true,
   color: color.surface.paper,
   /** Pixels. */
-  width: 380,
+  width: inchesToDeskPixels(US_LETTER_INCHES.width),
   /** Pixels. */
-  height: 380 / (8.5 / 11),
+  height: inchesToDeskPixels(US_LETTER_INCHES.height),
   /** Width-to-height ratio. */
-  aspectRatio: 8.5 / 11,
+  aspectRatio: US_LETTER_INCHES.width / US_LETTER_INCHES.height,
   /** Meters. */
   thickness: 0.0001,
 });
@@ -44,6 +45,7 @@ export const Paper = trait({
 export const Book = trait({
   id: '',
   title: '',
+  author: '',
   color: color.accent.sage,
   coverImage: '',
   /** Pixels. */

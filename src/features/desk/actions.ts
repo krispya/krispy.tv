@@ -93,6 +93,7 @@ export type PaperConfig = {
 export type BookConfig = {
   id: string;
   title?: string;
+  author?: string;
   color?: string;
   coverImage?: string;
   width?: number;
@@ -259,6 +260,7 @@ export const actions = createActions((world) => ({
       Book({
         id: config.id,
         ...(config.title !== undefined && { title: config.title }),
+        ...(config.author !== undefined && { author: config.author }),
         ...(config.color !== undefined && { color: config.color }),
         ...(config.coverImage !== undefined && { coverImage: config.coverImage }),
         ...(config.width !== undefined && { width: config.width }),

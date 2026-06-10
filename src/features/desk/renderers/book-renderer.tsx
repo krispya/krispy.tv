@@ -182,6 +182,7 @@ function BookView({ entity }: { entity: Entity }) {
   const faceCenterX = (book.width - depth) / 2;
   const faceCenterY = (book.height - depth) / 2;
   const title = book.title || book.id;
+  const accessibleTitle = book.author ? `${title} by ${book.author}` : title;
   const spineColor = shade(book.color, -28);
   const sketchEdges = depth >= SKETCH_EDGE_MIN_DEPTH_PX;
   const seed = hashSeed(book.id);
@@ -201,7 +202,7 @@ function BookView({ entity }: { entity: Entity }) {
       {isDebug && <BoundingBoxDebug entity={entity} />}
       <BookShadow bookId={book.id} />
       <div
-        aria-label={title}
+        aria-label={accessibleTitle}
         role="img"
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
@@ -233,11 +234,15 @@ function BookView({ entity }: { entity: Entity }) {
               transform: `translateZ(${halfDepth}px)`,
             }}
           >
-            <div className="absolute inset-x-8 top-10 border-t border-white/35" />
-            <div className="absolute inset-x-8 bottom-10 border-t border-black/20" />
-            <div className="absolute inset-x-8 top-1/2 -translate-y-1/2 text-center font-serif text-3xl leading-tight font-bold tracking-wide text-white uppercase drop-shadow-sm">
-              {title}
-            </div>
+            {!book.coverImage && (
+              <>
+                <div className="absolute inset-x-8 top-10 border-t border-white/35" />
+                <div className="absolute inset-x-8 bottom-10 border-t border-black/20" />
+                <div className="absolute inset-x-8 top-1/2 -translate-y-1/2 text-center font-serif text-3xl leading-tight font-bold tracking-wide text-white uppercase drop-shadow-sm">
+                  {title}
+                </div>
+              </>
+            )}
           </BookFace>
           <BookFace
             width={book.width}
