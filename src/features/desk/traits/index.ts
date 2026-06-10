@@ -2,6 +2,15 @@ import { relation, trait } from 'koota';
 import { color } from '../../../color.js';
 import { inchesToDeskPixels, US_LETTER_INCHES } from '../utils/dimensions.js';
 
+/**
+ * Scene render lifecycle. Asset fetch/decode suspends in React before the
+ * world exists, so the world starts at `warming`: the scene is mounted behind
+ * the boot screen while the GPU rasterizes layers and uploads textures.
+ * `ready` = frames are stable and the scene can go live.
+ */
+export type ScenePhase = 'warming' | 'ready';
+export const Scene = trait({ phase: 'warming' as ScenePhase });
+
 export const Time = trait({ last: 0, delta: 0 });
 export const Pointer = trait({ x: 0, y: 0 });
 export const Viewport = trait({ width: 0, height: 0 });

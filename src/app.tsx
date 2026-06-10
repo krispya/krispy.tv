@@ -1,13 +1,17 @@
 import { lazy, Suspense } from 'react';
 import { Route, Router, Switch } from 'wouter';
 import { DebugProvider } from './features/debug/index.js';
+import { LoadingScreen } from './features/loading/index.js';
 import { routes } from './routes.js';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
-const Desk = lazy(() =>
-  import('./features/desk/desk.js').then((module) => ({ default: module.Desk }))
-);
+const Desk = lazy(() => {
+  // Start image fetch + decode in parallel with the main desk chunk.
+  void import('./features/desk/utils/preload-assets.js').then((module) => module.preloadDeskAssets());
+
+  return import('./features/desk/desk.js').then((module) => ({ default: module.Desk }));
+});
 
 const About = lazy(() =>
   import('./features/about/about.js').then((module) => ({ default: module.About }))
@@ -34,9 +38,12 @@ export function App() {
             </Route>
 
             <Route path={routes.deskGroup.path}>
-              <Suspense fallback={<RoutePending />}>
+              {/* The loading screen covers the whole waterfall: chunk load, asset
+                  decode (Desk suspends) and GPU warmup. No fallback handoff. */}
+              <Suspense fallback={null}>
                 <Desk />
               </Suspense>
+              <LoadingScreen />
             </Route>
 
             <Route>

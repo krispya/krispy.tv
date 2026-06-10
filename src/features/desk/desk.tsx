@@ -1,5 +1,6 @@
 import { createWorld } from 'koota';
 import { WorldProvider } from 'koota/react';
+import { use } from 'react';
 import { Frameloop } from './frameloop.js';
 import { DeskProjection } from './presentation/desk-projection.js';
 import { ArticleRenderer } from './renderers/article-renderer.js';
@@ -10,10 +11,14 @@ import { PaperRenderer } from './renderers/paper-renderer.js';
 import { PolaroidFocusBackdrop } from './renderers/polaroid-focus-backdrop.js';
 import { PolaroidRenderer } from './renderers/polaroid-renderer.js';
 import { Startup } from './startup.js';
-import { ActiveSlug, Camera, Pointer, Time, Viewport } from './traits/index.js';
+import { ActiveSlug, Camera, Pointer, Scene, Time, Viewport } from './traits/index.js';
+import { preloadDeskAssets } from './utils/preload-assets.js';
 
 export function Desk() {
-  const world = createWorld(Time, Pointer, Viewport, Camera, ActiveSlug);
+  // Suspend until all desk images are decoded, before the world exists.
+  use(preloadDeskAssets());
+
+  const world = createWorld(Time, Pointer, Viewport, Camera, ActiveSlug, Scene);
 
   return (
     <WorldProvider world={world}>

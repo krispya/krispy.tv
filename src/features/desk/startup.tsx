@@ -1,19 +1,29 @@
-import { useActions } from 'koota/react';
-import { useEffect } from 'react';
+import type { Entity } from 'koota';
+import { useActions, useTraitEffect, useWorld } from 'koota/react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import { articles as articlesCatalog } from '../article/index.js';
 import { books as booksCatalog } from '../book/index.js';
 import { polaroids as polaroidsCatalog } from '../polaroid/index.js';
 import { actions } from './actions.js';
+import { loadingControl } from '../loading/index.js';
+import { Scene } from './traits/index.js';
 import {
   DEFAULT_BOOK_COVER_THICKNESS_INCHES,
   DEFAULT_BOOK_PAGE_THICKNESS_INCHES,
   inchesToDeskMeters,
   inchesToDeskPixels,
 } from './utils/dimensions.js';
+import { waitForStableFrames } from './utils/warmup.js';
 
 const MIN_PAGE_COUNT = 8;
 
+type PendingThrow = {
+  entity: Entity;
+  centered?: boolean;
+};
+
 export function Startup() {
+  const world = useWorld();
   const {
     destroyPapers,
     destroyPolaroids,
@@ -24,9 +34,16 @@ export function Startup() {
     spawnPolaroid,
     throwOntoDesk: throwPaperOntoDesk,
   } = useActions(actions);
+  const pendingThrowsRef = useRef<PendingThrow[]>([]);
+
+  // Re-cover the desk before paint so remounts never flash the empty scene.
+  useLayoutEffect(() => {
+    loadingControl.set('pending');
+  }, []);
 
   useEffect(() => {
     const desk = spawnDesk();
+    const pendingThrows: PendingThrow[] = [];
 
     const articles = articlesCatalog.map((article) => ({
       id: article.slug,
@@ -45,7 +62,7 @@ export function Startup() {
       const centered = index === 0;
       const paper = spawnPaper({ id, openable, centered });
 
-      throwPaperOntoDesk(paper, { centered });
+      pendingThrows.push({ entity: paper, centered });
     });
 
     const books = booksCatalog.map((contentBook) => {
@@ -63,7 +80,7 @@ export function Startup() {
         stickyNote: contentBook.stickyNote,
       });
 
-      throwPaperOntoDesk(book);
+      pendingThrows.push({ entity: book });
       return book;
     });
 
@@ -74,12 +91,26 @@ export function Startup() {
         caption: polaroid.caption,
       });
 
-      throwPaperOntoDesk(entity);
+      pendingThrows.push({ entity });
     }
 
     const headphones = spawnHeadphones({ width: 500, rotation: -34 });
 
+    pendingThrowsRef.current = pendingThrows;
+
+    // Assets are already decoded (the Desk component suspends on them), so the
+    // world starts at `warming`: the mounted scene composites behind the boot
+    // screen until the frame rate settles.
+    let cancelled = false;
+
+    void waitForStableFrames().then(() => {
+      if (cancelled) return;
+      world.set(Scene, { phase: 'ready' });
+    });
+
     return () => {
+      cancelled = true;
+      pendingThrowsRef.current = [];
       destroyPapers();
       destroyPolaroids();
       headphones.destroy();
@@ -88,6 +119,16 @@ export function Startup() {
     };
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- mount-only initial spawn
   }, []);
+
+  useTraitEffect(world, Scene, (scene) => {
+    if (scene?.phase !== 'ready') return;
+
+    for (const { entity, centered } of pendingThrowsRef.current.splice(0)) {
+      throwPaperOntoDesk(entity, { centered });
+    }
+
+    loadingControl.set('ready');
+  });
 
   return null;
 }
