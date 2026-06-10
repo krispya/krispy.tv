@@ -490,6 +490,11 @@ export const actions = createActions((world) => ({
 
     if (motion.phase === 'closing') return;
 
+    // Drop IsOpen as soon as the close starts: the desk becomes interactive
+    // again and the descending polaroid can be grabbed, restacked at the
+    // threshold, or knocked by collisions. IsControlled stays so gravity and
+    // friction don't fight the focus spring while it still owns the motion.
+    entity.remove(IsOpen, PolaroidFocusSpin);
     entity.set(Velocity, { x: 0, y: 0, z: 0 });
     entity.set(AngularVelocity, { x: 0, y: 0, z: 0 });
     entity.set(PolaroidFocusMotion, {

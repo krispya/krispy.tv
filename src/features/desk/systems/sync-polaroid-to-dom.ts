@@ -4,6 +4,7 @@ import { toMeshLiftScale } from '../presentation/lift.js';
 import { toShadowStyle } from '../presentation/shadow.js';
 import { setItemPerspectiveVars, toPerspectiveGrowthZPx } from '../presentation/item-perspective.js';
 import {
+  Desk,
   Dragging,
   IsOpen,
   Polaroid,
@@ -15,6 +16,7 @@ import {
 } from '../traits/index.js';
 import { clamp01, lerp } from '../utils/math.js';
 import { metersToCssPixels } from '../utils/physics-units.js';
+import { isThresholdItem } from '../utils/stack-order.js';
 
 const DRAGGING_STACK_BOOST = 1000;
 const FOCUSED_STACK_BOOST = 2000;
@@ -22,15 +24,22 @@ const FOCUSED_SCALE = 1.34;
 const FOCUSED_SHADOW_OPACITY_MULTIPLIER = 0;
 
 export function syncPolaroidToDOM(world: World) {
+  const restackThreshold = world.queryFirst(Desk)?.get(Desk)?.restackThreshold ?? 0;
+
   world
     .query(Polaroid, Position, Rotation, Ref, StackIndex)
     .updateEach(([_polaroid, position, rotation, ref, stackIndex], entity) => {
       const focusMotion = entity.get(PolaroidFocusMotion);
-      const focusProgress = entity.has(IsOpen) ? clamp01(focusMotion?.progress ?? 1) : 0;
+      const focusProgress = focusMotion ? clamp01(focusMotion.progress) : entity.has(IsOpen) ? 1 : 0;
+      // Once a closing polaroid descends past the restack threshold it has
+      // been resorted into the desk plane, so drop the focus z boost and let
+      // it render at its stack position while it settles.
+      const isTuckedIntoDeskPlane =
+        focusMotion?.phase === 'closing' && isThresholdItem(entity, restackThreshold);
       const cssZIndex = getPolaroidZIndex(
         stackIndex,
         entity.has(Dragging),
-        entity.has(IsOpen) || !!focusMotion
+        (entity.has(IsOpen) || !!focusMotion) && !isTuckedIntoDeskPlane
       );
       const heightM = getHeightAbovePlaneM(position.z);
       const shadow = toShadowStyle(heightM);

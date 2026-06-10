@@ -10,12 +10,15 @@ const BACKDROP_Z_INDEX = 1500;
 const BACKDROP_SCALE = 1.16;
 
 export function PolaroidFocusBackdrop() {
-  const openPolaroids = useQuery(Polaroid, IsOpen);
-  const openPolaroid = openPolaroids[0];
+  // Track focus motion rather than IsOpen so the backdrop can keep fading out
+  // while a polaroid is closing (IsOpen is removed as soon as a close starts).
+  const focusedPolaroids = useQuery(Polaroid, PolaroidFocusMotion);
+  const focusedPolaroid =
+    focusedPolaroids.find((entity) => entity.has(IsOpen)) ?? focusedPolaroids[0];
 
-  if (!openPolaroid) return null;
+  if (!focusedPolaroid) return null;
 
-  return <PolaroidFocusBackdropSurface entity={openPolaroid} />;
+  return <PolaroidFocusBackdropSurface entity={focusedPolaroid} />;
 }
 
 function PolaroidFocusBackdropSurface({ entity }: { entity: Entity }) {
@@ -26,17 +29,20 @@ function PolaroidFocusBackdropSurface({ entity }: { entity: Entity }) {
   const { closeOpenPolaroid } = useActions(actions);
   const opacity = getBackdropOpacity(motion);
   const rect = getVisibleDeskRect(viewport, camera);
+  const isClosing = motion?.phase === 'closing';
 
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-auto absolute bg-stone-950 backdrop-blur-[2px] will-change-[opacity,transform]"
+      className="absolute bg-stone-950 backdrop-blur-[2px] will-change-[opacity,transform]"
       style={{
         left: rect.x,
         top: rect.y,
         width: rect.width,
         height: rect.height,
         opacity,
+        // While closing, the fading backdrop must not block grabbing items.
+        pointerEvents: isClosing ? 'none' : 'auto',
         transform: `${getInverseStageTiltTransform()} scale(${BACKDROP_SCALE})`,
         transformOrigin: 'center center',
         zIndex: BACKDROP_Z_INDEX,

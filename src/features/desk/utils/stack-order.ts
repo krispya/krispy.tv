@@ -6,6 +6,7 @@ import {
   IsOpen,
   IsResting,
   IsStackable,
+  PolaroidFocusMotion,
   Position,
   StackIndex,
   Velocity,
@@ -102,9 +103,19 @@ export function getDeskPlaneInsertIndex(item: StackOrderItem, items: StackOrderI
   return lastDeskPlaneStackableIndex + 1;
 }
 
+export function isClosingFromFocus(entity: Entity) {
+  return entity.get(PolaroidFocusMotion)?.phase === 'closing';
+}
+
 export function isThresholdItem(entity: Entity, restackThreshold: number) {
   if (restackThreshold <= 0) return false;
-  if (entity.has(IsControlled) || entity.has(IsEnteringDesk) || entity.has(IsOpen)) return false;
+  if (entity.has(IsEnteringDesk)) return false;
+
+  // A polaroid descending from focus is still controlled by its close spring,
+  // but it should join the desk plane layer at the threshold like any fall.
+  if (!isClosingFromFocus(entity) && (entity.has(IsControlled) || entity.has(IsOpen))) {
+    return false;
+  }
 
   const position = entity.get(Position);
   const velocity = entity.get(Velocity);

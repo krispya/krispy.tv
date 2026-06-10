@@ -12,6 +12,7 @@ import {
   IsOpen,
   IsResting,
   Polaroid,
+  PolaroidFocusMotion,
   PolaroidFocusSpin,
   Pressed,
   Position,
@@ -105,7 +106,9 @@ function PolaroidView({ entity }: { entity: Entity }) {
       };
       const rotation = entity.get(Rotation) ?? { x: 0, y: 0, z: 0 };
 
-      entity.remove(Dragging, IsDroppedFromDragging, IsResting);
+      // Grabbing also interrupts a polaroid that is still closing from focus:
+      // dropping the focus spring and control hands it back to physics.
+      entity.remove(Dragging, IsDroppedFromDragging, IsResting, PolaroidFocusMotion, IsControlled);
       entity.set(Velocity, { x: 0, y: 0, z: 0 });
       entity.set(AngularVelocity, { x: 0, y: 0, z: 0 });
       entity.add(
