@@ -29,11 +29,12 @@ import { hashSeed, SketchOutline } from './sketch-outline.js';
 import { shade, withAlpha } from '../utils/color.js';
 import { screenPointToDeskMetersForWorld } from '../utils/camera.js';
 import { ITEM_PERSPECTIVE_PX } from '../presentation/stage.js';
+import { BOOK_LINES_COLOR, type BookLineKind } from '../presentation/book-lines.js';
+import { BookLinesOverlay } from './book-lines-overlay.js';
 
 const DRAG_THRESHOLD_PX = 5;
-// Below this depth (px) the spine/page-edge slivers are too thin for a
-// legible sketched outline, so we leave them unsketched.
-const SKETCH_EDGE_MIN_DEPTH_PX = 6;
+// Below this depth (px) the spine/page-edge slivers are too thin for legible line art.
+const BOOK_EDGE_LINES_MIN_DEPTH_PX = 6;
 // Book lies flat like paper; a tiny tilt reveals just a sliver of the page edges.
 const BASE_BOOK_ROTATE_X = 5;
 const BASE_BOOK_ROTATE_Y = 3;
@@ -218,8 +219,7 @@ function BookView({ entity }: { entity: Entity }) {
     .filter(Boolean)
     .join(', ');
   const spineColor = shade(book.color, -28);
-  const sketchEdges = depth >= SKETCH_EDGE_MIN_DEPTH_PX;
-  const seed = hashSeed(book.id);
+  const showBookEdgeLines = depth >= BOOK_EDGE_LINES_MIN_DEPTH_PX;
 
   return (
     <div
@@ -269,7 +269,9 @@ function BookView({ entity }: { entity: Entity }) {
             <BookFace
               width={book.width}
               height={book.height}
-              seed={seed + 1}
+              bookId={book.id}
+              lineKind="cover"
+              lineColor={BOOK_LINES_COLOR}
               className="rounded-[6px] [transform-style:preserve-3d]"
               style={{
                 backgroundColor: book.color,
@@ -303,7 +305,9 @@ function BookView({ entity }: { entity: Entity }) {
             <BookFace
               width={book.width}
               height={book.height}
-              seed={seed + 2}
+              bookId={book.id}
+              lineKind="cover"
+              lineColor={BOOK_LINES_COLOR}
               className="rounded-[6px]"
               style={{
                 backgroundColor: shade(book.color, -18),
@@ -313,7 +317,9 @@ function BookView({ entity }: { entity: Entity }) {
             <BookFace
               width={depth}
               height={book.height}
-              seed={sketchEdges ? seed + 3 : undefined}
+              bookId={book.id}
+              lineKind={showBookEdgeLines ? 'spine' : undefined}
+              lineColor={BOOK_LINES_COLOR}
               style={{
                 left: faceCenterX,
                 backgroundColor: spineColor,
@@ -325,7 +331,9 @@ function BookView({ entity }: { entity: Entity }) {
             <BookFace
               width={depth}
               height={book.height}
-              seed={sketchEdges ? seed + 4 : undefined}
+              bookId={book.id}
+              lineKind={showBookEdgeLines ? 'spine' : undefined}
+              lineColor={BOOK_LINES_COLOR}
               style={{
                 left: faceCenterX,
                 background: PAGE_EDGE_VERTICAL_LINES,
@@ -335,7 +343,9 @@ function BookView({ entity }: { entity: Entity }) {
             <BookFace
               width={book.width}
               height={depth}
-              seed={sketchEdges ? seed + 5 : undefined}
+              bookId={book.id}
+              lineKind={showBookEdgeLines ? 'side' : undefined}
+              lineColor={BOOK_LINES_COLOR}
               style={{
                 top: faceCenterY,
                 background: PAGE_EDGE_HORIZONTAL_LINES,
@@ -345,7 +355,9 @@ function BookView({ entity }: { entity: Entity }) {
             <BookFace
               width={book.width}
               height={depth}
-              seed={sketchEdges ? seed + 6 : undefined}
+              bookId={book.id}
+              lineKind={showBookEdgeLines ? 'side' : undefined}
+              lineColor={BOOK_LINES_COLOR}
               style={{
                 top: faceCenterY,
                 background: PAGE_EDGE_HORIZONTAL_LINES,
@@ -513,14 +525,18 @@ function BookShadow({ bookId }: { bookId: string }) {
 function BookFace({
   width,
   height,
-  seed,
+  bookId,
+  lineKind,
+  lineColor = BOOK_LINES_COLOR,
   children,
   className = '',
   style,
 }: {
   width: number;
   height: number;
-  seed?: number;
+  bookId?: string;
+  lineKind?: BookLineKind;
+  lineColor?: string;
   children?: ReactNode;
   className?: string;
   style?: CSSProperties;
@@ -530,8 +546,10 @@ function BookFace({
       className={`absolute top-0 left-0 shadow-sm [backface-visibility:hidden] ${className}`}
       style={{ width, height, ...style }}
     >
+      {bookId && lineKind && (
+        <BookLinesOverlay bookId={bookId} kind={lineKind} lineColor={lineColor} />
+      )}
       {children}
-      {seed !== undefined && <SketchOutline width={width} height={height} seed={seed} />}
     </div>
   );
 }

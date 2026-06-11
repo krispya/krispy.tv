@@ -17,6 +17,17 @@ export {
 } from './lift.js';
 export { type DeskShadowStyle, toShadowStyle } from './shadow.js';
 export {
+  BOOK_LINE_COUNT,
+  BOOK_LINES_BOIL_CYCLE_SECONDS,
+  BOOK_LINES_COLOR,
+  getBookLineSrc,
+  getBookLineVariant,
+  getBookLinesBoilPhaseOffset,
+  getBookLinesBoilStartFrame,
+  getBookLinesFrameStyle,
+  type BookLineKind,
+} from './book-lines.js';
+export {
   getPaperLineSrc,
   getPaperLineVariant,
   getPaperLinesBoilPhaseOffset,
