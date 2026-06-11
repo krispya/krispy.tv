@@ -28,7 +28,8 @@ import {
   SHADOW_BOIL_FRAME_COUNT,
 } from '../presentation/shadow.js';
 import { ITEM_PERSPECTIVE_PX } from '../presentation/stage.js';
-import { hashSeed, SketchOutline } from './sketch-outline.js';
+import { POLAROID_LINES_COLOR } from '../presentation/polaroid-lines.js';
+import { PolaroidLinesOverlay } from './polaroid-lines-overlay.js';
 
 const DRAG_THRESHOLD_PX = 5;
 const FRAME_PADDING_PX = 12;
@@ -285,27 +286,27 @@ function PolaroidView({ entity }: { entity: Entity }) {
                 'translateZ(var(--paper-z)) rotateX(var(--paper-rotate-x)) rotateY(var(--paper-rotate-y))',
             }}
           >
-            <div className="absolute inset-0 [transform:translateZ(0.5px)] overflow-hidden rounded-[3px] bg-[#f8f6f0] p-3 shadow-inner [backface-visibility:hidden]">
+            <div className="absolute inset-0 [transform:translateZ(0.5px)] overflow-visible rounded-[3px] bg-[#f8f6f0] p-3 shadow-inner [backface-visibility:hidden]">
               <PolaroidPhoto id={polaroid.id} imageSrc={polaroid.imageSrc} imageSize={imageSize} />
               {polaroid.caption ? (
                 <p className="mt-2 text-center text-sm text-stone-700">{polaroid.caption}</p>
               ) : null}
-              <SketchOutline
-                width={polaroid.width}
-                height={polaroid.height}
-                seed={hashSeed(polaroid.id)}
+              <PolaroidLinesOverlay
+                polaroidId={polaroid.id}
+                kind="outer"
+                lineColor={POLAROID_LINES_COLOR}
               />
             </div>
-            <div className="absolute inset-0 [transform:rotateY(180deg)_translateZ(0.5px)] overflow-hidden rounded-[3px] bg-[#eee7da] p-4 shadow-inner [backface-visibility:hidden]">
+            <div className="absolute inset-0 [transform:rotateY(180deg)_translateZ(0.5px)] overflow-visible rounded-[3px] bg-[#eee7da] p-4 shadow-inner [backface-visibility:hidden]">
               <div className="absolute inset-3 rounded-[2px] border border-stone-300/70" />
               <div className="absolute inset-x-8 top-8 h-px bg-stone-300/70" />
               <div className="absolute inset-x-8 top-[52px] h-px bg-stone-300/50" />
               <div className="absolute inset-x-8 top-[72px] h-px bg-stone-300/40" />
               <div className="absolute right-6 bottom-6 h-8 w-14 rounded-[2px] border border-stone-300/70" />
-              <SketchOutline
-                width={polaroid.width}
-                height={polaroid.height}
-                seed={hashSeed(`${polaroid.id}:back`)}
+              <PolaroidLinesOverlay
+                polaroidId={`${polaroid.id}:back`}
+                kind="outer"
+                lineColor={POLAROID_LINES_COLOR}
               />
             </div>
           </div>
@@ -326,12 +327,18 @@ function PolaroidPhoto({
 }) {
   return (
     <div
-      className="relative isolate shrink-0 overflow-hidden"
+      className="relative isolate shrink-0 overflow-visible"
       style={{ width: imageSize, height: imageSize }}
     >
-      <img src={imageSrc} alt="" draggable={false} className="h-full w-full object-cover" />
-      <PolaroidGlossOverlay id={id} size={imageSize} />
-      <SketchOutline width={imageSize} height={imageSize} seed={hashSeed(`${id}:image`)} />
+      <div className="absolute inset-0 overflow-hidden">
+        <img src={imageSrc} alt="" draggable={false} className="h-full w-full object-cover" />
+        <PolaroidGlossOverlay id={id} size={imageSize} />
+      </div>
+      <PolaroidLinesOverlay
+        polaroidId={`${id}:image`}
+        kind="inner"
+        lineColor={POLAROID_LINES_COLOR}
+      />
     </div>
   );
 }

@@ -50,6 +50,17 @@ export {
   type PolaroidGlossPath,
 } from './polaroid.js';
 export {
+  getPolaroidLineSrc,
+  getPolaroidLineVariant,
+  getPolaroidLinesBoilPhaseOffset,
+  getPolaroidLinesBoilStartFrame,
+  getPolaroidLinesFrameStyle,
+  POLAROID_LINE_COUNT,
+  POLAROID_LINES_BOIL_CYCLE_SECONDS,
+  POLAROID_LINES_COLOR,
+  type PolaroidLineKind,
+} from './polaroid-lines.js';
+export {
   getInverseStageTiltTransform,
   getStagePerspective,
   getStagePerspectiveOrigin,
