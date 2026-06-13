@@ -30,7 +30,6 @@ import {
   Velocity,
 } from './traits/index.js';
 import { getBookDepthMeters } from './utils/resting-height.js';
-import { cssPixelsToMeters, metersToCssPixels } from './utils/physics-units.js';
 import { clamp, randomInRange } from './utils/math.js';
 import { getVisibleDeskRectForWorld, type VisibleDeskRect } from './utils/camera.js';
 import {
@@ -38,6 +37,11 @@ import {
   getStackIndexedItems,
   renumberStackIndices,
 } from './utils/stack-order.js';
+import {
+  cssPixelsToMeters,
+  GRAVITY_METERS_PER_SECOND_SQUARED,
+  metersToCssPixels,
+} from './utils/physics-units.js';
 
 const POLAROID_FOCUS_Z_M = 0.26;
 const POLAROID_FOCUS_CURVE_M = 0.055;
@@ -59,6 +63,26 @@ const POLAROID_SPIN_MIN_DELTA_MS = 8;
 const HEADPHONES_CORNER_OVERLAP_X_PX = 62;
 const HEADPHONES_CORNER_OVERLAP_Y_PX = 26;
 const HEADPHONES_MASS = 120;
+/**
+ * Cluster radius for a constrained axis, as a fraction of the visible
+ * dimension. Smaller = tighter grouping around the target anchor. Sampling is
+ * center-biased, so landings concentrate well inside this radius.
+ */
+const TARGET_RADIUS_RATIO = 0.1;
+const QUADRANT_CORNER_TARGET_INSET_PX = 28;
+/** Fraction of the visible width the entry point is offset toward center for a diagonal arc. */
+const QUADRANT_ENTRY_OFFSET_RATIO = 0.1;
+/** Friction fallback when a body's coefficient is unavailable. */
+const DEFAULT_THROW_FRICTION = 0.2;
+
+/**
+ * Triangular random in [-1, 1] peaked at 0 (sum of two uniforms). Used to bias
+ * aimed landings toward their anchor so they cluster within a radius rather than
+ * spreading uniformly across a band.
+ */
+function centerBiasedUnit() {
+  return Math.random() + Math.random() - 1;
+}
 
 type DeskConfigOverrides = Partial<{
   wallGutter: number;
@@ -75,8 +99,25 @@ type KinematicBodyConfig = Partial<{
   mass: number;
 }>;
 
+export type DeskQuadrant = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+
+/**
+ * A quadrant corner, a half-side where the cross-axis spans the full desk,
+ * `'center'` which clusters at the desk midpoint on both axes, or `'spread'`
+ * which scatters uniformly across the whole desk.
+ */
+export type DeskThrowTarget =
+  | DeskQuadrant
+  | 'left'
+  | 'right'
+  | 'top'
+  | 'bottom'
+  | 'center'
+  | 'spread';
+
 type ThrowOntoDeskConfig = {
   centered?: boolean;
+  target?: DeskThrowTarget;
 };
 
 export type PaperConfig = {
@@ -156,6 +197,101 @@ function getThrowRotation(centered?: boolean) {
     x: 0,
     y: 0,
     z: centered ? randomInRange(-4, 4) : randomInRange(-28, 28),
+  };
+}
+
+/**
+ * Solves an aimed toss toward a desk corner or half-side. In this sim `x`/`y`
+ * are the desk plane and `z` is a small hop, so an item slides to rest under
+ * constant friction (`dampVelocity`) rather than falling onto a spot. The launch
+ * speed therefore comes from the friction stopping-distance relation
+ * `v = sqrt(2·a·d)`, which is viewport-independent and keeps the toss at a
+ * natural pace.
+ *
+ * The item is re-entered just below the target band (offset toward center for a
+ * natural diagonal arc) so the slide distance — and thus the speed — stays
+ * consistent no matter where it spawned horizontally. A target that omits a
+ * horizontal or vertical edge (e.g. `'right'`) spans that axis fully, so the
+ * landing varies freely along it.
+ */
+function getTargetedThrow(
+  position: { x: number; y: number; z: number },
+  target: DeskThrowTarget,
+  visibleRect: VisibleDeskRect,
+  box?: { width: number; height: number },
+  friction = DEFAULT_THROW_FRICTION
+) {
+  const halfWidth = (box?.width ?? 0) / 2;
+  const halfHeight = (box?.height ?? 0) / 2;
+  const insetX = Math.max(QUADRANT_CORNER_TARGET_INSET_PX, halfWidth);
+  const insetY = Math.max(QUADRANT_CORNER_TARGET_INSET_PX, halfHeight);
+  const radiusX = visibleRect.width * TARGET_RADIUS_RATIO;
+  const radiusY = visibleRect.height * TARGET_RADIUS_RATIO;
+  const minVisibleX = visibleRect.x + insetX;
+  const maxVisibleX = visibleRect.right - insetX;
+  const minVisibleY = visibleRect.y + insetY;
+  const maxVisibleY = visibleRect.bottom - insetY;
+  const horizontal =
+    target === 'center'
+      ? 'center'
+      : target.includes('left')
+        ? 'left'
+        : target.includes('right')
+          ? 'right'
+          : 'full';
+  const vertical =
+    target === 'center'
+      ? 'center'
+      : target.includes('top')
+        ? 'top'
+        : target.includes('bottom')
+          ? 'bottom'
+          : 'full';
+
+  // A constrained axis clusters within a radius around its anchor (an edge or
+  // the midpoint); a `full` axis spreads uniformly so its landing varies freely.
+  const anchorX =
+    horizontal === 'left'
+      ? minVisibleX + radiusX
+      : horizontal === 'right'
+        ? maxVisibleX - radiusX
+        : (minVisibleX + maxVisibleX) / 2;
+  const anchorY =
+    vertical === 'top'
+      ? minVisibleY + radiusY
+      : vertical === 'bottom'
+        ? maxVisibleY - radiusY
+        : (minVisibleY + maxVisibleY) / 2;
+  const targetXpx =
+    horizontal === 'full'
+      ? randomInRange(minVisibleX, maxVisibleX)
+      : clamp(anchorX + centerBiasedUnit() * radiusX, minVisibleX, maxVisibleX);
+  const targetYpx =
+    vertical === 'full'
+      ? randomInRange(minVisibleY, maxVisibleY)
+      : clamp(anchorY + centerBiasedUnit() * radiusY, minVisibleY, maxVisibleY);
+
+  const entryOffsetPx = visibleRect.width * QUADRANT_ENTRY_OFFSET_RATIO;
+  const entryShiftPx =
+    horizontal === 'right' ? -entryOffsetPx : horizontal === 'left' ? entryOffsetPx : 0;
+  const entryXpx = clamp(targetXpx + entryShiftPx, minVisibleX, maxVisibleX);
+
+  const targetX = cssPixelsToMeters(targetXpx);
+  const targetY = cssPixelsToMeters(targetYpx);
+  const entryX = cssPixelsToMeters(entryXpx);
+
+  const dx = targetX - entryX;
+  const dy = targetY - position.y;
+  const distance = Math.max(Math.hypot(dx, dy), 1e-6);
+  const decel = Math.max(friction, 0.05) * GRAVITY_METERS_PER_SECOND_SQUARED;
+  const speed = Math.sqrt(2 * decel * distance) * randomInRange(0.98, 1.06);
+
+  return {
+    entryX,
+    velocity: {
+      x: (dx / distance) * speed,
+      y: (dy / distance) * speed,
+    },
   };
 }
 
@@ -381,19 +517,30 @@ export const actions = createActions((world) => ({
     return entity;
   },
 
-  throwOntoDesk: (
-    entity: Entity,
-    config: Partial<{
-      centered: boolean;
-    }> = {}
-  ) => {
+  throwOntoDesk: (entity: Entity, config: ThrowOntoDeskConfig = {}) => {
     const launchAngle = config.centered ? 0 : randomInRange(-0.42, 0.42);
     const launchSpeed = config.centered ? randomInRange(0.78, 0.84) : randomInRange(0.75, 0.95);
     const spinDir = Math.random() < 0.5 ? -1 : 1;
+    const position = entity.get(Position);
+    const targetedThrow =
+      position && config.target && !config.centered
+        ? getTargetedThrow(
+            position,
+            config.target,
+            getVisibleDeskRectForWorld(world),
+            entity.get(BoundingBox),
+            entity.get(KinematicBody)?.friction
+          )
+        : undefined;
+
+    // Re-enter under the target band so the slide distance stays consistent.
+    if (targetedThrow && position) {
+      entity.set(Position, { x: targetedThrow.entryX, y: position.y, z: position.z });
+    }
 
     entity.set(Velocity, {
-      x: Math.sin(launchAngle) * launchSpeed,
-      y: -Math.cos(launchAngle) * launchSpeed,
+      x: targetedThrow?.velocity.x ?? Math.sin(launchAngle) * launchSpeed,
+      y: targetedThrow?.velocity.y ?? -Math.cos(launchAngle) * launchSpeed,
       z: config.centered ? randomInRange(0.14, 0.16) : randomInRange(0.12, 0.22),
     });
 

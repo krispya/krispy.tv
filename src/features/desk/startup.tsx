@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useRef } from 'react';
 import { articles as articlesCatalog } from '../article/index.js';
 import { books as booksCatalog } from '../book/index.js';
 import { polaroids as polaroidsCatalog } from '../polaroid/index.js';
-import { actions } from './actions.js';
+import { actions, type DeskThrowTarget } from './actions.js';
 import { loadingControl } from '../loading/index.js';
 import { Scene } from './traits/index.js';
 import {
@@ -15,13 +15,17 @@ import {
 } from './utils/dimensions.js';
 import { waitForStableFrames } from './utils/warmup.js';
 
-const MIN_PAGE_COUNT = 8;
 /** Milliseconds. Lets the loading cover fall most of the way before items toss up. */
 const TOSS_DELAY_MS = 220;
 
 type PendingThrow = {
   entity: Entity;
   centered?: boolean;
+  target?: DeskThrowTarget;
+};
+
+const POLAROID_THROW_TARGETS: Partial<Record<string, DeskThrowTarget>> = {
+  me: 'top-right',
 };
 
 export function Startup() {
@@ -36,6 +40,7 @@ export function Startup() {
     spawnPolaroid,
     throwOntoDesk: throwPaperOntoDesk,
   } = useActions(actions);
+
   const pendingThrowsRef = useRef<PendingThrow[]>([]);
 
   // Re-cover the desk before paint so remounts never flash the empty scene.
@@ -52,8 +57,7 @@ export function Startup() {
       openable: true,
     }));
 
-    const blankCount = Math.max(0, MIN_PAGE_COUNT - articles.length);
-    const blanks = Array.from({ length: blankCount }, (_, i) => ({
+    const blanks = Array.from({ length: 3 }, (_, i) => ({
       id: `blank-page-${i + 1}`,
       openable: false,
     }));
@@ -64,7 +68,8 @@ export function Startup() {
       const centered = index === 0;
       const paper = spawnPaper({ id, openable, centered });
 
-      pendingThrows.push({ entity: paper, centered });
+      // Scatter pages across the whole desk so they don't bunch up on entry.
+      pendingThrows.push({ entity: paper, centered, target: 'spread' });
     });
 
     const books = booksCatalog.map((contentBook) => {
@@ -82,7 +87,7 @@ export function Startup() {
         stickyNote: contentBook.stickyNote,
       });
 
-      pendingThrows.push({ entity: book });
+      pendingThrows.push({ entity: book, target: 'center' });
       return book;
     });
 
@@ -93,7 +98,7 @@ export function Startup() {
         caption: polaroid.caption,
       });
 
-      pendingThrows.push({ entity });
+      pendingThrows.push({ entity, target: POLAROID_THROW_TARGETS[polaroid.slug] });
     }
 
     const headphones = spawnHeadphones({ width: 500, rotation: -34 });
@@ -129,8 +134,8 @@ export function Startup() {
 
     // The unmount cleanup empties the pending list, so a late timer is a no-op.
     setTimeout(() => {
-      for (const { entity, centered } of pendingThrowsRef.current.splice(0)) {
-        throwPaperOntoDesk(entity, { centered });
+      for (const { entity, centered, target } of pendingThrowsRef.current.splice(0)) {
+        throwPaperOntoDesk(entity, { centered, target });
       }
     }, TOSS_DELAY_MS);
   });
