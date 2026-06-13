@@ -9,6 +9,7 @@ import { DeskRenderer } from './renderers/desk-renderer.js';
 import { HeadphonesRenderer } from './renderers/headphones-renderer.js';
 import { PaperRenderer } from './renderers/paper-renderer.js';
 import { PolaroidFocusBackdrop } from './renderers/polaroid-focus-backdrop.js';
+import { PolaroidFocusBody } from './renderers/polaroid-focus-body.js';
 import { PolaroidRenderer } from './renderers/polaroid-renderer.js';
 import { Startup } from './startup.js';
 import { ActiveSlug, Camera, Pointer, Scene, Time, Viewport } from './traits/index.js';
@@ -30,6 +31,7 @@ export function Desk() {
         <HeadphonesRenderer />
         <PaperRenderer />
         <PolaroidFocusBackdrop />
+        <PolaroidFocusBody />
         <PolaroidRenderer />
         <BookRenderer />
       </DeskProjection>

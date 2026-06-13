@@ -56,7 +56,7 @@ function PolaroidFocusBackdropSurface({ entity }: { entity: Entity }) {
 }
 
 function getBackdropOpacity(motion: ReturnType<typeof useTrait<typeof PolaroidFocusMotion>>) {
-  const maxOpacity = 0.72;
+  const maxOpacity = 0.82;
   if (!motion) return maxOpacity;
 
   const progress = clamp01(motion.progress);

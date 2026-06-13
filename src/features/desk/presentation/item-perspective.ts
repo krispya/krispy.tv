@@ -11,24 +11,6 @@ import {
 
 const DEG_TO_RAD = Math.PI / 180;
 
-/** Desk-local px distance of the per-item perspective camera. */
-export function getItemPerspectiveDeskPx(world: World) {
-  const camera = world.get(Camera);
-  const zoom = Math.max(0.001, camera?.zoom ?? 1);
-
-  return STAGE_PERSPECTIVE_PX / zoom;
-}
-
-/**
- * Pixels of `translateZ` (inside the item perspective) that make an element
- * appear scaled by `scale`: apparent size = d / (d - z).
- */
-export function toPerspectiveGrowthZPx(world: World, scale: number) {
-  if (scale <= 1) return 0;
-
-  return getItemPerspectiveDeskPx(world) * (1 - 1 / scale);
-}
-
 /**
  * Per-item stand-in for the shared stage perspective. Intermediate stage
  * transforms flatten descendant 3D, so each item carries a local

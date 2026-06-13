@@ -1,6 +1,7 @@
 import type { Entity } from 'koota';
 import { useActions, useHas, useQuery, useTrait, useWorld } from 'koota/react';
 import { useCallback, type CSSProperties } from 'react';
+import { getPolaroid } from '../../polaroid/index.js';
 import { BoundingBoxDebug, useDebug } from '../../debug/index.js';
 import { actions } from '../actions.js';
 import { PolaroidGlossOverlay } from './polaroid-gloss-overlay.js';
@@ -20,6 +21,7 @@ import {
   Rotation,
   Selected,
   Velocity,
+  Viewport,
 } from '../traits/index.js';
 import { screenPointToDeskMetersForWorld } from '../utils/camera.js';
 import {
@@ -29,6 +31,11 @@ import {
 } from '../presentation/shadow.js';
 import { ITEM_PERSPECTIVE_PX } from '../presentation/stage.js';
 import { POLAROID_LINES_COLOR } from '../presentation/polaroid-lines.js';
+import {
+  getPolaroidFocusBodyPlacement,
+  POLAROID_FOCUS_BODY_SHIFT_PX,
+  POLAROID_FOCUSED_SCALE,
+} from '../presentation/polaroid-focus.js';
 import { PolaroidLinesOverlay } from './polaroid-lines-overlay.js';
 
 const DRAG_THRESHOLD_PX = 5;
@@ -43,11 +50,13 @@ const POLAROID_INITIAL_STYLE = {
   '--paper-rotate-x': '0deg',
   '--paper-rotate-y': '0deg',
   '--paper-rotate-z': '0deg',
+  '--paper-lift-scale': '1',
   '--shadow-offset-x': '2px',
   '--shadow-offset-y': '3px',
   '--shadow-scale-x': '1',
   '--shadow-scale-y': '1',
   '--shadow-opacity': '0.2',
+  '--focus-progress': '0',
 } satisfies PolaroidStyle;
 
 export function PolaroidRenderer() {
@@ -58,6 +67,7 @@ export function PolaroidRenderer() {
 function PolaroidView({ entity }: { entity: Entity }) {
   const polaroid = useTrait(entity, Polaroid);
   const world = useWorld();
+  const viewport = useTrait(world, Viewport);
   const isDragging = useHas(entity, Dragging);
   const isFocusSpinning = useHas(entity, PolaroidFocusSpin);
   const isOpen = useHas(entity, IsOpen);
@@ -242,11 +252,20 @@ function PolaroidView({ entity }: { entity: Entity }) {
   if (!polaroid) return null;
 
   const imageSize = polaroid.width - FRAME_PADDING_PX * 2;
+  const hasBody = getPolaroid(polaroid.id)?.hasBody ?? false;
+  // Shift the card left while focused so it makes room for the body beside
+  // it. Skipped on narrow viewports where the body sits below instead. The
+  // translate sits after the scale, so divide by the focus scale to get the
+  // desired desk-plane shift.
+  const shiftsForBody = hasBody && getPolaroidFocusBodyPlacement(viewport?.width ?? 0) === 'right';
+  const focusShiftTransform = shiftsForBody
+    ? ` translateX(calc(var(--focus-progress) * ${-POLAROID_FOCUS_BODY_SHIFT_PX / POLAROID_FOCUSED_SCALE}px))`
+    : '';
 
   return (
     <div
       ref={handleInit}
-      className="absolute top-0 left-0 isolate will-change-transform"
+      className="absolute top-0 left-0 isolate will-change-transform [transform-style:preserve-3d]"
       style={{
         ...POLAROID_INITIAL_STYLE,
         width: polaroid.width,
@@ -269,7 +288,7 @@ function PolaroidView({ entity }: { entity: Entity }) {
           isOpen ? (isFocusSpinning ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-grab'
         } ${isDragging ? 'cursor-grabbing' : ''}`}
         style={{
-          transform: 'rotateZ(var(--paper-rotate-z))',
+          transform: `translateZ(var(--paper-z)) rotateZ(var(--paper-rotate-z)) scale(var(--paper-lift-scale))${focusShiftTransform}`,
         }}
       >
         <div
@@ -282,8 +301,7 @@ function PolaroidView({ entity }: { entity: Entity }) {
           <div
             className="absolute inset-0 will-change-transform [transform-style:preserve-3d]"
             style={{
-              transform:
-                'translateZ(var(--paper-z)) rotateX(var(--paper-rotate-x)) rotateY(var(--paper-rotate-y))',
+              transform: 'rotateX(var(--paper-rotate-x)) rotateY(var(--paper-rotate-y))',
             }}
           >
             <div className="absolute inset-0 [transform:translateZ(0.5px)] overflow-visible rounded-[3px] bg-[#f8f6f0] p-3 shadow-inner [backface-visibility:hidden]">
@@ -371,8 +389,7 @@ function PolaroidShadow({ polaroidId }: { polaroidId: string }) {
         <div
           className="absolute inset-0"
           style={{
-            transform:
-              'translateZ(var(--paper-z)) rotateX(var(--paper-rotate-x)) rotateY(var(--paper-rotate-y))',
+            transform: 'rotateX(var(--paper-rotate-x)) rotateY(var(--paper-rotate-y))',
           }}
         >
           {Array.from({ length: SHADOW_BOIL_FRAME_COUNT }, (_, frameIndex) => (

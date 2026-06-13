@@ -1,8 +1,9 @@
 import type { World } from 'koota';
 import { getHeightAbovePlaneM } from '../utils/height.js';
-import { toMeshLiftScale } from '../presentation/lift.js';
+import { toMeshLiftScale, toTranslateZPx } from '../presentation/lift.js';
 import { toShadowStyle } from '../presentation/shadow.js';
-import { setItemPerspectiveVars, toPerspectiveGrowthZPx } from '../presentation/item-perspective.js';
+import { setItemPerspectiveVars } from '../presentation/item-perspective.js';
+import { POLAROID_FOCUSED_SCALE } from '../presentation/polaroid-focus.js';
 import {
   Desk,
   Dragging,
@@ -20,7 +21,6 @@ import { isThresholdItem } from '../utils/stack-order.js';
 
 const DRAGGING_STACK_BOOST = 1000;
 const FOCUSED_STACK_BOOST = 2000;
-const FOCUSED_SCALE = 1.34;
 const FOCUSED_SHADOW_OPACITY_MULTIPLIER = 0;
 
 export function syncPolaroidToDOM(world: World) {
@@ -43,7 +43,7 @@ export function syncPolaroidToDOM(world: World) {
       );
       const heightM = getHeightAbovePlaneM(position.z);
       const shadow = toShadowStyle(heightM);
-      const liftScale = lerp(toMeshLiftScale(heightM), FOCUSED_SCALE, focusProgress);
+      const liftScale = lerp(toMeshLiftScale(heightM), POLAROID_FOCUSED_SCALE, focusProgress);
       const shadowOpacity = lerp(
         shadow.opacity,
         shadow.opacity * FOCUSED_SHADOW_OPACITY_MULTIPLIER,
@@ -54,10 +54,11 @@ export function syncPolaroidToDOM(world: World) {
         position.y
       )}px)`;
       ref.style.zIndex = cssZIndex.toString();
-      // Lift/focus growth comes from moving the item toward the per-item
-      // perspective camera instead of a 2D scale, so item and shadow grow
-      // consistently with the projection.
-      ref.style.setProperty('--paper-z', `${toPerspectiveGrowthZPx(world, liftScale).toFixed(1)}px`);
+      // Lift/focus growth is a centered 2D scale on the hit target (same as
+      // paper/book) so the visual stays aligned with the bounding box even
+      // when the per-item perspective origin is offset.
+      ref.style.setProperty('--paper-z', `${toTranslateZPx(heightM, entity)}px`);
+      ref.style.setProperty('--paper-lift-scale', liftScale.toString());
       ref.style.setProperty('--paper-rotate-x', `${rotation.x}deg`);
       ref.style.setProperty('--paper-rotate-y', `${rotation.y}deg`);
       ref.style.setProperty('--paper-rotate-z', `${rotation.z}deg`);
@@ -67,6 +68,7 @@ export function syncPolaroidToDOM(world: World) {
       ref.style.setProperty('--shadow-scale-x', shadow.scaleX.toString());
       ref.style.setProperty('--shadow-scale-y', shadow.scaleY.toString());
       ref.style.setProperty('--shadow-opacity', shadowOpacity.toString());
+      ref.style.setProperty('--focus-progress', focusProgress.toString());
     });
 }
 
