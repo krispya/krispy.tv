@@ -1,5 +1,6 @@
 import { books } from '../../book/index.js';
 import { polaroids } from '../../polaroid/index.js';
+import { getStickyNoteLineSrc, STICKY_NOTE_LINE_COUNT } from '../presentation/sticky-note-lines.js';
 import { decodeImage } from './warmup.js';
 
 let cache: Promise<void> | undefined;
@@ -10,8 +11,16 @@ let cache: Promise<void> | undefined;
  * visits resolve instantly.
  */
 export function preloadDeskAssets(): Promise<void> {
+  const stickyNoteLineImages = Array.from({ length: STICKY_NOTE_LINE_COUNT }, (_, index) =>
+    getStickyNoteLineSrc(index + 1)
+  );
+
   cache ??= Promise.allSettled(
-    [...books.map((book) => book.coverImageSrc), ...polaroids.map((polaroid) => polaroid.imageSrc)]
+    [
+      ...books.map((book) => book.coverImageSrc),
+      ...polaroids.map((polaroid) => polaroid.imageSrc),
+      ...stickyNoteLineImages,
+    ]
       .filter(Boolean)
       .map(decodeImage)
   ).then(() => undefined);

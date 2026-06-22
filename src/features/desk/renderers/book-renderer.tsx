@@ -25,12 +25,12 @@ import {
 } from '../presentation/shadow.js';
 import { metersToCssPixels } from '../utils/physics-units.js';
 import { getBookDepthMeters } from '../utils/resting-height.js';
-import { hashSeed, SketchOutline } from './sketch-outline.js';
 import { shade, withAlpha } from '../utils/color.js';
 import { screenPointToDeskMetersForWorld } from '../utils/camera.js';
 import { ITEM_PERSPECTIVE_PX } from '../presentation/stage.js';
 import { BOOK_LINES_COLOR, type BookLineKind } from '../presentation/book-lines.js';
 import { BookLinesOverlay } from './book-lines-overlay.js';
+import { StickyNoteLinesOverlay } from './sticky-note-lines-overlay.js';
 
 const DRAG_THRESHOLD_PX = 5;
 // Below this depth (px) the spine/page-edge slivers are too thin for legible line art.
@@ -66,9 +66,6 @@ const PAGE_EDGE_HORIZONTAL_LINES = `repeating-linear-gradient(to bottom, ${PAGE_
 const PAGE_EDGE_VERTICAL_LINES = `repeating-linear-gradient(to right, ${PAGE_LINE_LIGHT} 0px, ${PAGE_LINE_LIGHT} 2px, ${PAGE_LINE_DARK} 2px, ${PAGE_LINE_DARK} 3px)`;
 const COVER_SHADOW_CONFORM = color.image.blackConform;
 const STICKY_NOTE_DEFAULT_COLOR = color.accent.gold;
-const STICKY_NOTE_X_PERCENT = 36;
-const STICKY_NOTE_Y_PERCENT = 17;
-const STICKY_NOTE_SIZE_PERCENT = 58;
 /** Pixels above the cover where the note's stuck (top) edge floats. */
 const STICKY_NOTE_LIFT_PX = 3;
 /** Degrees. Peel of the unstuck bottom edge away from the cover. */
@@ -293,14 +290,7 @@ function BookView({ entity }: { entity: Entity }) {
                   </div>
                 </>
               )}
-              {stickyNote && (
-                <StickyNote
-                  note={stickyNote}
-                  bookId={book.id}
-                  bookWidth={book.width}
-                  bookHeight={book.height}
-                />
-              )}
+              {stickyNote && <StickyNote note={stickyNote} bookId={book.id} />}
             </BookFace>
             <BookFace
               width={book.width}
@@ -376,28 +366,19 @@ function getVisualBookDepth(width: number, height: number, physicalDepth: number
   return Math.max(physicalDepth, Math.min(physicalDepth * BOOK_VISUAL_DEPTH_SCALE, maxVisualDepth));
 }
 
-function StickyNote({
-  note,
-  bookId,
-  bookWidth,
-  bookHeight,
-}: {
-  note: StickyNoteData;
-  bookId: string;
-  bookWidth: number;
-  bookHeight: number;
-}) {
-  const width = (bookWidth * STICKY_NOTE_SIZE_PERCENT) / 100;
-  const height = width;
-  const left = (bookWidth * STICKY_NOTE_X_PERCENT) / 100;
-  const top = (bookHeight * STICKY_NOTE_Y_PERCENT) / 100;
+function StickyNote({ note, bookId }: { note: StickyNoteData; bookId: string }) {
+  const width = 132;
+  const height = 132;
+  const left = 82;
+  const top = 59;
   const rotation = note.rotation ?? -7;
   const noteColor = note.color || STICKY_NOTE_DEFAULT_COLOR;
   const creaseColor = withAlpha(shade(noteColor, -60), 0.24);
+  const lineColor = shade(noteColor, -42);
   const highlightColor = withAlpha('#ffffff', 0.32);
   const text = note.text?.trim();
   const textSize = Math.max(16, Math.min(22, width * 0.14));
-  const noteSeed = hashSeed(`${bookId}:sticky-note`);
+  const stickyNoteId = `${bookId}:sticky-note`;
 
   return (
     <div
@@ -411,7 +392,7 @@ function StickyNote({
         transform: `rotate(${rotation}deg) translateZ(2px)`,
       }}
     >
-      <StickyNoteShadow shadowId={`${bookId}:sticky-note`} />
+      <StickyNoteShadow shadowId={stickyNoteId} />
       <div
         className="absolute inset-0 rounded-[2px]"
         style={{
@@ -431,7 +412,7 @@ function StickyNote({
             {text}
           </div>
         )}
-        <SketchOutline width={width} height={height} seed={noteSeed} />
+        <StickyNoteLinesOverlay stickyNoteId={stickyNoteId} lineColor={lineColor} />
       </div>
     </div>
   );

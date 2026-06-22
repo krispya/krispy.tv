@@ -61,6 +61,16 @@ export {
   type PolaroidLineKind,
 } from './polaroid-lines.js';
 export {
+  getStickyNoteLineSrc,
+  getStickyNoteLineVariant,
+  getStickyNoteLinesBoilPhaseOffset,
+  getStickyNoteLinesBoilStartFrame,
+  getStickyNoteLinesFrameStyle,
+  STICKY_NOTE_LINE_COUNT,
+  STICKY_NOTE_LINES_BOIL_CYCLE_SECONDS,
+  STICKY_NOTE_LINES_COLOR,
+} from './sticky-note-lines.js';
+export {
   getInverseStageTiltTransform,
   getStagePerspective,
   getStagePerspectiveOrigin,

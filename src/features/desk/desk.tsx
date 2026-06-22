@@ -35,6 +35,7 @@ export function Desk() {
         <PolaroidRenderer />
         <BookRenderer />
       </DeskProjection>
+
       <ArticleRenderer />
     </WorldProvider>
   );

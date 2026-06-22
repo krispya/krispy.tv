@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-export function useAnimationFrame(callback: () => void) {
+export function useFrame(callback: () => void) {
   const callbackRef = useRef(callback);
 
   useEffect(() => {

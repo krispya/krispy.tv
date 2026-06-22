@@ -28,14 +28,14 @@ import {
 } from './systems/index.js';
 import { ActiveSlug, Camera, Pointer, Viewport } from './traits/index.js';
 import { DEFAULT_CAMERA, getResponsiveDeskZoom } from './utils/camera.js';
-import { useAnimationFrame } from '../frameloop/use-animation-frame.js';
+import { useFrame } from '../frameloop/use-frame.js';
 
 export function Frameloop() {
   const world = useWorld();
   const [isArticle, params] = useRoute<{ slug: string }>(routes.article.path);
   const slug = isArticle ? (params?.slug ?? '') : '';
 
-  useAnimationFrame(() => {
+  useFrame(() => {
     // Time
     updateTime(world);
 
