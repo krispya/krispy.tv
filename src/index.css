@@ -15,6 +15,7 @@
   --font-mono:
     'Fira Code Variable', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
     'Courier New', monospace;
+  --font-focus: 'Recursive', var(--font-sans);
 
   --color-primary-50: oklch(0.971 0.014 343.198);
   --color-primary-100: oklch(0.948 0.028 342.258);

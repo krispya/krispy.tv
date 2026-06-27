@@ -92,7 +92,7 @@ function PolaroidFocusBodyPanel({ entity }: { entity: Entity }) {
       }}
     >
       <div
-        className={`line-clamp-4 text-xl leading-snug text-stone-100/90 [text-shadow:0_1px_2px_rgb(0_0_0/0.5)] ${
+        className={`font-focus line-clamp-4 text-xl leading-snug text-stone-100/90 [font-variation-settings:'CASL'_0.35,'CRSV'_1,'MONO'_0,'slnt'_0] [text-shadow:0_1px_2px_rgb(0_0_0/0.5)] ${
           placement === 'below' ? 'text-center' : ''
         }`}
       >
