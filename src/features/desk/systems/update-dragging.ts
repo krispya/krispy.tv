@@ -1,7 +1,9 @@
-import type { World } from 'koota';
+import { Not, type World } from 'koota';
 import {
   Dragging,
+  IsFocused,
   IsResting,
+  ItemFocusMotion,
   KinematicBody,
   Pointer,
   Position,
@@ -22,7 +24,7 @@ export function updateDragging(world: World) {
   const deskPoint = screenPointToDeskMetersForWorld(world, pointer.x, pointer.y);
 
   world
-    .query(Position, Velocity, Dragging, KinematicBody)
+    .query(Position, Velocity, Dragging, KinematicBody, Not(IsFocused), Not(ItemFocusMotion))
     .updateEach(([position, velocity, dragging, physics], entity) => {
       entity.remove(IsResting);
       dragging.liftProgress = dampedLerp(dragging.liftProgress, 1, LIFT_DAMPING, time.delta);

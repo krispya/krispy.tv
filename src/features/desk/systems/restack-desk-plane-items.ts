@@ -3,9 +3,10 @@ import {
   Desk,
   IsControlled,
   IsEnteringDesk,
+  IsFocused,
   IsOpen,
   IsResting,
-  PolaroidFocusMotion,
+  ItemFocusMotion,
   Position,
   StackIndex,
   Velocity,
@@ -38,22 +39,12 @@ export function restackDeskPlaneItems(world: World) {
         Not(IsResting),
         Not(IsControlled),
         Not(IsEnteringDesk),
+        Not(IsFocused),
+        Not(ItemFocusMotion),
         Not(IsOpen)
       )
       .readEach(([position, velocity, stackIndex], entity) => {
         if (position.z > deskPlaneRestackThreshold || velocity.z > 0) return;
-        candidates.push({ entity, stackIndex: stackIndex.value });
-      });
-
-    // Polaroids closing from focus keep IsControlled while the close spring
-    // drives them, so the query above skips them. They should still tuck into
-    // the desk plane order once they descend past the threshold.
-    world
-      .query(Position, StackIndex, PolaroidFocusMotion, Not(IsResting), Not(IsEnteringDesk))
-      .readEach(([position, stackIndex, motion], entity) => {
-        if (motion.phase !== 'closing') return;
-        if (!entity.has(IsControlled)) return;
-        if (position.z > deskPlaneRestackThreshold) return;
         candidates.push({ entity, stackIndex: stackIndex.value });
       });
   }

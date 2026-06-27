@@ -16,13 +16,14 @@ import {
   restackDeskPlaneItems,
   syncArticle,
   syncBookToDOM,
+  syncDeskItemToDOM,
   syncHeadphonesToDOM,
   syncOpenState,
   syncPaperToDOM,
   syncPolaroidToDOM,
   updateArticleMotion,
   updateDragging,
-  updatePolaroidFocus,
+  updateItemFocus,
   updateRotation,
   updateTime,
 } from './systems/index.js';
@@ -64,9 +65,10 @@ export function Frameloop() {
     detectPastVisibleDesk(world);
     syncArticle(world);
     updateArticleMotion(world);
-    updatePolaroidFocus(world);
+    updateItemFocus(world);
 
     // View
+    syncDeskItemToDOM(world);
     syncPaperToDOM(world);
     syncPolaroidToDOM(world);
     syncBookToDOM(world);

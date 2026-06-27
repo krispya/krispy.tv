@@ -3,8 +3,11 @@ import {
   AngularVelocity,
   BoundingBox,
   Desk,
+  IsControlled,
   IsEnteringDesk,
+  IsFocused,
   IsOpen,
+  ItemFocusMotion,
   KinematicBody,
   Position,
   Velocity,
@@ -32,7 +35,10 @@ export function bounceWithinVisibleDesk(world: World) {
       AngularVelocity,
       BoundingBox,
       KinematicBody,
+      Not(IsControlled),
       Not(IsEnteringDesk),
+      Not(IsFocused),
+      Not(ItemFocusMotion),
       Not(IsOpen)
     )
     .updateEach(([position, velocity, angularVelocity, box]) => {

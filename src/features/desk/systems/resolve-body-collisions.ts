@@ -7,11 +7,12 @@ import {
   IsControlled,
   IsDroppedFromDragging,
   IsEnteringDesk,
+  IsFocused,
   IsOpen,
   IsResting,
   IsStackable,
+  ItemFocusMotion,
   KinematicBody,
-  PolaroidFocusMotion,
   Position,
   Rotation,
   StackIndex,
@@ -95,6 +96,8 @@ export function resolveBodyCollisions(world: World) {
       KinematicBody,
       Not(IsControlled),
       Not(IsEnteringDesk),
+      Not(IsFocused),
+      Not(ItemFocusMotion),
       Not(IsOpen)
     )
     .readEach(([position, rotation, velocity, angularVelocity, box, stackIndex, body], entity) => {
@@ -120,52 +123,6 @@ export function resolveBodyCollisions(world: World) {
         angularVelocityDirty: false,
       });
     });
-
-  // Polaroids closing from focus keep IsControlled while the close spring
-  // drives them, so the query above skips them. Once they descend into the
-  // desk plane (past the restack threshold) they become collidable again; a
-  // hit interrupts the close and hands them back to physics below.
-  world
-    .query(
-      Position,
-      Rotation,
-      Velocity,
-      AngularVelocity,
-      BoundingBox,
-      StackIndex,
-      KinematicBody,
-      PolaroidFocusMotion,
-      Not(IsEnteringDesk),
-      Not(IsOpen)
-    )
-    .readEach(
-      ([position, rotation, velocity, angularVelocity, box, stackIndex, body, motion], entity) => {
-        if (motion.phase !== 'closing') return;
-        if (!entity.has(IsControlled)) return;
-        if (desk.restackThreshold <= 0 || position.z > desk.restackThreshold) return;
-        if (box.width <= 0 || box.height <= 0) return;
-
-        bodies.push({
-          entity,
-          position: { x: position.x, y: position.y, z: position.z },
-          rotation: { z: rotation.z },
-          velocity: { x: velocity.x, y: velocity.y, z: velocity.z },
-          angularVelocity: { z: angularVelocity.z },
-          box: { width: cssPixelsToMeters(box.width), height: cssPixelsToMeters(box.height) },
-          stackIndex: stackIndex.value,
-          restingHeight: 0,
-          resting: false,
-          stackable: entity.has(IsStackable),
-          boundary: entity.has(IsBoundary),
-          droppedFromDragging: false,
-          activeDropCollision: false,
-          inverseMass: getInverseMass(body.mass),
-          positionDirty: false,
-          velocityDirty: false,
-          angularVelocityDirty: false,
-        });
-      }
-    );
 
   for (let aIndex = 0; aIndex < bodies.length; aIndex++) {
     for (let bIndex = aIndex + 1; bIndex < bodies.length; bIndex++) {
@@ -204,15 +161,17 @@ export function resolveBodyCollisions(world: World) {
 
   if (resolved.size === 0) return;
 
-  // A collision interrupts a focus close: release the spring and control so
-  // the write-back below applies the impulse and physics takes over.
-  for (const entity of resolved.keys()) {
-    if (entity.get(PolaroidFocusMotion)?.phase !== 'closing') continue;
-    entity.remove(PolaroidFocusMotion, IsControlled);
-  }
-
   world
-    .query(Position, Velocity, AngularVelocity, Not(IsControlled), Not(IsEnteringDesk), Not(IsOpen))
+    .query(
+      Position,
+      Velocity,
+      AngularVelocity,
+      Not(IsControlled),
+      Not(IsEnteringDesk),
+      Not(IsFocused),
+      Not(ItemFocusMotion),
+      Not(IsOpen)
+    )
     .updateEach(([position, velocity, angularVelocity], entity) => {
       const next = resolved.get(entity);
       if (!next) return;

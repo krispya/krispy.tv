@@ -36,11 +36,12 @@ const PAPER_INITIAL_STYLE = {
   '--item-perspective': `${ITEM_PERSPECTIVE_PX}px`,
   '--item-persp-x': '0px',
   '--item-persp-y': '0px',
-  '--paper-z': '0px',
-  '--paper-rotate-x': '0deg',
-  '--paper-rotate-y': '0deg',
-  '--paper-rotate-z': '0deg',
-  '--paper-lift-scale': '1',
+  '--item-z': '0px',
+  '--item-rotate-x': '0deg',
+  '--item-rotate-y': '0deg',
+  '--item-rotate-z': '0deg',
+  '--item-lift-scale': '1',
+  '--item-focus-progress': '0',
   '--shadow-offset-x': '2px',
   '--shadow-offset-y': '3px',
   '--shadow-scale-x': '1',
@@ -238,7 +239,7 @@ function PaperView({ entity }: { entity: Entity }) {
         }`}
         style={{
           transform:
-            'translateZ(var(--paper-z)) rotateZ(var(--paper-rotate-z)) scale(var(--paper-lift-scale))',
+            'translateZ(var(--item-z)) rotateZ(var(--item-rotate-z)) scale(var(--item-lift-scale))',
         }}
       >
         <div
@@ -251,7 +252,7 @@ function PaperView({ entity }: { entity: Entity }) {
           <div
             className="absolute inset-0 will-change-transform [transform-style:preserve-3d]"
             style={{
-              transform: 'rotateX(var(--paper-rotate-x)) rotateY(var(--paper-rotate-y))',
+              transform: 'rotateX(var(--item-rotate-x)) rotateY(var(--item-rotate-y))',
             }}
           >
             <div
@@ -287,7 +288,7 @@ function PaperShadow({ paperId }: { paperId: string }) {
           '--boil-phase': `${phaseOffset}s`,
           opacity: 'var(--shadow-opacity)',
           transform:
-            'translate(var(--shadow-offset-x), var(--shadow-offset-y)) rotate(var(--paper-rotate-z)) scale(var(--shadow-scale-x), var(--shadow-scale-y))',
+            'translate(var(--shadow-offset-x), var(--shadow-offset-y)) rotate(var(--item-rotate-z)) scale(var(--shadow-scale-x), var(--shadow-scale-y))',
         } as CSSProperties
       }
     >
@@ -302,7 +303,7 @@ function PaperShadow({ paperId }: { paperId: string }) {
       >
         <div
           className="absolute inset-0"
-          style={{ transform: 'rotateX(var(--paper-rotate-x)) rotateY(var(--paper-rotate-y))' }}
+          style={{ transform: 'rotateX(var(--item-rotate-x)) rotateY(var(--item-rotate-y))' }}
         >
           {Array.from({ length: SHADOW_BOIL_FRAME_COUNT }, (_, frameIndex) => (
             <div

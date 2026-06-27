@@ -2,7 +2,9 @@ import { Not, type World } from 'koota';
 import {
   AngularVelocity,
   IsControlled,
+  IsFocused,
   IsResting,
+  ItemFocusMotion,
   KinematicBody,
   Position,
   Rotation,
@@ -32,7 +34,9 @@ export function resolveRestingBody(world: World) {
       AngularVelocity,
       KinematicBody,
       Not(IsControlled),
-      Not(IsResting)
+      Not(IsFocused),
+      Not(IsResting),
+      Not(ItemFocusMotion)
     )
     .updateEach(([position, rotation, velocity, angularVelocity, body], entity) => {
       if (position.z > DESK_PLANE_CONTACT_EPSILON_M) return;

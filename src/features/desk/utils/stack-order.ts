@@ -3,10 +3,11 @@ import {
   Dragging,
   IsControlled,
   IsEnteringDesk,
+  IsFocused,
   IsOpen,
   IsResting,
   IsStackable,
-  PolaroidFocusMotion,
+  ItemFocusMotion,
   Position,
   StackIndex,
   Velocity,
@@ -104,16 +105,19 @@ export function getDeskPlaneInsertIndex(item: StackOrderItem, items: StackOrderI
 }
 
 export function isClosingFromFocus(entity: Entity) {
-  return entity.get(PolaroidFocusMotion)?.phase === 'closing';
+  return entity.get(ItemFocusMotion)?.phase === 'closing';
 }
 
 export function isThresholdItem(entity: Entity, restackThreshold: number) {
   if (restackThreshold <= 0) return false;
   if (entity.has(IsEnteringDesk)) return false;
 
-  // A polaroid descending from focus is still controlled by its close spring,
+  // An item descending from focus is still controlled by its close spring,
   // but it should join the desk plane layer at the threshold like any fall.
-  if (!isClosingFromFocus(entity) && (entity.has(IsControlled) || entity.has(IsOpen))) {
+  if (
+    !isClosingFromFocus(entity) &&
+    (entity.has(IsControlled) || entity.has(IsOpen) || entity.has(IsFocused))
+  ) {
     return false;
   }
 

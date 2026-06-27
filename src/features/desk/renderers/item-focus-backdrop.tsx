@@ -2,31 +2,30 @@ import type { Entity } from 'koota';
 import { useActions, useQuery, useTrait, useWorld } from 'koota/react';
 import { actions } from '../actions.js';
 import { getInverseStageTiltTransform } from '../presentation/stage.js';
-import { Camera, IsOpen, Polaroid, PolaroidFocusMotion, Viewport } from '../traits/index.js';
+import { Camera, IsFocused, ItemFocusMotion, Viewport } from '../traits/index.js';
 import { getVisibleDeskRect } from '../utils/camera.js';
 import { clamp01, easeInOutCubic, easeOutCubic } from '../utils/math.js';
 
 const BACKDROP_Z_INDEX = 1500;
 const BACKDROP_SCALE = 1.16;
 
-export function PolaroidFocusBackdrop() {
-  // Track focus motion rather than IsOpen so the backdrop can keep fading out
-  // while a polaroid is closing (IsOpen is removed as soon as a close starts).
-  const focusedPolaroids = useQuery(Polaroid, PolaroidFocusMotion);
-  const focusedPolaroid =
-    focusedPolaroids.find((entity) => entity.has(IsOpen)) ?? focusedPolaroids[0];
+export function ItemFocusBackdrop() {
+  // Track focus motion rather than IsFocused so the backdrop can keep fading out
+  // while an item is closing (IsFocused is removed as soon as a close starts).
+  const focusedItems = useQuery(ItemFocusMotion);
+  const focusedItem = focusedItems.find((entity) => entity.has(IsFocused)) ?? focusedItems[0];
 
-  if (!focusedPolaroid) return null;
+  if (!focusedItem) return null;
 
-  return <PolaroidFocusBackdropSurface entity={focusedPolaroid} />;
+  return <ItemFocusBackdropSurface entity={focusedItem} />;
 }
 
-function PolaroidFocusBackdropSurface({ entity }: { entity: Entity }) {
+function ItemFocusBackdropSurface({ entity }: { entity: Entity }) {
   const world = useWorld();
   const viewport = useTrait(world, Viewport);
   const camera = useTrait(world, Camera);
-  const motion = useTrait(entity, PolaroidFocusMotion);
-  const { closeOpenPolaroid } = useActions(actions);
+  const motion = useTrait(entity, ItemFocusMotion);
+  const { closeFocusedItems } = useActions(actions);
   const opacity = getBackdropOpacity(motion);
   const rect = getVisibleDeskRect(viewport, camera);
   const isClosing = motion?.phase === 'closing';
@@ -49,13 +48,13 @@ function PolaroidFocusBackdropSurface({ entity }: { entity: Entity }) {
       }}
       onPointerDown={(event) => {
         event.preventDefault();
-        closeOpenPolaroid();
+        closeFocusedItems();
       }}
     />
   );
 }
 
-function getBackdropOpacity(motion: ReturnType<typeof useTrait<typeof PolaroidFocusMotion>>) {
+function getBackdropOpacity(motion: ReturnType<typeof useTrait<typeof ItemFocusMotion>>) {
   const maxOpacity = 0.82;
   if (!motion) return maxOpacity;
 

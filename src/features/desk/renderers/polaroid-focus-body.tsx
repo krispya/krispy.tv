@@ -12,7 +12,7 @@ import {
   POLAROID_FOCUSED_SCALE,
 } from '../presentation/polaroid-focus.js';
 import { getInverseStageTiltTransform } from '../presentation/stage.js';
-import { Camera, IsOpen, Polaroid, PolaroidFocusMotion, Viewport } from '../traits/index.js';
+import { Camera, IsFocused, ItemFocusMotion, Polaroid, Viewport } from '../traits/index.js';
 import { getVisibleDeskRect } from '../utils/camera.js';
 import { clamp01 } from '../utils/math.js';
 
@@ -25,9 +25,9 @@ const BODY_Z_INDEX = 1600;
  * tree) so it never moves, scales, or rotates with the photo.
  */
 export function PolaroidFocusBody() {
-  const focusedPolaroids = useQuery(Polaroid, PolaroidFocusMotion);
+  const focusedPolaroids = useQuery(Polaroid, ItemFocusMotion);
   const focusedPolaroid =
-    focusedPolaroids.find((entity) => entity.has(IsOpen)) ?? focusedPolaroids[0];
+    focusedPolaroids.find((entity) => entity.has(IsFocused)) ?? focusedPolaroids[0];
 
   if (!focusedPolaroid) return null;
 
@@ -38,14 +38,14 @@ function PolaroidFocusBodyPanel({ entity }: { entity: Entity }) {
   const world = useWorld();
   const viewport = useTrait(world, Viewport);
   const camera = useTrait(world, Camera);
-  const motion = useTrait(entity, PolaroidFocusMotion);
+  const motion = useTrait(entity, ItemFocusMotion);
   const polaroid = useTrait(entity, Polaroid);
 
   if (!polaroid) return null;
   if (!getPolaroid(polaroid.id)?.hasBody) return null;
 
   const rect = getVisibleDeskRect(viewport, camera);
-  const progress = motion ? clamp01(motion.progress) : entity.has(IsOpen) ? 1 : 0;
+  const progress = motion ? clamp01(motion.progress) : entity.has(IsFocused) ? 1 : 0;
   const placement = getPolaroidFocusBodyPlacement(viewport?.width ?? 0);
   const scaledHalfWidthPx = (polaroid.width * POLAROID_FOCUSED_SCALE) / 2;
   const scaledHalfHeightPx = (polaroid.height * POLAROID_FOCUSED_SCALE) / 2;

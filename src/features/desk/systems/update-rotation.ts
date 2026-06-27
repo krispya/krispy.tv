@@ -3,7 +3,9 @@ import {
   AngularVelocity,
   Dragging,
   IsControlled,
+  IsFocused,
   IsResting,
+  ItemFocusMotion,
   KinematicBody,
   Position,
   Rotation,
@@ -42,7 +44,7 @@ export function updateRotation(world: World) {
   if (!time) return;
 
   world
-    .query(Rotation, AngularVelocity, Velocity, Dragging)
+    .query(Rotation, AngularVelocity, Velocity, Dragging, Not(IsFocused), Not(ItemFocusMotion))
     .updateEach(([rotation, angularVelocity, velocity, dragging]) => {
       const pickupRotationScale = 1 - PICKUP_STRAIGHTNESS;
 
@@ -133,7 +135,9 @@ export function updateRotation(world: World) {
       AngularVelocity,
       KinematicBody,
       Not(IsControlled),
-      Not(IsResting)
+      Not(IsFocused),
+      Not(IsResting),
+      Not(ItemFocusMotion)
     )
     .updateEach(([velocity, position, rotation, angularVelocity]) => {
       // Settle the tilt progressively as a descending item nears the desk so

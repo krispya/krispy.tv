@@ -30,8 +30,12 @@ import { HeadphonesLinesOverlay } from './headphones-lines-overlay.js';
 type HeadphonesStyle = CSSProperties & Record<`--${string}`, string>;
 
 const HEADPHONES_INITIAL_STYLE = {
-  '--headphones-z': '0px',
-  '--headphones-rotate-z': '0deg',
+  '--item-z': '0px',
+  '--item-rotate-x': '0deg',
+  '--item-rotate-y': '0deg',
+  '--item-rotate-z': '0deg',
+  '--item-lift-scale': '1',
+  '--item-focus-progress': '0',
   '--shadow-offset-x': '2px',
   '--shadow-offset-y': '3px',
   '--shadow-scale-x': '1',
@@ -77,7 +81,8 @@ function HeadphonesView({ entity }: { entity: Entity }) {
         aria-hidden="true"
         className="absolute inset-0 overflow-visible"
         style={{
-          transform: 'translateZ(var(--headphones-z)) rotateZ(var(--headphones-rotate-z))',
+          transform:
+            'translateZ(var(--item-z)) rotateZ(var(--item-rotate-z)) scale(var(--item-lift-scale))',
         }}
       >
         <HeadphonesStand headphonesId={headphones.id} />

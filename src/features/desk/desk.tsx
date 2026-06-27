@@ -7,8 +7,8 @@ import { ArticleRenderer } from './renderers/article-renderer.js';
 import { BookRenderer } from './renderers/book-renderer.js';
 import { DeskRenderer } from './renderers/desk-renderer.js';
 import { HeadphonesRenderer } from './renderers/headphones-renderer.js';
+import { ItemFocusBackdrop } from './renderers/item-focus-backdrop.js';
 import { PaperRenderer } from './renderers/paper-renderer.js';
-import { PolaroidFocusBackdrop } from './renderers/polaroid-focus-backdrop.js';
 import { PolaroidFocusBody } from './renderers/polaroid-focus-body.js';
 import { PolaroidRenderer } from './renderers/polaroid-renderer.js';
 import { Startup } from './startup.js';
@@ -30,7 +30,7 @@ export function Desk() {
         <DeskRenderer />
         <HeadphonesRenderer />
         <PaperRenderer />
-        <PolaroidFocusBackdrop />
+        <ItemFocusBackdrop />
         <PolaroidFocusBody />
         <PolaroidRenderer />
         <BookRenderer />

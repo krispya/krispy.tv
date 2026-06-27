@@ -155,10 +155,45 @@ export const Dragging = trait({
   tiltVelocity: () => ({ x: 0, y: 0 }),
 });
 
-export type PolaroidFocusPhase = 'opening' | 'closing';
+export const FocusableItem = trait({
+  focusedScale: 1.34,
+  /** Meters. */
+  targetZ: 0.26,
+  /** Meters. */
+  curveOffset: 0.055,
+  /** Degrees. */
+  targetRotationX: -4,
+  /** Degrees. */
+  targetRotationY: 5,
+  /** Degrees. */
+  targetRotationZ: 3,
+  sideVelocityScale: 10,
+  /** Meters per second. */
+  upwardVelocity: 0.48,
+  /** Degrees per second. */
+  rotationXVelocity: -120,
+  /** Degrees per second. */
+  rotationYVelocity: 80,
+  /** Degrees per CSS pixel. */
+  spinRotationYPerPx: 0.55,
+  /** Degrees per CSS pixel. */
+  spinRotationXPerPx: 0.12,
+  /** Degrees. */
+  spinRotationXMin: -18,
+  /** Degrees. */
+  spinRotationXMax: 12,
+  spinTouchSensitivity: 2.5,
+  spinVelocityScale: 1,
+  /** Degrees per second. */
+  spinMaxVelocityDeg: 750,
+  /** Milliseconds. */
+  spinMinDeltaMs: 8,
+});
 
-export const PolaroidFocusMotion = trait({
-  phase: 'opening' as PolaroidFocusPhase,
+export type ItemFocusPhase = 'opening' | 'closing';
+
+export const ItemFocusMotion = trait({
+  phase: 'opening' as ItemFocusPhase,
   progress: 0,
   progressVelocity: 0,
   /** Meters. */
@@ -179,7 +214,7 @@ export const PolaroidFocusMotion = trait({
   sideTilt: 0,
 });
 
-export const PolaroidFocusSpin = trait({
+export const ItemFocusSpin = trait({
   pointerId: 0,
   pointerType: 'mouse',
   /** CSS pixels. */
@@ -202,6 +237,7 @@ export const Selected = trait();
 
 export const IsControlled = trait();
 export const IsDroppedFromDragging = trait();
+export const IsFocused = trait();
 export const IsStackable = trait();
 export const IsOpen = trait();
 export const IsOffScreen = trait();

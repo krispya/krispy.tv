@@ -8,19 +8,22 @@ import {
   Desk,
   DeskConfig,
   Dragging,
+  FocusableItem,
   HEADPHONES_ASPECT_RATIO,
   Headphones,
   IsBoundary,
   IsControlled,
+  IsDroppedFromDragging,
   IsEnteringDesk,
+  IsFocused,
   IsOffScreen,
   IsOpen,
   IsResting,
+  ItemFocusMotion,
+  ItemFocusSpin,
   KinematicBody,
   Paper,
   Polaroid,
-  PolaroidFocusMotion,
-  PolaroidFocusSpin,
   Position,
   Pressed,
   Rotation,
@@ -43,23 +46,6 @@ import {
   metersToCssPixels,
 } from './utils/physics-units.js';
 
-const POLAROID_FOCUS_Z_M = 0.26;
-const POLAROID_FOCUS_CURVE_M = 0.055;
-const POLAROID_FOCUS_ROTATION_X = -4;
-const POLAROID_FOCUS_ROTATION_Y = 5;
-const POLAROID_FOCUS_ROTATION_Z = 3;
-const POLAROID_FOCUS_SIDE_VELOCITY_SCALE = 10;
-const POLAROID_FOCUS_UPWARD_VELOCITY = 0.48;
-const POLAROID_FOCUS_ROTATION_X_VELOCITY = -120;
-const POLAROID_FOCUS_ROTATION_Y_VELOCITY = 80;
-const POLAROID_SPIN_ROTATION_Y_PER_PX = 0.55;
-const POLAROID_SPIN_ROTATION_X_PER_PX = 0.12;
-const POLAROID_SPIN_ROTATION_X_MIN = -18;
-const POLAROID_SPIN_ROTATION_X_MAX = 12;
-const POLAROID_SPIN_TOUCH_SENSITIVITY = 2.5;
-const POLAROID_SPIN_VELOCITY_SCALE = 1;
-const POLAROID_SPIN_MAX_VELOCITY_DEG = 750;
-const POLAROID_SPIN_MIN_DELTA_MS = 8;
 const HEADPHONES_CORNER_OVERLAP_X_PX = 62;
 const HEADPHONES_CORNER_OVERLAP_Y_PX = 26;
 const HEADPHONES_MASS = 120;
@@ -297,7 +283,7 @@ function getTargetedThrow(
   };
 }
 
-function getStablePolaroidSign(id: string) {
+function getStableFocusSign(id: string) {
   let hash = 0;
 
   for (let index = 0; index < id.length; index++) {
@@ -307,27 +293,32 @@ function getStablePolaroidSign(id: string) {
   return hash % 2 === 0 ? 1 : -1;
 }
 
-function getPolaroidFocusTarget(entity: Entity, visibleRect: VisibleDeskRect) {
-  const polaroid = entity.get(Polaroid);
+function getFocusItemId(entity: Entity) {
+  return entity.get(Polaroid)?.id ?? entity.get(Book)?.id ?? String(entity.id());
+}
+
+function getItemFocusTarget(entity: Entity, visibleRect: VisibleDeskRect) {
+  const focusable = entity.get(FocusableItem);
   const position = entity.get(Position) ?? { x: 0, y: 0, z: 0 };
   const centerX = cssPixelsToMeters(visibleRect.x + visibleRect.width / 2);
   const centerY = cssPixelsToMeters(visibleRect.y + visibleRect.height / 2);
   const sourceSide = position.x < centerX ? -1 : 1;
-  const stableSign = getStablePolaroidSign(polaroid?.id ?? String(entity.id()));
+  const stableSign = getStableFocusSign(getFocusItemId(entity));
+  const sideTilt = (focusable?.targetRotationY ?? 0) * -sourceSide;
 
   return {
     position: {
       x: centerX,
       y: centerY,
-      z: POLAROID_FOCUS_Z_M,
+      z: focusable?.targetZ ?? 0,
     },
     rotation: {
-      x: POLAROID_FOCUS_ROTATION_X,
-      y: POLAROID_FOCUS_ROTATION_Y * -sourceSide,
-      z: POLAROID_FOCUS_ROTATION_Z * stableSign,
+      x: focusable?.targetRotationX ?? 0,
+      y: sideTilt,
+      z: (focusable?.targetRotationZ ?? 0) * stableSign,
     },
-    curveOffset: POLAROID_FOCUS_CURVE_M * stableSign,
-    sideTilt: POLAROID_FOCUS_ROTATION_Y * -sourceSide,
+    curveOffset: (focusable?.curveOffset ?? 0) * stableSign,
+    sideTilt,
   };
 }
 
@@ -418,6 +409,7 @@ export const actions = createActions((world) => ({
       Rotation(getThrowRotation(config.centered)),
       Velocity,
       AngularVelocity,
+      FocusableItem,
       StackIndex({ value: getNextStackIndex(world) })
     );
 
@@ -499,6 +491,7 @@ export const actions = createActions((world) => ({
       Rotation(getThrowRotation(config.centered)),
       Velocity,
       AngularVelocity,
+      FocusableItem,
       StackIndex({ value: getNextStackIndex(world) }),
       IsStackable
     );
@@ -570,16 +563,16 @@ export const actions = createActions((world) => ({
     renumberStackIndices(items);
   },
 
-  openPolaroid: (entity: Entity) => {
-    const polaroid = entity.get(Polaroid);
+  focusItem: (entity: Entity) => {
+    const focusable = entity.get(FocusableItem);
     const position = entity.get(Position);
     const rotation = entity.get(Rotation);
-    if (!polaroid || !position || !rotation) return;
+    if (!focusable || !position || !rotation) return;
 
-    world.query(Polaroid, IsOpen).forEach((candidate) => {
+    world.query(IsFocused, ItemFocusMotion).forEach((candidate) => {
       if (candidate === entity) return;
 
-      const candidateMotion = candidate.get(PolaroidFocusMotion);
+      const candidateMotion = candidate.get(ItemFocusMotion);
       if (candidateMotion) {
         candidate.set(Position, {
           x: candidateMotion.fromPosition.x,
@@ -593,19 +586,19 @@ export const actions = createActions((world) => ({
         });
       }
 
-      candidate.remove(IsOpen, IsControlled, PolaroidFocusMotion);
+      candidate.remove(IsFocused, IsControlled, ItemFocusMotion, ItemFocusSpin);
     });
 
-    const target = getPolaroidFocusTarget(entity, getVisibleDeskRectForWorld(world));
+    const target = getItemFocusTarget(entity, getVisibleDeskRectForWorld(world));
 
-    entity.remove(Dragging, Pressed, Selected, IsResting);
+    entity.remove(Dragging, IsDroppedFromDragging, IsEnteringDesk, Pressed, Selected, IsResting);
     entity.set(Velocity, { x: 0, y: 0, z: 0 });
     entity.set(AngularVelocity, { x: 0, y: 0, z: 0 });
-    entity.add(IsOpen, IsControlled);
+    entity.add(IsFocused, IsControlled);
 
     actions(world).raiseDeskItem(entity);
     entity.add(
-      PolaroidFocusMotion({
+      ItemFocusMotion({
         phase: 'opening',
         progress: 0,
         progressVelocity: 0,
@@ -614,13 +607,13 @@ export const actions = createActions((world) => ({
         toPosition: target.position,
         toRotation: target.rotation,
         positionVelocity: {
-          x: target.curveOffset * POLAROID_FOCUS_SIDE_VELOCITY_SCALE,
+          x: target.curveOffset * focusable.sideVelocityScale,
           y: 0,
-          z: POLAROID_FOCUS_UPWARD_VELOCITY,
+          z: focusable.upwardVelocity,
         },
         rotationVelocity: {
-          x: POLAROID_FOCUS_ROTATION_X_VELOCITY,
-          y: Math.sign(target.sideTilt || 1) * POLAROID_FOCUS_ROTATION_Y_VELOCITY,
+          x: focusable.rotationXVelocity,
+          y: Math.sign(target.sideTilt || 1) * focusable.rotationYVelocity,
           z: 0,
         },
         curveOffset: target.curveOffset,
@@ -629,26 +622,26 @@ export const actions = createActions((world) => ({
     );
   },
 
-  closePolaroid: (entity: Entity) => {
-    const motion = entity.get(PolaroidFocusMotion);
+  closeFocusedItem: (entity: Entity) => {
+    const focusable = entity.get(FocusableItem);
+    const motion = entity.get(ItemFocusMotion);
     const position = entity.get(Position);
     const rotation = entity.get(Rotation);
 
-    if (!motion || !position || !rotation) {
-      entity.remove(IsOpen, IsControlled, PolaroidFocusMotion);
+    if (!focusable || !motion || !position || !rotation) {
+      entity.remove(IsFocused, IsControlled, ItemFocusMotion, ItemFocusSpin);
       return;
     }
 
     if (motion.phase === 'closing') return;
 
-    // Drop IsOpen as soon as the close starts: the desk becomes interactive
-    // again and the descending polaroid can be grabbed, restacked at the
-    // threshold, or knocked by collisions. IsControlled stays so gravity and
-    // friction don't fight the focus spring while it still owns the motion.
-    entity.remove(IsOpen, PolaroidFocusSpin);
+    // Drop IsFocused as soon as the close starts so the backdrop can stop
+    // blocking input. ItemFocusMotion + IsControlled keep physics out until
+    // the close spring finishes or the user grabs the item.
+    entity.remove(IsFocused, ItemFocusSpin);
     entity.set(Velocity, { x: 0, y: 0, z: 0 });
     entity.set(AngularVelocity, { x: 0, y: 0, z: 0 });
-    entity.set(PolaroidFocusMotion, {
+    entity.set(ItemFocusMotion, {
       phase: 'closing',
       progress: 1,
       progressVelocity: 0,
@@ -665,7 +658,7 @@ export const actions = createActions((world) => ({
         z: motion.fromRotation.z,
       },
       positionVelocity: {
-        x: motion.curveOffset * -POLAROID_FOCUS_SIDE_VELOCITY_SCALE * 0.35,
+        x: motion.curveOffset * -focusable.sideVelocityScale * 0.35,
         y: 0,
         z: 0,
       },
@@ -675,7 +668,7 @@ export const actions = createActions((world) => ({
     });
   },
 
-  startPolaroidFocusSpin: (
+  startItemFocusSpin: (
     entity: Entity,
     pointerId: number,
     x: number,
@@ -683,21 +676,24 @@ export const actions = createActions((world) => ({
     timeMs: number,
     pointerType: string
   ) => {
-    if (!entity.has(IsOpen)) return;
+    if (!entity.has(IsFocused)) return;
 
+    const focusable = entity.get(FocusableItem);
     const rotation = entity.get(Rotation);
-    const motion = entity.get(PolaroidFocusMotion);
-    if (!rotation || !motion || motion.phase === 'closing') return;
+    const motion = entity.get(ItemFocusMotion);
+    if (!focusable || !rotation || !motion || motion.phase === 'closing') return;
 
     const currentRotation = { x: rotation.x, y: rotation.y, z: rotation.z };
 
-    entity.set(PolaroidFocusMotion, {
+    entity.remove(Dragging, IsDroppedFromDragging, Pressed, Selected, IsResting);
+    entity.add(IsControlled);
+    entity.set(ItemFocusMotion, {
       ...motion,
       toRotation: currentRotation,
       rotationVelocity: { x: 0, y: 0, z: 0 },
     });
     entity.add(
-      PolaroidFocusSpin({
+      ItemFocusSpin({
         pointerId,
         pointerType,
         lastClient: { x, y },
@@ -707,29 +703,32 @@ export const actions = createActions((world) => ({
     );
   },
 
-  updatePolaroidFocusSpin: (
-    entity: Entity,
-    pointerId: number,
-    x: number,
-    y: number,
-    timeMs: number
-  ) => {
-    const spin = entity.get(PolaroidFocusSpin);
-    const motion = entity.get(PolaroidFocusMotion);
-    if (!spin || !motion || spin.pointerId !== pointerId || motion.phase === 'closing') return;
+  updateItemFocusSpin: (entity: Entity, pointerId: number, x: number, y: number, timeMs: number) => {
+    const focusable = entity.get(FocusableItem);
+    const spin = entity.get(ItemFocusSpin);
+    const motion = entity.get(ItemFocusMotion);
+    if (
+      !focusable ||
+      !spin ||
+      !motion ||
+      spin.pointerId !== pointerId ||
+      motion.phase === 'closing'
+    ) {
+      return;
+    }
 
     const dx = x - spin.lastClient.x;
     const dy = y - spin.lastClient.y;
     if (dx === 0 && dy === 0) return;
 
-    const sensitivity = spin.pointerType === 'touch' ? POLAROID_SPIN_TOUCH_SENSITIVITY : 1;
-    const deltaRotationX = -dy * POLAROID_SPIN_ROTATION_X_PER_PX * sensitivity;
-    const deltaRotationY = dx * POLAROID_SPIN_ROTATION_Y_PER_PX * sensitivity;
+    const sensitivity = spin.pointerType === 'touch' ? focusable.spinTouchSensitivity : 1;
+    const deltaRotationX = -dy * focusable.spinRotationXPerPx * sensitivity;
+    const deltaRotationY = dx * focusable.spinRotationYPerPx * sensitivity;
     const nextRotation = {
       x: clamp(
         spin.rotation.x + deltaRotationX,
-        POLAROID_SPIN_ROTATION_X_MIN,
-        POLAROID_SPIN_ROTATION_X_MAX
+        focusable.spinRotationXMin,
+        focusable.spinRotationXMax
       ),
       y: spin.rotation.y + deltaRotationY,
       z: spin.rotation.z,
@@ -738,43 +737,43 @@ export const actions = createActions((world) => ({
     const deltaMs = timeMs - spin.lastTimeMs;
     const nextRotationVelocity = { ...motion.rotationVelocity };
 
-    if (deltaMs >= POLAROID_SPIN_MIN_DELTA_MS) {
+    if (deltaMs >= focusable.spinMinDeltaMs) {
       const deltaSeconds = deltaMs / 1000;
       nextRotationVelocity.x = clamp(
-        (deltaRotationX / deltaSeconds) * POLAROID_SPIN_VELOCITY_SCALE,
-        -POLAROID_SPIN_MAX_VELOCITY_DEG,
-        POLAROID_SPIN_MAX_VELOCITY_DEG
+        (deltaRotationX / deltaSeconds) * focusable.spinVelocityScale,
+        -focusable.spinMaxVelocityDeg,
+        focusable.spinMaxVelocityDeg
       );
       nextRotationVelocity.y = clamp(
-        (deltaRotationY / deltaSeconds) * POLAROID_SPIN_VELOCITY_SCALE,
-        -POLAROID_SPIN_MAX_VELOCITY_DEG,
-        POLAROID_SPIN_MAX_VELOCITY_DEG
+        (deltaRotationY / deltaSeconds) * focusable.spinVelocityScale,
+        -focusable.spinMaxVelocityDeg,
+        focusable.spinMaxVelocityDeg
       );
     }
 
-    entity.set(PolaroidFocusSpin, {
+    entity.set(ItemFocusSpin, {
       ...spin,
       lastClient: { x, y },
       lastTimeMs: timeMs,
       rotation: nextRotation,
     });
-    entity.set(PolaroidFocusMotion, {
+    entity.set(ItemFocusMotion, {
       ...motion,
       toRotation: nextRotation,
       rotationVelocity: nextRotationVelocity,
     });
   },
 
-  endPolaroidFocusSpin: (entity: Entity, pointerId: number) => {
-    const spin = entity.get(PolaroidFocusSpin);
+  endItemFocusSpin: (entity: Entity, pointerId: number) => {
+    const spin = entity.get(ItemFocusSpin);
     if (!spin || spin.pointerId !== pointerId) return;
 
-    entity.remove(PolaroidFocusSpin);
+    entity.remove(ItemFocusSpin);
   },
 
-  closeOpenPolaroid: () => {
-    world.query(Polaroid, IsOpen).forEach((entity) => {
-      actions(world).closePolaroid(entity);
+  closeFocusedItems: () => {
+    world.query(IsFocused).forEach((entity) => {
+      actions(world).closeFocusedItem(entity);
     });
   },
 

@@ -1,6 +1,6 @@
 import type { Entity } from 'koota';
 import { useActions, useHas, useQuery, useTrait, useWorld } from 'koota/react';
-import { useCallback, type CSSProperties } from 'react';
+import type { CSSProperties } from 'react';
 import { color } from '../../../color.js';
 import { getPolaroid } from '../../polaroid/index.js';
 import { BoundingBoxDebug, useDebug } from '../../debug/index.js';
@@ -11,11 +11,11 @@ import {
   Dragging,
   IsControlled,
   IsDroppedFromDragging,
-  IsOpen,
+  IsFocused,
   IsResting,
+  ItemFocusMotion,
+  ItemFocusSpin,
   Polaroid,
-  PolaroidFocusMotion,
-  PolaroidFocusSpin,
   Pressed,
   Position,
   Ref,
@@ -48,17 +48,17 @@ const POLAROID_INITIAL_STYLE = {
   '--item-perspective': `${ITEM_PERSPECTIVE_PX}px`,
   '--item-persp-x': '0px',
   '--item-persp-y': '0px',
-  '--paper-z': '0px',
-  '--paper-rotate-x': '0deg',
-  '--paper-rotate-y': '0deg',
-  '--paper-rotate-z': '0deg',
-  '--paper-lift-scale': '1',
+  '--item-z': '0px',
+  '--item-rotate-x': '0deg',
+  '--item-rotate-y': '0deg',
+  '--item-rotate-z': '0deg',
+  '--item-lift-scale': '1',
   '--shadow-offset-x': '2px',
   '--shadow-offset-y': '3px',
   '--shadow-scale-x': '1',
   '--shadow-scale-y': '1',
   '--shadow-opacity': '0.2',
-  '--focus-progress': '0',
+  '--item-focus-progress': '0',
 } satisfies PolaroidStyle;
 
 export function PolaroidRenderer() {
@@ -71,185 +71,156 @@ function PolaroidView({ entity }: { entity: Entity }) {
   const world = useWorld();
   const viewport = useTrait(world, Viewport);
   const isDragging = useHas(entity, Dragging);
-  const isFocusSpinning = useHas(entity, PolaroidFocusSpin);
-  const isOpen = useHas(entity, IsOpen);
-  const {
-    endPolaroidFocusSpin,
-    openPolaroid,
-    raiseDeskItem,
-    startPolaroidFocusSpin,
-    updatePolaroidFocusSpin,
-  } = useActions(actions);
+  const isFocusSpinning = useHas(entity, ItemFocusSpin);
+  const isFocused = useHas(entity, IsFocused);
+  const { endItemFocusSpin, focusItem, raiseDeskItem, startItemFocusSpin, updateItemFocusSpin } =
+    useActions(actions);
 
   const { enabled: isDebug } = useDebug();
 
-  const handleInit = useCallback(
-    (element: HTMLDivElement | null) => {
-      if (!element) return;
+  function handleInit(element: HTMLDivElement | null) {
+    if (!element) return;
 
-      entity.add(Ref(element));
+    entity.add(Ref(element));
 
-      return () => entity.remove(Ref);
-    },
-    [entity]
-  );
+    return () => entity.remove(Ref);
+  }
 
-  const handlePointerDown = useCallback(
-    (event: React.PointerEvent<HTMLDivElement>) => {
-      if (event.pointerType === 'mouse' && event.button !== 0) return;
+  function handlePointerDown(event: React.PointerEvent<HTMLDivElement>) {
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
 
-      if (entity.has(IsOpen)) {
-        startPolaroidFocusSpin(
-          entity,
-          event.pointerId,
-          event.clientX,
-          event.clientY,
-          event.timeStamp,
-          event.pointerType
-        );
-        event.currentTarget.setPointerCapture(event.pointerId);
-        return;
-      }
-
-      const position = entity.get(Position) ?? { x: 0, y: 0, z: 0 };
-      const deskPoint = screenPointToDeskMetersForWorld(world, event.clientX, event.clientY);
-      const offset = {
-        x: deskPoint.x - position.x,
-        y: deskPoint.y - position.y,
-      };
-      const rotation = entity.get(Rotation) ?? { x: 0, y: 0, z: 0 };
-
-      // Grabbing also interrupts a polaroid that is still closing from focus:
-      // dropping the focus spring and control hands it back to physics.
-      entity.remove(Dragging, IsDroppedFromDragging, IsResting, PolaroidFocusMotion, IsControlled);
-      entity.set(Velocity, { x: 0, y: 0, z: 0 });
-      entity.set(AngularVelocity, { x: 0, y: 0, z: 0 });
-      entity.add(
-        Pressed({
-          pointerId: event.pointerId,
-          origin: { x: event.clientX, y: event.clientY },
-          offset,
-          rotation: {
-            x: rotation.x,
-            y: rotation.y,
-            z: rotation.z,
-          },
-        })
+    if (entity.has(IsFocused)) {
+      startItemFocusSpin(
+        entity,
+        event.pointerId,
+        event.clientX,
+        event.clientY,
+        event.timeStamp,
+        event.pointerType
       );
-      entity.add(Selected);
       event.currentTarget.setPointerCapture(event.pointerId);
-    },
-    [entity, startPolaroidFocusSpin, world]
-  );
+      return;
+    }
 
-  const handlePointerMove = useCallback(
-    (event: React.PointerEvent<HTMLDivElement>) => {
-      if (entity.has(IsOpen)) {
-        updatePolaroidFocusSpin(
-          entity,
-          event.pointerId,
-          event.clientX,
-          event.clientY,
-          event.timeStamp
-        );
-        return;
-      }
+    const position = entity.get(Position) ?? { x: 0, y: 0, z: 0 };
+    const deskPoint = screenPointToDeskMetersForWorld(world, event.clientX, event.clientY);
+    const offset = {
+      x: deskPoint.x - position.x,
+      y: deskPoint.y - position.y,
+    };
+    const rotation = entity.get(Rotation) ?? { x: 0, y: 0, z: 0 };
 
-      const pressed = entity.get(Pressed);
+    // Grabbing also interrupts an item that is still closing from focus:
+    // dropping the focus spring and control hands it back to physics.
+    entity.remove(Dragging, IsDroppedFromDragging, IsResting, ItemFocusMotion, IsControlled);
+    entity.set(Velocity, { x: 0, y: 0, z: 0 });
+    entity.set(AngularVelocity, { x: 0, y: 0, z: 0 });
+    entity.add(
+      Pressed({
+        pointerId: event.pointerId,
+        origin: { x: event.clientX, y: event.clientY },
+        offset,
+        rotation: {
+          x: rotation.x,
+          y: rotation.y,
+          z: rotation.z,
+        },
+      })
+    );
+    entity.add(Selected);
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
 
-      if (!pressed || pressed.pointerId !== event.pointerId) return;
+  function handlePointerMove(event: React.PointerEvent<HTMLDivElement>) {
+    if (entity.has(IsFocused)) {
+      updateItemFocusSpin(entity, event.pointerId, event.clientX, event.clientY, event.timeStamp);
+      return;
+    }
 
-      const dx = event.clientX - pressed.origin.x;
-      const dy = event.clientY - pressed.origin.y;
-      const distance = Math.hypot(dx, dy);
+    const pressed = entity.get(Pressed);
 
-      if (distance < DRAG_THRESHOLD_PX) return;
+    if (!pressed || pressed.pointerId !== event.pointerId) return;
 
-      const position = entity.get(Position) ?? { x: 0, y: 0, z: 0 };
+    const dx = event.clientX - pressed.origin.x;
+    const dy = event.clientY - pressed.origin.y;
+    const distance = Math.hypot(dx, dy);
 
-      entity.set(Position, { x: position.x, y: position.y, z: 0 });
-      entity.set(Velocity, { x: 0, y: 0, z: 0 });
-      entity.set(AngularVelocity, { x: 0, y: 0, z: 0 });
-      entity.remove(Pressed, IsResting);
-      entity.remove(Selected);
-      raiseDeskItem(entity);
-      entity.add(IsControlled);
-      entity.add(
-        Dragging({
-          offset: pressed.offset,
-          rotation: pressed.rotation,
-          liftProgress: 0,
-        })
-      );
-    },
-    [entity, raiseDeskItem, updatePolaroidFocusSpin]
-  );
+    if (distance < DRAG_THRESHOLD_PX) return;
 
-  const handlePointerUp = useCallback(
-    (event: React.PointerEvent<HTMLDivElement>) => {
-      const pressed = entity.get(Pressed);
-      const dragging = entity.get(Dragging);
+    const position = entity.get(Position) ?? { x: 0, y: 0, z: 0 };
 
-      if (entity.has(IsOpen)) {
-        endPolaroidFocusSpin(entity, event.pointerId);
+    entity.set(Position, { x: position.x, y: position.y, z: 0 });
+    entity.set(Velocity, { x: 0, y: 0, z: 0 });
+    entity.set(AngularVelocity, { x: 0, y: 0, z: 0 });
+    entity.remove(Pressed, IsResting);
+    entity.remove(Selected);
+    raiseDeskItem(entity);
+    entity.add(IsControlled);
+    entity.add(
+      Dragging({
+        offset: pressed.offset,
+        rotation: pressed.rotation,
+        liftProgress: 0,
+      })
+    );
+  }
 
-        if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-          event.currentTarget.releasePointerCapture(event.pointerId);
-        }
-        return;
-      }
+  function handlePointerUp(event: React.PointerEvent<HTMLDivElement>) {
+    const pressed = entity.get(Pressed);
+    const dragging = entity.get(Dragging);
 
-      if (pressed && pressed.pointerId === event.pointerId) {
-        openPolaroid(entity);
-      }
-
-      if (dragging) {
-        entity.remove(Dragging, IsControlled);
-        entity.add(IsDroppedFromDragging);
-      }
+    if (entity.has(IsFocused)) {
+      endItemFocusSpin(entity, event.pointerId);
 
       if (event.currentTarget.hasPointerCapture(event.pointerId)) {
         event.currentTarget.releasePointerCapture(event.pointerId);
       }
-    },
-    [endPolaroidFocusSpin, entity, openPolaroid]
-  );
+      return;
+    }
 
-  const handlePointerCancel = useCallback(
-    (event: React.PointerEvent<HTMLDivElement>) => {
-      endPolaroidFocusSpin(entity, event.pointerId);
-      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-        event.currentTarget.releasePointerCapture(event.pointerId);
-      }
+    if (pressed && pressed.pointerId === event.pointerId) {
+      focusItem(entity);
+    }
 
-      entity.remove(Pressed);
-      entity.remove(Selected);
-      if (entity.has(Dragging)) {
-        entity.add(IsDroppedFromDragging);
-        entity.remove(Dragging, IsControlled);
-      }
-    },
-    [endPolaroidFocusSpin, entity]
-  );
+    if (dragging) {
+      entity.remove(Dragging, IsControlled);
+      entity.add(IsDroppedFromDragging);
+    }
 
-  const clearPointerState = useCallback(() => {
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  }
+
+  function handlePointerCancel(event: React.PointerEvent<HTMLDivElement>) {
+    endItemFocusSpin(entity, event.pointerId);
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+
     entity.remove(Pressed);
     entity.remove(Selected);
     if (entity.has(Dragging)) {
       entity.add(IsDroppedFromDragging);
       entity.remove(Dragging, IsControlled);
     }
-  }, [entity]);
+  }
 
-  const handleLostPointerCapture = useCallback(
-    (event: React.PointerEvent<HTMLDivElement>) => {
-      if (event.buttons === 0) {
-        endPolaroidFocusSpin(entity, event.pointerId);
-        clearPointerState();
-      }
-    },
-    [clearPointerState, endPolaroidFocusSpin, entity]
-  );
+  function clearPointerState() {
+    entity.remove(Pressed);
+    entity.remove(Selected);
+    if (entity.has(Dragging)) {
+      entity.add(IsDroppedFromDragging);
+      entity.remove(Dragging, IsControlled);
+    }
+  }
+
+  function handleLostPointerCapture(event: React.PointerEvent<HTMLDivElement>) {
+    if (event.buttons === 0) {
+      endItemFocusSpin(entity, event.pointerId);
+      clearPointerState();
+    }
+  }
 
   if (!polaroid) return null;
 
@@ -261,7 +232,7 @@ function PolaroidView({ entity }: { entity: Entity }) {
   // desired desk-plane shift.
   const shiftsForBody = hasBody && getPolaroidFocusBodyPlacement(viewport?.width ?? 0) === 'right';
   const focusShiftTransform = shiftsForBody
-    ? ` translateX(calc(var(--focus-progress) * ${-POLAROID_FOCUS_BODY_SHIFT_PX / POLAROID_FOCUSED_SCALE}px))`
+    ? ` translateX(calc(var(--item-focus-progress) * ${-POLAROID_FOCUS_BODY_SHIFT_PX / POLAROID_FOCUSED_SCALE}px))`
     : '';
 
   return (
@@ -287,10 +258,10 @@ function PolaroidView({ entity }: { entity: Entity }) {
         onLostPointerCapture={handleLostPointerCapture}
         onDragStart={(event) => event.preventDefault()}
         className={`absolute inset-0 touch-none rounded-[3px] select-none [-webkit-user-drag:none] ${
-          isOpen ? (isFocusSpinning ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-grab'
+          isFocused ? (isFocusSpinning ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-grab'
         } ${isDragging ? 'cursor-grabbing' : ''}`}
         style={{
-          transform: `translateZ(var(--paper-z)) rotateZ(var(--paper-rotate-z)) scale(var(--paper-lift-scale))${focusShiftTransform}`,
+          transform: `translateZ(var(--item-z)) rotateZ(var(--item-rotate-z)) scale(var(--item-lift-scale))${focusShiftTransform}`,
         }}
       >
         <div
@@ -303,7 +274,7 @@ function PolaroidView({ entity }: { entity: Entity }) {
           <div
             className="absolute inset-0 will-change-transform [transform-style:preserve-3d]"
             style={{
-              transform: 'rotateX(var(--paper-rotate-x)) rotateY(var(--paper-rotate-y))',
+              transform: 'rotateX(var(--item-rotate-x)) rotateY(var(--item-rotate-y))',
             }}
           >
             <div className="absolute inset-0 [transform:translateZ(0.5px)] overflow-visible rounded-[3px] bg-[#f8f6f0] p-3 shadow-inner [backface-visibility:hidden]">
@@ -419,7 +390,7 @@ function PolaroidShadow({ polaroidId }: { polaroidId: string }) {
           '--boil-phase': `${phaseOffset}s`,
           opacity: 'var(--shadow-opacity)',
           transform:
-            'translate(var(--shadow-offset-x), var(--shadow-offset-y)) rotate(var(--paper-rotate-z)) scale(var(--shadow-scale-x), var(--shadow-scale-y))',
+            'translate(var(--shadow-offset-x), var(--shadow-offset-y)) rotate(var(--item-rotate-z)) scale(var(--shadow-scale-x), var(--shadow-scale-y))',
         } as CSSProperties
       }
     >
@@ -435,7 +406,7 @@ function PolaroidShadow({ polaroidId }: { polaroidId: string }) {
         <div
           className="absolute inset-0"
           style={{
-            transform: 'rotateX(var(--paper-rotate-x)) rotateY(var(--paper-rotate-y))',
+            transform: 'rotateX(var(--item-rotate-x)) rotateY(var(--item-rotate-y))',
           }}
         >
           {Array.from({ length: SHADOW_BOIL_FRAME_COUNT }, (_, frameIndex) => (

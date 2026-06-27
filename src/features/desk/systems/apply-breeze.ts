@@ -2,7 +2,9 @@ import { Not, type World } from 'koota';
 import {
   AngularVelocity,
   IsControlled,
+  IsFocused,
   IsResting,
+  ItemFocusMotion,
   Paper,
   Position,
   Time,
@@ -31,7 +33,16 @@ export function applyBreeze(world: World) {
   const delta = Math.min(time.delta, MAX_BREEZE_TIMESTEP);
 
   world
-    .query(Position, Velocity, AngularVelocity, Paper, Not(IsControlled), Not(IsResting))
+    .query(
+      Position,
+      Velocity,
+      AngularVelocity,
+      Paper,
+      Not(IsControlled),
+      Not(IsFocused),
+      Not(IsResting),
+      Not(ItemFocusMotion)
+    )
     .updateEach(([position, velocity, angularVelocity], entity) => {
       const lift = clamp01(getHeightAbovePlaneM(position.z) / AIRBORNE_HEIGHT_M);
       const angularDamping = Math.pow(ANGULAR_DAMPING, delta * 60);

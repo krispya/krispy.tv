@@ -1,9 +1,8 @@
 import type { World } from 'koota';
 import {
   IsControlled,
-  IsOpen,
-  PolaroidFocusMotion,
-  PolaroidFocusSpin,
+  ItemFocusMotion,
+  ItemFocusSpin,
   Position,
   Rotation,
   Time,
@@ -27,14 +26,14 @@ const ROTATION_REST_EPSILON_DEG = 0.08;
 const ROTATION_VELOCITY_REST_EPSILON_DEG = 1.4;
 const PROGRESS_REST_EPSILON = 0.01;
 
-export function updatePolaroidFocus(world: World) {
+export function updateItemFocus(world: World) {
   const time = world.get(Time);
   if (!time) return;
 
   const delta = Math.min(time.delta, MAX_SPRING_DELTA);
 
   world
-    .query(Position, Rotation, PolaroidFocusMotion)
+    .query(Position, Rotation, ItemFocusMotion)
     .updateEach(([position, rotation, motion], entity) => {
       const positionStiffness =
         motion.phase === 'closing' ? CLOSE_POSITION_STIFFNESS : POSITION_STIFFNESS;
@@ -57,7 +56,7 @@ export function updatePolaroidFocus(world: World) {
         delta,
       });
 
-      const isSpinning = entity.has(PolaroidFocusSpin);
+      const isSpinning = entity.has(ItemFocusSpin);
       const rotationStiffness = isSpinning ? SPIN_ROTATION_STIFFNESS : ROTATION_STIFFNESS;
       const rotationDamping = isSpinning ? SPIN_ROTATION_DAMPING : ROTATION_DAMPING;
 
@@ -118,7 +117,7 @@ export function updatePolaroidFocus(world: World) {
       motion.rotationVelocity.z = 0;
 
       if (motion.phase === 'closing') {
-        entity.remove(PolaroidFocusMotion, IsOpen, IsControlled);
+        entity.remove(ItemFocusMotion, IsControlled);
       }
     });
 }

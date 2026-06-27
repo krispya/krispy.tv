@@ -9,7 +9,10 @@ import {
   Dragging,
   IsControlled,
   IsDroppedFromDragging,
+  IsFocused,
   IsResting,
+  ItemFocusMotion,
+  ItemFocusSpin,
   Position,
   Pressed,
   Ref,
@@ -47,11 +50,12 @@ const BOOK_INITIAL_STYLE = {
   '--item-perspective': `${ITEM_PERSPECTIVE_PX}px`,
   '--item-persp-x': '0px',
   '--item-persp-y': '0px',
-  '--book-z': '0px',
-  '--book-rotate-x': '0deg',
-  '--book-rotate-y': '0deg',
-  '--book-rotate-z': '0deg',
-  '--book-lift-scale': '1',
+  '--item-z': '0px',
+  '--item-rotate-x': '0deg',
+  '--item-rotate-y': '0deg',
+  '--item-rotate-z': '0deg',
+  '--item-lift-scale': '1',
+  '--item-focus-progress': '0',
   '--book-shadow-size': '0px',
   '--book-shadow-clip': 'none',
   '--book-shadow-lift': 'none',
@@ -85,7 +89,10 @@ function BookView({ entity }: { entity: Entity }) {
   const book = useTrait(entity, Book);
   const world = useWorld();
   const isDragging = useHas(entity, Dragging);
-  const { raiseDeskItem } = useActions(actions);
+  const isFocusSpinning = useHas(entity, ItemFocusSpin);
+  const isFocused = useHas(entity, IsFocused);
+  const { endItemFocusSpin, focusItem, raiseDeskItem, startItemFocusSpin, updateItemFocusSpin } =
+    useActions(actions);
 
   const { enabled: isDebug } = useDebug();
 
@@ -100,6 +107,19 @@ function BookView({ entity }: { entity: Entity }) {
   function handlePointerDown(event: PointerEvent<HTMLDivElement>) {
     if (event.pointerType === 'mouse' && event.button !== 0) return;
 
+    if (entity.has(IsFocused)) {
+      startItemFocusSpin(
+        entity,
+        event.pointerId,
+        event.clientX,
+        event.clientY,
+        event.timeStamp,
+        event.pointerType
+      );
+      event.currentTarget.setPointerCapture(event.pointerId);
+      return;
+    }
+
     const position = entity.get(Position) ?? { x: 0, y: 0, z: 0 };
     const deskPoint = screenPointToDeskMetersForWorld(world, event.clientX, event.clientY);
     const offset = {
@@ -108,7 +128,7 @@ function BookView({ entity }: { entity: Entity }) {
     };
     const rotation = entity.get(Rotation) ?? { x: 0, y: 0, z: 0 };
 
-    entity.remove(Dragging, IsDroppedFromDragging, IsResting);
+    entity.remove(Dragging, IsDroppedFromDragging, IsResting, ItemFocusMotion, IsControlled);
     entity.set(Velocity, { x: 0, y: 0, z: 0 });
     entity.set(AngularVelocity, { x: 0, y: 0, z: 0 });
     entity.add(
@@ -128,6 +148,11 @@ function BookView({ entity }: { entity: Entity }) {
   }
 
   function handlePointerMove(event: PointerEvent<HTMLDivElement>) {
+    if (entity.has(IsFocused)) {
+      updateItemFocusSpin(entity, event.pointerId, event.clientX, event.clientY, event.timeStamp);
+      return;
+    }
+
     const pressed = entity.get(Pressed);
 
     if (!pressed || pressed.pointerId !== event.pointerId) return;
@@ -160,9 +185,19 @@ function BookView({ entity }: { entity: Entity }) {
     const pressed = entity.get(Pressed);
     const dragging = entity.get(Dragging);
 
+    if (entity.has(IsFocused)) {
+      endItemFocusSpin(entity, event.pointerId);
+
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
+      return;
+    }
+
     if (pressed && pressed.pointerId === event.pointerId) {
       entity.remove(Pressed);
       entity.remove(Selected);
+      focusItem(entity);
     }
 
     if (dragging) {
@@ -175,7 +210,12 @@ function BookView({ entity }: { entity: Entity }) {
     }
   }
 
-  function handlePointerCancel() {
+  function handlePointerCancel(event: PointerEvent<HTMLDivElement>) {
+    endItemFocusSpin(entity, event.pointerId);
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+
     entity.remove(Pressed);
     entity.remove(Selected);
     if (entity.has(Dragging)) entity.add(IsDroppedFromDragging);
@@ -184,6 +224,7 @@ function BookView({ entity }: { entity: Entity }) {
 
   function handleLostPointerCapture(event: PointerEvent<HTMLDivElement>) {
     if (event.buttons === 0) {
+      endItemFocusSpin(entity, event.pointerId);
       entity.remove(Pressed);
       entity.remove(Selected);
       if (entity.has(Dragging)) entity.add(IsDroppedFromDragging);
@@ -241,11 +282,11 @@ function BookView({ entity }: { entity: Entity }) {
         onPointerCancel={handlePointerCancel}
         onLostPointerCapture={handleLostPointerCapture}
         className={`absolute inset-0 cursor-grab touch-none select-none ${
-          isDragging ? 'cursor-grabbing' : ''
-        }`}
+          isFocused && isFocusSpinning ? 'cursor-grabbing' : ''
+        } ${isDragging ? 'cursor-grabbing' : ''}`}
         style={{
           transform:
-            'translateZ(var(--book-z)) rotateZ(var(--book-rotate-z)) scale(var(--book-lift-scale))',
+            'translateZ(var(--item-z)) rotateZ(var(--item-rotate-z)) scale(var(--item-lift-scale))',
         }}
       >
         <div
@@ -258,7 +299,7 @@ function BookView({ entity }: { entity: Entity }) {
           <div
             className="absolute inset-0 will-change-transform [transform-style:preserve-3d]"
             style={{
-              transform: `rotateX(calc(var(--book-rotate-x) + ${BASE_BOOK_ROTATE_X}deg)) rotateY(calc(var(--book-rotate-y) - ${BASE_BOOK_ROTATE_Y}deg))`,
+              transform: `rotateX(calc(var(--item-rotate-x) + ${BASE_BOOK_ROTATE_X}deg)) rotateY(calc(var(--item-rotate-y) - ${BASE_BOOK_ROTATE_Y}deg))`,
             }}
           >
             {/* preserve-3d keeps the sticky note's lift/peel in the book's 3D
@@ -485,7 +526,7 @@ function BookShadow({ bookId }: { bookId: string }) {
       >
         <div
           className="absolute inset-0"
-          style={{ transform: 'rotateX(var(--book-rotate-x)) rotateY(var(--book-rotate-y))' }}
+          style={{ transform: 'rotateX(var(--item-rotate-x)) rotateY(var(--item-rotate-y))' }}
         >
           {Array.from({ length: SHADOW_BOIL_FRAME_COUNT }, (_, frameIndex) => (
             <div
