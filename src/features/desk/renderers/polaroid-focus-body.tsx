@@ -1,6 +1,6 @@
 import type { Entity } from 'koota';
 import { useQuery, useTrait, useWorld } from 'koota/react';
-import { createElement, Suspense, use, type ComponentType } from 'react';
+import { createElement, Suspense, use, useEffect, useState, type ComponentType } from 'react';
 import { getPolaroid } from '../../polaroid/index.js';
 import {
   getPolaroidFocusBodyPlacement,
@@ -91,20 +91,39 @@ function PolaroidFocusBodyPanel({ entity }: { entity: Entity }) {
         zIndex: BODY_Z_INDEX,
       }}
     >
-      <div
-        className={`font-focus line-clamp-4 text-xl leading-snug text-stone-100/90 [font-variation-settings:'CASL'_0.35,'CRSV'_1,'MONO'_0,'slnt'_0] [text-shadow:0_1px_2px_rgb(0_0_0/0.5)] ${
-          placement === 'below' ? 'text-center' : ''
-        }`}
-      >
-        <Suspense fallback={null}>
-          <PolaroidBodyContent slug={polaroid.id} />
-        </Suspense>
-      </div>
+      <PolaroidBodyText key={polaroid.id} placement={placement} slug={polaroid.id} />
     </div>
   );
 }
 
-const polaroidBodyPromises = new Map<string, Promise<unknown>>();
+function PolaroidBodyText({
+  placement,
+  slug,
+}: {
+  placement: ReturnType<typeof getPolaroidFocusBodyPlacement>;
+  slug: string;
+}) {
+  const [wasLoadedAtMount] = useState(() => isPolaroidBodyLoaded(slug));
+
+  return (
+    <div
+      className={`font-focus line-clamp-4 text-xl leading-snug text-stone-100/90 [font-variation-settings:'CASL'_0.35,'CRSV'_1,'MONO'_0,'slnt'_0] [text-shadow:0_1px_2px_rgb(0_0_0/0.5)] ${
+        placement === 'below' ? 'text-center' : ''
+      }`}
+    >
+      <Suspense fallback={null}>
+        <PolaroidBodyContent slug={slug} wasLoadedAtMount={wasLoadedAtMount} />
+      </Suspense>
+    </div>
+  );
+}
+
+const polaroidBodyPromises = new Map<string, Promise<ComponentType>>();
+const loadedPolaroidBodies = new Set<string>();
+
+function isPolaroidBodyLoaded(slug: string) {
+  return loadedPolaroidBodies.has(slug);
+}
 
 function loadPolaroidBodyComponent(slug: string) {
   const cachedPromise = polaroidBodyPromises.get(slug);
@@ -113,17 +132,49 @@ function loadPolaroidBodyComponent(slug: string) {
   const polaroid = getPolaroid(slug);
   if (!polaroid) return null;
 
-  const promise = polaroid.loadComponent();
+  const promise = polaroid.loadComponent().then((component) => {
+    loadedPolaroidBodies.add(slug);
+    return component as ComponentType;
+  });
   polaroidBodyPromises.set(slug, promise);
 
   return promise;
 }
 
-function PolaroidBodyContent({ slug }: { slug: string }) {
+function PolaroidBodyContent({
+  slug,
+  wasLoadedAtMount,
+}: {
+  slug: string;
+  wasLoadedAtMount: boolean;
+}) {
   const promise = loadPolaroidBodyComponent(slug);
   if (!promise) return null;
 
-  const Component = use(promise) as ComponentType;
+  const Component = use(promise);
 
-  return createElement(Component);
+  return <LoadedPolaroidBodyContent component={Component} wasLoadedAtMount={wasLoadedAtMount} />;
+}
+
+function LoadedPolaroidBodyContent({
+  component: Component,
+  wasLoadedAtMount,
+}: {
+  component: ComponentType;
+  wasLoadedAtMount: boolean;
+}) {
+  const [isVisible, setIsVisible] = useState(wasLoadedAtMount);
+
+  useEffect(() => {
+    if (isVisible) return;
+
+    const animationFrame = requestAnimationFrame(() => setIsVisible(true));
+    return () => cancelAnimationFrame(animationFrame);
+  }, [isVisible]);
+
+  return (
+    <div className="transition-opacity duration-300 ease-out" style={{ opacity: isVisible ? 1 : 0 }}>
+      {createElement(Component)}
+    </div>
+  );
 }
