@@ -1,6 +1,7 @@
 import type { Entity } from 'koota';
 import { useActions, useHas, useQuery, useTrait, useWorld } from 'koota/react';
 import { useCallback, type CSSProperties } from 'react';
+import { color } from '../../../color.js';
 import { getPolaroid } from '../../polaroid/index.js';
 import { BoundingBoxDebug, useDebug } from '../../debug/index.js';
 import { actions } from '../actions.js';
@@ -40,6 +41,7 @@ import { PolaroidLinesOverlay } from './polaroid-lines-overlay.js';
 
 const DRAG_THRESHOLD_PX = 5;
 const FRAME_PADDING_PX = 12;
+const POLAROID_CAPTION_IMAGE_COLOR = color.line.ink;
 type PolaroidStyle = CSSProperties & Record<`--${string}`, string>;
 
 const POLAROID_INITIAL_STYLE = {
@@ -306,9 +308,11 @@ function PolaroidView({ entity }: { entity: Entity }) {
           >
             <div className="absolute inset-0 [transform:translateZ(0.5px)] overflow-visible rounded-[3px] bg-[#f8f6f0] p-3 shadow-inner [backface-visibility:hidden]">
               <PolaroidPhoto id={polaroid.id} imageSrc={polaroid.imageSrc} imageSize={imageSize} />
-              {polaroid.caption ? (
-                <p className="mt-2 text-center text-sm text-stone-700">{polaroid.caption}</p>
-              ) : null}
+              <PolaroidCaption
+                caption={polaroid.caption}
+                imageAlt={polaroid.captionImageAlt}
+                imageSrc={polaroid.captionImageSrc}
+              />
               <PolaroidLinesOverlay
                 polaroidId={polaroid.id}
                 kind="outer"
@@ -332,6 +336,48 @@ function PolaroidView({ entity }: { entity: Entity }) {
       </div>
     </div>
   );
+}
+
+function PolaroidCaption({
+  caption,
+  imageAlt,
+  imageSrc,
+}: {
+  caption: string;
+  imageAlt: string;
+  imageSrc: string;
+}) {
+  if (imageSrc) {
+    return (
+      <span className="relative mx-auto mt-1.5 block w-fit max-w-[78%]">
+        <img
+          src={imageSrc}
+          alt={imageAlt}
+          draggable={false}
+          className="block h-8 max-w-full object-contain opacity-0"
+        />
+        <span
+          aria-hidden="true"
+          className="absolute inset-0"
+          style={{
+            backgroundColor: POLAROID_CAPTION_IMAGE_COLOR,
+            WebkitMaskImage: `url(${imageSrc})`,
+            maskImage: `url(${imageSrc})`,
+            WebkitMaskSize: 'contain',
+            maskSize: 'contain',
+            WebkitMaskPosition: 'center',
+            maskPosition: 'center',
+            WebkitMaskRepeat: 'no-repeat',
+            maskRepeat: 'no-repeat',
+          }}
+        />
+      </span>
+    );
+  }
+
+  if (!caption) return null;
+
+  return <p className="mt-2 text-center text-sm text-stone-700">{caption}</p>;
 }
 
 function PolaroidPhoto({

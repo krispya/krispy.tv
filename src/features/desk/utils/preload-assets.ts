@@ -5,6 +5,10 @@ import { decodeImage } from './warmup.js';
 
 let cache: Promise<void> | undefined;
 
+function isImageSrc(src: string | undefined): src is string {
+  return Boolean(src);
+}
+
 /**
  * Fetches and decodes every desk image. Module-level promise cache so React's
  * `use()` receives a stable promise identity across renders, and repeat desk
@@ -19,9 +23,12 @@ export function preloadDeskAssets(): Promise<void> {
     [
       ...books.map((book) => book.coverImageSrc),
       ...polaroids.map((polaroid) => polaroid.imageSrc),
+      ...polaroids.map((polaroid) =>
+        polaroid.caption?.kind === 'image' ? polaroid.caption.imageSrc : undefined
+      ),
       ...stickyNoteLineImages,
     ]
-      .filter(Boolean)
+      .filter(isImageSrc)
       .map(decodeImage)
   ).then(() => undefined);
 

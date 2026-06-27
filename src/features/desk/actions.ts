@@ -166,6 +166,8 @@ export type PolaroidConfig = {
   id: string;
   imageSrc: string;
   caption?: string;
+  captionImageSrc?: string;
+  captionImageAlt?: string;
   width?: number;
   height?: number;
   aspectRatio?: number;
@@ -487,6 +489,8 @@ export const actions = createActions((world) => ({
         id: config.id,
         imageSrc: config.imageSrc,
         ...(config.caption !== undefined && { caption: config.caption }),
+        ...(config.captionImageSrc !== undefined && { captionImageSrc: config.captionImageSrc }),
+        ...(config.captionImageAlt !== undefined && { captionImageAlt: config.captionImageAlt }),
         ...(config.width !== undefined && { width: config.width }),
         ...(config.height !== undefined && { height: config.height }),
         ...(config.aspectRatio !== undefined && { aspectRatio: config.aspectRatio }),

@@ -99,6 +99,8 @@ export const Polaroid = trait({
   id: '',
   imageSrc: '',
   caption: '',
+  captionImageSrc: '',
+  captionImageAlt: '',
   /** Pixels. */
   width: 200,
   /** Pixels. */

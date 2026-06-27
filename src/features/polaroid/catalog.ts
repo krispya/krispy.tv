@@ -1,4 +1,4 @@
-import type { Polaroid, PolaroidFrontmatter } from './types.js';
+import type { Polaroid, PolaroidCaption, PolaroidFrontmatter } from './types.js';
 
 const polaroidFrontmatterModules = import.meta.glob<PolaroidFrontmatter>('@content/polaroids/*.mdx', {
   eager: true,
@@ -23,9 +23,40 @@ function slugFromPath(path: string) {
   return filename.replace(/\.mdx$/, '');
 }
 
+function isRemoteOrDataUrl(path: string) {
+  return /^(?:[a-z][a-z\d+\-.]*:)?\/\//i.test(path) || /^(?:data|blob):/i.test(path);
+}
+
 function toImageSrc(image: string) {
+  if (isRemoteOrDataUrl(image)) return image;
+
   const path = image.startsWith('/') ? image.slice(1) : image;
   return `${import.meta.env.BASE_URL}${path}`;
+}
+
+function isImageCaptionUrl(caption: string) {
+  return (
+    isRemoteOrDataUrl(caption) ||
+    /(?:^data:image\/|(?:\.avif|\.gif|\.jpe?g|\.png|\.svg|\.webp)(?:[?#].*)?$)/i.test(caption)
+  );
+}
+
+function toCaption(caption: PolaroidFrontmatter['caption']): PolaroidCaption | undefined {
+  if (!caption) return undefined;
+
+  if (typeof caption === 'string') {
+    return isImageCaptionUrl(caption)
+      ? { kind: 'image', imageSrc: toImageSrc(caption), alt: '' }
+      : { kind: 'text', text: caption };
+  }
+
+  if (caption.image) {
+    return { kind: 'image', imageSrc: toImageSrc(caption.image), alt: caption.alt ?? '' };
+  }
+
+  if (caption.text) return { kind: 'text', text: caption.text };
+
+  return undefined;
 }
 
 export const polaroids: Polaroid[] = Object.entries(polaroidFrontmatterModules)
@@ -33,7 +64,7 @@ export const polaroids: Polaroid[] = Object.entries(polaroidFrontmatterModules)
     slug: slugFromPath(path),
     image: frontmatter.image,
     imageSrc: toImageSrc(frontmatter.image),
-    caption: frontmatter.caption ?? '',
+    caption: toCaption(frontmatter.caption),
     order: frontmatter.order ?? 0,
     hasBody: frontmatter.hasBody ?? false,
     loadComponent: () => loadPolaroidModule(path),

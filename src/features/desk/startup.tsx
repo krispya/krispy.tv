@@ -28,6 +28,16 @@ const POLAROID_THROW_TARGETS: Partial<Record<string, DeskThrowTarget>> = {
   me: 'top-right',
 };
 
+function getPolaroidCaptionConfig(caption: (typeof polaroidsCatalog)[number]['caption']) {
+  if (!caption) return {};
+
+  if (caption.kind === 'image') {
+    return { captionImageSrc: caption.imageSrc, captionImageAlt: caption.alt };
+  }
+
+  return { caption: caption.text };
+}
+
 export function Startup() {
   const world = useWorld();
   const {
@@ -95,7 +105,7 @@ export function Startup() {
       const entity = spawnPolaroid({
         id: polaroid.slug,
         imageSrc: polaroid.imageSrc,
-        caption: polaroid.caption,
+        ...getPolaroidCaptionConfig(polaroid.caption),
       });
 
       pendingThrows.push({ entity, target: POLAROID_THROW_TARGETS[polaroid.slug] });
