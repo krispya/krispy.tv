@@ -272,7 +272,7 @@ function PaperView({ entity }: { entity: Entity }) {
                 }),
               }}
             />
-            <PaperLinesOverlay paperId={paper.id} paused={isDragging} />
+            <PaperLinesOverlay paperId={paper.id} lineColor={paper.lineColor} paused={isDragging} />
           </div>
         </div>
       </div>

@@ -38,7 +38,7 @@ export function StandardArticle({
           </span>
         </div>
       </header>
-      <div className="prose prose-lg prose-gray prose-p:first-of-type:first-letter:float-left prose-p:first-of-type:first-letter:mr-3 prose-p:first-of-type:first-letter:text-7xl prose-p:first-of-type:first-letter:mt-[-0.05em] prose-p:first-of-type:first-letter:font-black prose-headings:font-serif prose-headings:font-black prose-headings:uppercase mt-10 max-w-none font-sans leading-relaxed tracking-wide">
+      <div className="prose prose-lg prose-gray prose-p:first-of-type:first-letter:float-left prose-p:first-of-type:first-letter:mr-3 prose-p:first-of-type:first-letter:text-7xl prose-p:first-of-type:first-letter:mt-[-0.05em] prose-p:first-of-type:first-letter:font-black prose-p:whitespace-pre-line prose-headings:font-serif prose-headings:font-black prose-headings:uppercase mt-10 max-w-none font-sans leading-relaxed tracking-wide">
         {children}
       </div>
     </article>

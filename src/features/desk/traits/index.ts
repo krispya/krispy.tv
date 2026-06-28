@@ -41,6 +41,7 @@ export const Paper = trait({
   id: '',
   openable: true,
   color: color.surface.paper,
+  lineColor: color.line.ink,
   /** Pixels. */
   width: inchesToDeskPixels(US_LETTER_INCHES.width),
   /** Pixels. */

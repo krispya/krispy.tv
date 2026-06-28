@@ -11,10 +11,12 @@ import {
 
 export function PaperLinesOverlay({
   paperId,
+  lineColor,
   animate = true,
   paused = false,
 }: {
   paperId: string;
+  lineColor?: string;
   /** Cycle line art variants for a boil effect (CSS-driven). */
   animate?: boolean;
   /** Freeze the boil on the current frame (e.g. while dragging). */
@@ -37,7 +39,7 @@ export function PaperLinesOverlay({
           <div
             key={frameIndex}
             className={`paper-lines-boil-frame paper-lines-boil-frame--${frameIndex} absolute`}
-            style={getPaperLinesFrameStyle(src, PAPER_LINES_LAYOUT)}
+            style={getPaperLinesFrameStyle(src, PAPER_LINES_LAYOUT, lineColor)}
           />
         );
       })}

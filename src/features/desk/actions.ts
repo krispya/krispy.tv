@@ -110,6 +110,7 @@ export type PaperConfig = {
   id: string;
   openable?: boolean;
   color?: string;
+  lineColor?: string;
   width?: number;
   height?: number;
   aspectRatio?: number;
@@ -359,6 +360,7 @@ export const actions = createActions((world) => ({
         color:
           config.color ??
           (config.openable === false ? color.surface.paper : color.surface.articlePaper),
+        ...(config.lineColor !== undefined && { lineColor: config.lineColor }),
         ...(config.width !== undefined && { width: config.width }),
         ...(config.height !== undefined && { height: config.height }),
         ...(config.aspectRatio !== undefined && { aspectRatio: config.aspectRatio }),

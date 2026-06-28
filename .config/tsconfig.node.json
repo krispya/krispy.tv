@@ -15,5 +15,11 @@
     "noEmit": true,
     "jsx": "react-jsx"
   },
-  "include": ["../*.config.ts", "./*.ts", "../scripts"]
+  "include": [
+    "../*.config.ts",
+    "./*.ts",
+    "../scripts",
+    "../src/features/article/styles/*-takumi.tsx",
+    "../src/features/article/utils/format-article-date.ts"
+  ]
 }

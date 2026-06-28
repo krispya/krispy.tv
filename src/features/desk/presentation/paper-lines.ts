@@ -19,7 +19,7 @@ export const PAPER_LINES_LAYOUT = {
   scaleY: 1.065,
   offsetX: 0,
   offsetY: -1,
-  opacity: 0.5,
+  opacity: 1,
 } satisfies PaperLinesLayout;
 
 export const US_LETTER_LINE_COUNT = 3;
@@ -57,7 +57,8 @@ export function getPaperLinesTransform(layout: PaperLinesLayout = PAPER_LINES_LA
 
 export function getPaperLinesFrameStyle(
   src: string,
-  layout: PaperLinesLayout = PAPER_LINES_LAYOUT
+  layout: PaperLinesLayout = PAPER_LINES_LAYOUT,
+  lineColor: string = PAPER_LINES_COLOR
 ): CSSProperties {
   return {
     left: '50%',
@@ -67,7 +68,7 @@ export function getPaperLinesFrameStyle(
     transform: getPaperLinesTransform(layout),
     transformOrigin: 'center center',
     opacity: layout.opacity,
-    backgroundColor: PAPER_LINES_COLOR,
+    backgroundColor: lineColor,
     WebkitMaskImage: `url(${src})`,
     maskImage: `url(${src})`,
     WebkitMaskSize: '100% 100%',

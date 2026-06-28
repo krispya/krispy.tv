@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useRef } from 'react';
 import { articles as articlesCatalog } from '../article/index.js';
 import { books as booksCatalog } from '../book/index.js';
 import { polaroids as polaroidsCatalog } from '../polaroid/index.js';
+import { color } from '../../color.js';
 import { actions, type DeskThrowTarget } from './actions.js';
 import { loadingControl } from '../loading/index.js';
 import { Scene } from './traits/index.js';
@@ -65,18 +66,20 @@ export function Startup() {
     const articles = articlesCatalog.map((article) => ({
       id: article.slug,
       openable: true,
+      lineColor: article.style === 'typewriter' ? color.line.typewriter : color.line.ink,
     }));
 
     const blanks = Array.from({ length: 3 }, (_, i) => ({
       id: `blank-page-${i + 1}`,
       openable: false,
+      lineColor: color.line.blankPaper,
     }));
 
-    const items: { id: string; openable: boolean }[] = [...blanks, articles[0]];
+    const items: { id: string; openable: boolean; lineColor?: string }[] = [...blanks, articles[0]];
 
-    items.forEach(({ id, openable }, index) => {
+    items.forEach(({ id, openable, lineColor }, index) => {
       const centered = index === 0;
-      const paper = spawnPaper({ id, openable, centered });
+      const paper = spawnPaper({ id, openable, centered, lineColor });
 
       // Scatter pages across the whole desk so they don't bunch up on entry.
       pendingThrows.push({ entity: paper, centered, target: 'spread' });

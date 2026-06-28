@@ -11,7 +11,7 @@ export const palette = {
   promenade: '#F7F6E1',
   folio: '#FFFDF7',
   igniting: '#F5D798',
-  meat: '#EE7F80',
+  coral: '#EE7F80',
   hazel: '#A36943',
   rootBeer: '#7F524D',
   catnip: '#88B094',
@@ -20,7 +20,7 @@ export const palette = {
 
 type ColorTokens = {
   surface: { desk: string; paper: string; articlePaper: string; paperEdge: string };
-  line: { ink: string; inkSoft: string };
+  line: { ink: string; inkSoft: string; typewriter: string; blankPaper: string };
   accent: { gold: string; coral: string; sage: string; sky: string; wood: string };
   image: { blackConform: string };
 };
@@ -38,10 +38,12 @@ export const color: ColorTokens = {
   line: {
     ink: shade(palette.rootBeer, -25),
     inkSoft: palette.rootBeer,
+    typewriter: shade(palette.igniting, 0),
+    blankPaper: shade(palette.rootBeer, 25),
   },
   accent: {
     gold: palette.igniting,
-    coral: palette.meat,
+    coral: palette.coral,
     sage: palette.catnip,
     sky: palette.overTheSky,
     wood: palette.hazel,
