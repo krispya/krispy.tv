@@ -277,16 +277,7 @@ function BookView({ entity }: { entity: Entity }) {
       {isDebug && <BoundingBoxDebug entity={entity} />}
       <BookShadow bookId={book.id} />
       <div
-        aria-label={accessibleTitle}
-        role="img"
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerCancel}
-        onLostPointerCapture={handleLostPointerCapture}
-        className={`absolute inset-0 cursor-grab touch-none select-none ${
-          isFocused && isFocusSpinning ? 'cursor-grabbing' : ''
-        } ${isDragging ? 'cursor-grabbing' : ''}`}
+        className="absolute inset-0"
         style={{
           transform:
             'translateZ(var(--item-z)) rotateZ(var(--item-rotate-z)) scale(var(--item-lift-scale))',
@@ -300,7 +291,16 @@ function BookView({ entity }: { entity: Entity }) {
           }}
         >
           <div
-            className="absolute inset-0 will-change-transform [transform-style:preserve-3d]"
+            aria-label={accessibleTitle}
+            role="img"
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerCancel={handlePointerCancel}
+            onLostPointerCapture={handleLostPointerCapture}
+            className={`pointer-events-auto absolute inset-0 cursor-grab touch-none will-change-transform select-none [transform-style:preserve-3d] ${
+              isFocused && isFocusSpinning ? 'cursor-grabbing' : ''
+            } ${isDragging ? 'cursor-grabbing' : ''}`}
             style={{
               transform: `rotateX(calc(var(--item-rotate-x) + ${BASE_BOOK_ROTATE_X}deg)) rotateY(calc(var(--item-rotate-y) - ${BASE_BOOK_ROTATE_Y}deg))`,
             }}

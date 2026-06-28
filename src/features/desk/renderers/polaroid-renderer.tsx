@@ -250,16 +250,7 @@ function PolaroidView({ entity }: { entity: Entity }) {
       {isDebug && <BoundingBoxDebug entity={entity} />}
       <PolaroidShadow polaroidId={polaroid.id} />
       <div
-        aria-label="Photo"
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerCancel}
-        onLostPointerCapture={handleLostPointerCapture}
-        onDragStart={(event) => event.preventDefault()}
-        className={`absolute inset-0 touch-none rounded-[3px] select-none [-webkit-user-drag:none] ${
-          isFocused ? (isFocusSpinning ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-grab'
-        } ${isDragging ? 'cursor-grabbing' : ''}`}
+        className="absolute inset-0"
         style={{
           transform: `translateZ(var(--item-z)) rotateZ(var(--item-rotate-z)) scale(var(--item-lift-scale))${focusShiftTransform}`,
         }}
@@ -272,7 +263,16 @@ function PolaroidView({ entity }: { entity: Entity }) {
           }}
         >
           <div
-            className="absolute inset-0 will-change-transform [transform-style:preserve-3d]"
+            aria-label="Photo"
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerCancel={handlePointerCancel}
+            onLostPointerCapture={handleLostPointerCapture}
+            onDragStart={(event) => event.preventDefault()}
+            className={`pointer-events-auto absolute inset-0 touch-none rounded-[3px] will-change-transform select-none [-webkit-user-drag:none] [transform-style:preserve-3d] ${
+              isFocused ? (isFocusSpinning ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-grab'
+            } ${isDragging ? 'cursor-grabbing' : ''}`}
             style={{
               transform: 'rotateX(var(--item-rotate-x)) rotateY(var(--item-rotate-y))',
             }}
