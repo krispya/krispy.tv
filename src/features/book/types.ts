@@ -10,10 +10,16 @@ export type BookStickyNote = {
   rotation?: number;
 };
 
+export type BookCoverImages = {
+  front: string;
+  back?: string;
+  spine?: string;
+};
+
 export type BookContent = {
   title: string;
   author: string;
-  coverImage: string;
+  coverImages: BookCoverImages;
   color?: string;
   pageCount: number;
   dimensions: BookDimensions;
@@ -24,4 +30,6 @@ export type BookContent = {
 export type Book = BookContent & {
   slug: string;
   coverImageSrc: string;
+  backCoverImageSrc?: string;
+  spineImageSrc?: string;
 };

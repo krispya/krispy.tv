@@ -258,6 +258,9 @@ function BookView({ entity }: { entity: Entity }) {
     .join(', ');
   const spineColor = shade(book.color, -28);
   const showBookEdgeLines = depth >= BOOK_EDGE_LINES_MIN_DEPTH_PX;
+  const frontCoverImageStyle = getCoverImageStyle(book.coverImage);
+  const backCoverImageStyle = getCoverImageStyle(book.backCoverImage);
+  const spineImageStyle = getCoverImageStyle(book.spineImage);
 
   return (
     <div
@@ -313,12 +316,7 @@ function BookView({ entity }: { entity: Entity }) {
               className="rounded-[6px] [transform-style:preserve-3d]"
               style={{
                 backgroundColor: book.color,
-                ...(book.coverImage && {
-                  backgroundImage: `${COVER_SHADOW_CONFORM}, url(${book.coverImage})`,
-                  backgroundBlendMode: 'lighten, normal',
-                  backgroundSize: 'cover, cover',
-                  backgroundPosition: 'center, center',
-                }),
+                ...frontCoverImageStyle,
                 transform: `translateZ(${halfDepth}px)`,
               }}
             >
@@ -342,6 +340,7 @@ function BookView({ entity }: { entity: Entity }) {
               className="rounded-[6px]"
               style={{
                 backgroundColor: shade(book.color, -18),
+                ...backCoverImageStyle,
                 transform: `rotateY(180deg) translateZ(${halfDepth}px)`,
               }}
             />
@@ -354,8 +353,12 @@ function BookView({ entity }: { entity: Entity }) {
               style={{
                 left: faceCenterX,
                 backgroundColor: spineColor,
-                backgroundImage:
-                  'linear-gradient(to right, rgba(0,0,0,0.28), rgba(255,255,255,0.08))',
+                backgroundImage: spineImageStyle.backgroundImage
+                  ? spineImageStyle.backgroundImage
+                  : 'linear-gradient(to right, rgba(0,0,0,0.28), rgba(255,255,255,0.08))',
+                backgroundBlendMode: spineImageStyle.backgroundBlendMode,
+                backgroundSize: spineImageStyle.backgroundSize,
+                backgroundPosition: spineImageStyle.backgroundPosition,
                 transform: `rotateY(-90deg) translateZ(${halfWidth}px)`,
               }}
             />
@@ -405,6 +408,17 @@ function BookView({ entity }: { entity: Entity }) {
 function getVisualBookDepth(width: number, height: number, physicalDepth: number) {
   const maxVisualDepth = Math.min(width, height) * BOOK_VISUAL_DEPTH_MAX_SHORT_SIDE_RATIO;
   return Math.max(physicalDepth, Math.min(physicalDepth * BOOK_VISUAL_DEPTH_SCALE, maxVisualDepth));
+}
+
+function getCoverImageStyle(image: string): CSSProperties {
+  if (!image) return {};
+
+  return {
+    backgroundImage: `${COVER_SHADOW_CONFORM}, url(${image})`,
+    backgroundBlendMode: 'lighten, normal',
+    backgroundSize: 'cover, cover',
+    backgroundPosition: 'center, center',
+  };
 }
 
 function StickyNote({ note, bookId }: { note: StickyNoteData; bookId: string }) {

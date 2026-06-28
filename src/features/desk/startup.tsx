@@ -89,6 +89,8 @@ export function Startup() {
         author: contentBook.author,
         color: contentBook.color,
         coverImage: contentBook.coverImageSrc,
+        backCoverImage: contentBook.backCoverImageSrc,
+        spineImage: contentBook.spineImageSrc,
         width: inchesToDeskPixels(contentBook.dimensions.width),
         height: inchesToDeskPixels(contentBook.dimensions.height),
         pageCount: contentBook.pageCount,

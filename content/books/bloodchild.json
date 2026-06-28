@@ -1,7 +1,11 @@
 {
   "title": "Bloodchild and Other Stories",
   "author": "Octavia Butler",
-  "coverImage": "images/books/blood-child-cover.webp",
+  "coverImages": {
+    "front": "images/books/blood-child-cover-front.webp",
+    "back": "images/books/blood-child-cover-back.webp",
+    "spine": "images/books/blood-child-spine.webp"
+  },
   "color": "#e4110b",
   "pageCount": 145,
   "dimensions": {

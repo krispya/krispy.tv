@@ -64,6 +64,8 @@ export const Book = trait({
   author: '',
   color: color.accent.sage,
   coverImage: '',
+  backCoverImage: '',
+  spineImage: '',
   /** Pixels. */
   width: 260,
   /** Pixels. */

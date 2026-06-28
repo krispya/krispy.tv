@@ -21,7 +21,9 @@ export const books: Book[] = Object.entries(bookModules)
   .map(([path, book]) => ({
     ...book,
     slug: slugFromPath(path),
-    coverImageSrc: toImageSrc(book.coverImage),
+    coverImageSrc: toImageSrc(book.coverImages.front),
+    ...(book.coverImages.back && { backCoverImageSrc: toImageSrc(book.coverImages.back) }),
+    ...(book.coverImages.spine && { spineImageSrc: toImageSrc(book.coverImages.spine) }),
   }))
   .sort(
     (first, second) =>

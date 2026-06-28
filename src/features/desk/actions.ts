@@ -124,6 +124,8 @@ export type BookConfig = {
   author?: string;
   color?: string;
   coverImage?: string;
+  backCoverImage?: string;
+  spineImage?: string;
   width?: number;
   height?: number;
   aspectRatio?: number;
@@ -394,6 +396,8 @@ export const actions = createActions((world) => ({
         ...(config.author !== undefined && { author: config.author }),
         ...(config.color !== undefined && { color: config.color }),
         ...(config.coverImage !== undefined && { coverImage: config.coverImage }),
+        ...(config.backCoverImage !== undefined && { backCoverImage: config.backCoverImage }),
+        ...(config.spineImage !== undefined && { spineImage: config.spineImage }),
         ...(config.width !== undefined && { width: config.width }),
         ...(config.height !== undefined && { height: config.height }),
         ...(config.pageCount !== undefined && { pageCount: config.pageCount }),
