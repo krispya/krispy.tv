@@ -7,6 +7,7 @@ declare module '*.mdx' {
     title: string;
     date: string;
     summary: string;
+    style?: 'standard' | 'typewriter';
   };
 
   const MDXComponent: ComponentType;

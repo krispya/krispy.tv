@@ -1,7 +1,10 @@
+export type ArticleStyle = 'standard' | 'typewriter';
+
 export type ArticleFrontmatter = {
   title: string;
   date: string;
   summary: string;
+  style?: ArticleStyle;
   tags: string[];
 };
 

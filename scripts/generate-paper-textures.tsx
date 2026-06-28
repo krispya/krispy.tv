@@ -32,20 +32,25 @@ const FIRA_CODE_FONT =
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, '..');
+const TYPE_MACHINE_FONT = path.join(ROOT, 'public/fonts/type-machine/Type-Machine.ttf');
 
 // US Letter at 96dpi
 const PAPER_W = 816;
 const PAPER_H = 1056;
 const PADDING = 48;
 const PAPER_BACKGROUND = '#fffdf7';
+const TYPEWRITER_FONT_FAMILY = 'Type Machine';
 
 const PRIMARY_700 = 'oklch(0.525_0.223_3.958)';
 const PRIMARY_200 = 'oklch(0.899_0.061_343.231)';
+
+type ArticleStyle = 'standard' | 'typewriter';
 
 type Frontmatter = {
   title: string;
   date: string;
   summary: string;
+  style?: ArticleStyle;
   tags?: string[];
 };
 
@@ -131,7 +136,12 @@ async function loadImage(filePath: string): Promise<ImageInfo> {
 type RenderCtx = {
   imageInfos: Map<string, ImageInfo>;
   contentWidth: number;
+  articleStyle: ArticleStyle;
 };
+
+function getArticleStyle(frontmatter: Frontmatter): ArticleStyle {
+  return frontmatter.style === 'typewriter' ? 'typewriter' : 'standard';
+}
 
 function renderInline(
   nodes: (Text | Strong | InlineCode | Link | Image | RootContent)[],
@@ -176,13 +186,21 @@ function renderBlock(node: RootContent, ctx: RenderCtx, key: string): React.Reac
   if (node.type === 'heading') {
     const h = node as Heading;
     const tw =
-      h.depth === 1
-        ? 'mt-8 mb-3 text-3xl font-bold font-serif text-gray-950 uppercase leading-tight'
-        : h.depth === 2
-          ? 'mt-6 mb-2 text-2xl font-bold font-serif text-gray-950 uppercase leading-tight'
-          : 'mt-4 mb-1 text-xl font-bold font-serif text-gray-950 uppercase';
+      ctx.articleStyle === 'typewriter'
+        ? h.depth === 1
+          ? 'mt-8 mb-3 text-2xl font-semibold text-gray-950 leading-snug'
+          : h.depth === 2
+            ? 'mt-6 mb-2 text-xl font-semibold text-gray-950 leading-snug'
+            : 'mt-4 mb-1 text-lg font-semibold text-gray-950'
+        : h.depth === 1
+          ? 'mt-8 mb-3 text-3xl font-bold font-serif text-gray-950 uppercase leading-tight'
+          : h.depth === 2
+            ? 'mt-6 mb-2 text-2xl font-bold font-serif text-gray-950 uppercase leading-tight'
+            : 'mt-4 mb-1 text-xl font-bold font-serif text-gray-950 uppercase';
+    const fontFamily =
+      ctx.articleStyle === 'typewriter' ? TYPEWRITER_FONT_FAMILY : 'Playfair Display Variable';
     return (
-      <div key={key} tw={tw} style={{ fontFamily: 'Playfair Display Variable' }}>
+      <div key={key} tw={tw} style={{ fontFamily }}>
         {renderInline(h.children as never[], key)}
       </div>
     );
@@ -211,8 +229,14 @@ function renderBlock(node: RootContent, ctx: RenderCtx, key: string): React.Reac
     return (
       <div
         key={key}
-        tw="mb-5 text-lg text-gray-800 leading-relaxed"
-        style={{ fontFamily: 'Inter Variable' }}
+        tw={
+          ctx.articleStyle === 'typewriter'
+            ? 'mb-5 text-base text-gray-800 leading-relaxed'
+            : 'mb-5 text-lg text-gray-800 leading-relaxed'
+        }
+        style={{
+          fontFamily: ctx.articleStyle === 'typewriter' ? TYPEWRITER_FONT_FAMILY : 'Inter Variable',
+        }}
       >
         {renderInline(p as never[], key)}
       </div>
@@ -228,9 +252,22 @@ function renderBlock(node: RootContent, ctx: RenderCtx, key: string): React.Reac
   if (node.type === 'list') {
     const list = node as List;
     return (
-      <div key={key} tw="mb-5 flex flex-col pl-5" style={{ fontFamily: 'Inter Variable' }}>
+      <div
+        key={key}
+        tw="mb-5 flex flex-col pl-5"
+        style={{
+          fontFamily: ctx.articleStyle === 'typewriter' ? TYPEWRITER_FONT_FAMILY : 'Inter Variable',
+        }}
+      >
         {list.children.map((item: (typeof list.children)[number], i: number) => (
-          <div key={i} tw="flex flex-row gap-2 text-lg text-gray-800 leading-relaxed">
+          <div
+            key={i}
+            tw={
+              ctx.articleStyle === 'typewriter'
+                ? 'flex flex-row gap-2 text-base text-gray-800 leading-relaxed'
+                : 'flex flex-row gap-2 text-lg text-gray-800 leading-relaxed'
+            }
+          >
             <span tw="text-gray-400 mt-px">{list.ordered ? `${i + 1}.` : '•'}</span>
             <div tw="flex flex-col">
               {(item.children as BlockContent[]).map((child, j) => {
@@ -256,7 +293,11 @@ function renderBlock(node: RootContent, ctx: RenderCtx, key: string): React.Reac
       <div
         key={key}
         tw="mb-4 bg-gray-100 rounded-md p-4 text-sm text-gray-800"
-        style={{ whiteSpace: 'pre' as never, fontFamily: 'Fira Code Variable' }}
+        style={{
+          whiteSpace: 'pre' as never,
+          fontFamily:
+            ctx.articleStyle === 'typewriter' ? TYPEWRITER_FONT_FAMILY : 'Fira Code Variable',
+        }}
       >
         {node.value}
       </div>
@@ -265,7 +306,17 @@ function renderBlock(node: RootContent, ctx: RenderCtx, key: string): React.Reac
 
   if (node.type === 'blockquote') {
     return (
-      <div key={key} tw="mb-4 border-l-4 border-gray-300 pl-4 text-gray-600 italic">
+      <div
+        key={key}
+        tw={
+          ctx.articleStyle === 'typewriter'
+            ? 'mb-4 border-l-2 border-gray-300 pl-4 text-gray-600'
+            : 'mb-4 border-l-4 border-gray-300 pl-4 text-gray-600 italic'
+        }
+        style={{
+          fontFamily: ctx.articleStyle === 'typewriter' ? TYPEWRITER_FONT_FAMILY : 'Inter Variable',
+        }}
+      >
         {(node.children as RootContent[]).map((child, i) => renderBlock(child, ctx, `${key}-${i}`))}
       </div>
     );
@@ -285,6 +336,7 @@ async function main() {
   const interFont = await readFile(INTER_FONT);
   const playfairFont = await readFile(PLAYFAIR_FONT);
   const firaCodeFont = await readFile(FIRA_CODE_FONT);
+  const typeMachineFont = await readFile(TYPE_MACHINE_FONT);
 
   const author: Author = JSON.parse(await readFile(path.join(ROOT, 'content/author.json'), 'utf8'));
 
@@ -298,6 +350,7 @@ async function main() {
     const slug = file.replace('.mdx', '');
     const source = await readFile(path.join(articlesDir, file), 'utf8');
     const fm = parseFrontmatter(source);
+    const articleStyle = getArticleStyle(fm);
 
     const ast = remark().use(remarkFrontmatter, ['yaml']).parse(source) as Root;
 
@@ -315,7 +368,7 @@ async function main() {
     }
 
     const contentWidth = PAPER_W - PADDING * 2;
-    const ctx: RenderCtx = { imageInfos, contentWidth };
+    const ctx: RenderCtx = { imageInfos, contentWidth, articleStyle };
 
     const png = await render(
       <div
@@ -325,34 +378,74 @@ async function main() {
           height: PAPER_H,
           padding: PADDING,
           backgroundColor: PAPER_BACKGROUND,
-          fontFamily: 'Inter Variable',
+          fontFamily: articleStyle === 'typewriter' ? TYPEWRITER_FONT_FAMILY : 'Inter Variable',
         }}
       >
         {/* Article header — mirrors article.tsx */}
-        <div tw="flex flex-col mb-10 items-center justify-center">
+        <div
+          tw={
+            articleStyle === 'typewriter'
+              ? 'flex flex-col mb-10 items-start justify-center'
+              : 'flex flex-col mb-10 items-center justify-center'
+          }
+        >
           <span
-            tw="mb-6 text-center text-7xl font-black uppercase text-gray-950 leading-none"
-            style={{ fontFamily: 'Playfair Display Variable', letterSpacing: '-0.05em' }}
+            tw={
+              articleStyle === 'typewriter'
+                ? 'mb-6 text-left text-5xl font-semibold text-gray-950 leading-tight'
+                : 'mb-6 text-center text-7xl font-black uppercase text-gray-950 leading-none'
+            }
+            style={{
+              fontFamily:
+                articleStyle === 'typewriter' ? TYPEWRITER_FONT_FAMILY : 'Playfair Display Variable',
+              letterSpacing: articleStyle === 'typewriter' ? '0' : '-0.05em',
+            }}
           >
             {fm.title}
           </span>
           <span
-            tw="mb-8 text-center text-xl text-gray-700 w-full leading-relaxed"
-            style={{ fontFamily: 'Playfair Display Variable', fontStyle: 'italic' }}
+            tw={
+              articleStyle === 'typewriter'
+                ? 'mb-8 text-left text-base text-gray-700 w-full leading-relaxed'
+                : 'mb-8 text-center text-xl text-gray-700 w-full leading-relaxed'
+            }
+            style={{
+              fontFamily:
+                articleStyle === 'typewriter' ? TYPEWRITER_FONT_FAMILY : 'Playfair Display Variable',
+              fontStyle: articleStyle === 'typewriter' ? 'normal' : 'italic',
+            }}
           >
             {fm.summary}
           </span>
           <div
             tw="flex flex-row justify-between w-full py-3"
             style={{
-              borderTop: '2px solid oklch(0.13 0.028 261.692)',
-              borderBottom: '2px solid oklch(0.13 0.028 261.692)',
+              borderTop:
+                articleStyle === 'typewriter'
+                  ? '1px solid oklch(0.707 0.022 261.325)'
+                  : '2px solid oklch(0.13 0.028 261.692)',
+              borderBottom:
+                articleStyle === 'typewriter'
+                  ? '1px solid oklch(0.707 0.022 261.325)'
+                  : '2px solid oklch(0.13 0.028 261.692)',
             }}
           >
-            <span tw="text-sm font-bold tracking-widest text-gray-900 uppercase">
+            <span
+              tw={
+                articleStyle === 'typewriter'
+                  ? 'text-xs font-medium tracking-widest text-gray-700 uppercase'
+                  : 'text-sm font-bold tracking-widest text-gray-900 uppercase'
+              }
+            >
               {formatDate(fm.date)}
             </span>
-            <span tw="text-sm font-bold tracking-widest text-gray-900 uppercase">
+            <span
+              tw={
+                articleStyle === 'typewriter'
+                  ? 'text-xs font-medium tracking-widest text-gray-700 uppercase'
+                  : 'text-sm font-bold tracking-widest text-gray-900 uppercase'
+              }
+            >
               By{' '}
               <span tw={`text-[${PRIMARY_700}] underline decoration-[${PRIMARY_200}]`}>
                 {author.name}
@@ -370,6 +463,7 @@ async function main() {
           { name: 'Inter Variable', data: interFont },
           { name: 'Playfair Display Variable', data: playfairFont },
           { name: 'Fira Code Variable', data: firaCodeFont },
+          { name: TYPEWRITER_FONT_FAMILY, data: typeMachineFont },
         ],
       }
     );
