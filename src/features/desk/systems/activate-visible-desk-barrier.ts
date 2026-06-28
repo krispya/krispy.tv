@@ -1,8 +1,7 @@
 import type { World } from 'koota';
 import { BoundingBox, Desk, IsEnteringDesk, KinematicBody, Position } from '../traits/index.js';
 import { getVisibleDeskRectForWorld } from '../utils/camera.js';
-import { getViewportRange } from '../utils/math.js';
-import { cssPixelsToMeters } from '../utils/physics-units.js';
+import { getVisibleDeskBarrierRange } from '../utils/visible-desk-barrier.js';
 
 export function activateVisibleDeskBarrier(world: World) {
   const desk = world.queryFirst(Desk)?.get(Desk);
@@ -14,16 +13,10 @@ export function activateVisibleDeskBarrier(world: World) {
   world
     .query(IsEnteringDesk, Position, BoundingBox, KinematicBody)
     .updateEach(([position, box], entity) => {
-      const height = cssPixelsToMeters(box.height);
-      if (height <= 0) return;
+      const range = getVisibleDeskBarrierRange(visibleRect, box, desk.barrierOverflowRatio);
+      if (!range) return;
 
-      const rangeY = getViewportRange(
-        height,
-        cssPixelsToMeters(visibleRect.height),
-        cssPixelsToMeters(desk.wallGutter)
-      );
-
-      if (position.y <= cssPixelsToMeters(visibleRect.y) + rangeY.max) {
+      if (position.y <= range.maxY) {
         entity.remove(IsEnteringDesk);
       }
     });

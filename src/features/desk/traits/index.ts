@@ -17,19 +17,15 @@ export const Viewport = trait({ width: 0, height: 0 });
 export const Camera = trait({ x: 720, y: 450, zoom: 0.8 });
 
 export const DeskConfig = trait({
-  /** Pixels. Off-screen throw margin. */
-  wallGutter: 190,
-  /** Pixels. */
-  wallGutterMin: 48,
-  /** Pixels. */
-  wallGutterMax: 200,
+  /** Fraction of each item's size allowed beyond the visible desk barrier. */
+  barrierOverflowRatio: 0.5,
   /** Meters above the desk plane where descending items join the resting stack layer. */
   restackThreshold: 0.01,
 });
 
 export const Desk = trait({
-  /** Pixels. */
-  wallGutter: 200,
+  /** Fraction of each item's size allowed beyond the visible desk barrier. */
+  barrierOverflowRatio: 0.5,
   /** Meters. */
   restackThreshold: 0.02,
   wallBounce: 0.85,

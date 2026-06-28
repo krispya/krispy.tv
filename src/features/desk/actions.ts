@@ -45,6 +45,7 @@ import {
   GRAVITY_METERS_PER_SECOND_SQUARED,
   metersToCssPixels,
 } from './utils/physics-units.js';
+import { getDeskBarrierOverflow } from './utils/visible-desk-barrier.js';
 
 const HEADPHONES_CORNER_OVERLAP_X_PX = 62;
 const HEADPHONES_CORNER_OVERLAP_Y_PX = 26;
@@ -71,9 +72,7 @@ function centerBiasedUnit() {
 }
 
 type DeskConfigOverrides = Partial<{
-  wallGutter: number;
-  wallGutterMin: number;
-  wallGutterMax: number;
+  barrierOverflowRatio: number;
   restackThreshold: number;
 }>;
 
@@ -170,15 +169,17 @@ function getOffScreenThrowPosition(
   height: number,
   config: ThrowOntoDeskConfig,
   visibleRect: VisibleDeskRect,
-  wallGutter: number
+  barrierOverflowRatio: number
 ) {
+  const entryDistance = Math.max(24, getDeskBarrierOverflow(height, barrierOverflowRatio));
+
   return {
     x: cssPixelsToMeters(
       config.centered
         ? visibleRect.x + visibleRect.width / 2
         : randomInRange(visibleRect.x + width * 0.5, visibleRect.right - width * 0.5)
     ),
-    y: cssPixelsToMeters(visibleRect.bottom + height / 2 + randomInRange(24, wallGutter)),
+    y: cssPixelsToMeters(visibleRect.bottom + height / 2 + randomInRange(24, entryDistance)),
     z: randomInRange(0.055, 0.09),
   };
 }
@@ -340,7 +341,7 @@ export const actions = createActions((world) => ({
     const resolved = deskEntity.get(DeskConfig);
     if (resolved) {
       deskEntity.set(Desk, {
-        wallGutter: clamp(resolved.wallGutter, resolved.wallGutterMin, resolved.wallGutterMax),
+        barrierOverflowRatio: resolved.barrierOverflowRatio,
         restackThreshold: Math.max(0, resolved.restackThreshold),
       });
     }
@@ -378,7 +379,13 @@ export const actions = createActions((world) => ({
     entity.add(KinematicBody({ mass: 1, ...config.physics, depth: paper.thickness }));
     entity.add(
       Position(
-        getOffScreenThrowPosition(paper.width, paper.height, config, visibleRect, desk.wallGutter)
+        getOffScreenThrowPosition(
+          paper.width,
+          paper.height,
+          config,
+          visibleRect,
+          desk.barrierOverflowRatio
+        )
       )
     );
 
@@ -423,7 +430,13 @@ export const actions = createActions((world) => ({
     entity.add(BoundingBox({ width: book.width, height: book.height }));
     entity.add(
       Position(
-        getOffScreenThrowPosition(book.width, book.height, config, visibleRect, desk.wallGutter)
+        getOffScreenThrowPosition(
+          book.width,
+          book.height,
+          config,
+          visibleRect,
+          desk.barrierOverflowRatio
+        )
       )
     );
     entity.add(KinematicBody({ mass: 8, ...config.physics, depth: getBookDepthMeters(book) }));
@@ -511,7 +524,7 @@ export const actions = createActions((world) => ({
           polaroid.height,
           config,
           visibleRect,
-          desk.wallGutter
+          desk.barrierOverflowRatio
         )
       )
     );

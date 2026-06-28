@@ -18,8 +18,7 @@ import {
   reflectVelocityOnBarrier,
 } from '../utils/barrier-bounce.js';
 import { getVisibleDeskRectForWorld } from '../utils/camera.js';
-import { getViewportRange } from '../utils/math.js';
-import { cssPixelsToMeters } from '../utils/physics-units.js';
+import { getVisibleDeskBarrierRange } from '../utils/visible-desk-barrier.js';
 
 export function bounceWithinVisibleDesk(world: World) {
   const desk = world.queryFirst(Desk)?.get(Desk);
@@ -42,50 +41,32 @@ export function bounceWithinVisibleDesk(world: World) {
       Not(IsOpen)
     )
     .updateEach(([position, velocity, angularVelocity, box]) => {
-      const width = cssPixelsToMeters(box.width);
-      const height = cssPixelsToMeters(box.height);
-      if (width <= 0 || height <= 0) return;
+      const range = getVisibleDeskBarrierRange(visibleRect, box, desk.barrierOverflowRatio);
+      if (!range) return;
 
-      const rangeX = getViewportRange(
-        width,
-        cssPixelsToMeters(visibleRect.width),
-        cssPixelsToMeters(desk.wallGutter)
-      );
-      const rangeY = getViewportRange(
-        height,
-        cssPixelsToMeters(visibleRect.height),
-        cssPixelsToMeters(desk.wallGutter)
-      );
-      const offsetX = cssPixelsToMeters(visibleRect.x);
-      const offsetY = cssPixelsToMeters(visibleRect.y);
-      const minX = offsetX + rangeX.min;
-      const maxX = offsetX + rangeX.max;
-      const minY = offsetY + rangeY.min;
-      const maxY = offsetY + rangeY.max;
-
-      if (position.x < minX) {
+      if (position.x < range.minX) {
         const normal = { x: 1, y: 0 };
-        position.x = minX;
+        position.x = range.minX;
         if (reflectVelocityOnBarrier(velocity, normal, desk.wallBounce, desk.wallFriction)) {
           applyBarrierBounceSpin(angularVelocity, normal, velocity, getBounceSpinBias(normal));
         }
-      } else if (position.x > maxX) {
+      } else if (position.x > range.maxX) {
         const normal = { x: -1, y: 0 };
-        position.x = maxX;
+        position.x = range.maxX;
         if (reflectVelocityOnBarrier(velocity, normal, desk.wallBounce, desk.wallFriction)) {
           applyBarrierBounceSpin(angularVelocity, normal, velocity, getBounceSpinBias(normal));
         }
       }
 
-      if (position.y < minY) {
+      if (position.y < range.minY) {
         const normal = { x: 0, y: 1 };
-        position.y = minY;
+        position.y = range.minY;
         if (reflectVelocityOnBarrier(velocity, normal, desk.wallBounce, desk.wallFriction)) {
           applyBarrierBounceSpin(angularVelocity, normal, velocity, getBounceSpinBias(normal));
         }
-      } else if (position.y > maxY) {
+      } else if (position.y > range.maxY) {
         const normal = { x: 0, y: -1 };
-        position.y = maxY;
+        position.y = range.maxY;
         if (reflectVelocityOnBarrier(velocity, normal, desk.wallBounce, desk.wallFriction)) {
           applyBarrierBounceSpin(angularVelocity, normal, velocity, getBounceSpinBias(normal));
         }

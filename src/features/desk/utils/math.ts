@@ -67,17 +67,6 @@ export function dampedLerp(current: number, target: number, damping: number, del
   return current + (target - current) * alpha;
 }
 
-export function getViewportRange(size: number, viewportSize: number, wallGutter: number) {
-  const halfSize = size / 2;
-  const min = halfSize - wallGutter;
-  const max = viewportSize - halfSize + wallGutter;
-
-  if (min <= max) return { min, max };
-
-  const midpoint = viewportSize / 2;
-  return { min: midpoint, max: midpoint };
-}
-
 export function randomInRange(min: number, max: number) {
   if (max <= min) return (min + max) / 2;
 
