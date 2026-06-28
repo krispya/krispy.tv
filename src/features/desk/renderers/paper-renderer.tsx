@@ -71,6 +71,10 @@ function getPaperTextureOverlay(id: string): string {
   return PAPER_TEXTURE_OVERLAYS[hashString(id) % PAPER_TEXTURE_OVERLAYS.length];
 }
 
+function getArticleTextureSrc(id: string): string {
+  return `${import.meta.env.BASE_URL}images/articles/${encodeURIComponent(id)}.png`;
+}
+
 export function PaperRenderer() {
   const entities = useQuery(Paper, Position, Rotation);
   return entities.map((entity) => <PaperView key={entity.id()} entity={entity} />);
@@ -260,7 +264,7 @@ function PaperView({ entity }: { entity: Entity }) {
               style={{
                 backgroundColor: paper.color,
                 ...(paper.openable && {
-                  backgroundImage: `${getPaperTextureOverlay(paper.id)}, ${PAPER_IMAGE_SHADOW_CONFORM}, url(${import.meta.env.BASE_URL}images/articles/${paper.id}.png)`,
+                  backgroundImage: `${getPaperTextureOverlay(paper.id)}, ${PAPER_IMAGE_SHADOW_CONFORM}, url(${getArticleTextureSrc(paper.id)})`,
                   backgroundBlendMode: 'multiply, lighten, normal',
                   backgroundSize: 'cover, cover, cover',
                   backgroundPosition: 'center, center, top center',
