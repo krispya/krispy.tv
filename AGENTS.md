@@ -1,14 +1,11 @@
+<!-- managed:start -->
 ## Workspace Tools
 
 - **Package Manager:** pnpm
 - **Linter:** oxlint
 - **Formatter:** prettier
 
-## React Compiler
-
-This project uses React Compiler with linting enforcement. **Do not** add `useMemo`, `useCallback`, or `React.memo` and instead use the compiled memoization.
-
-## After Editing
+### After Editing
 
 ✅ After editing files, check the types for errors and then format and lint only the files changed for the current task.
 
@@ -16,8 +13,8 @@ This project uses React Compiler with linting enforcement. **Do not** add `useMe
 # Example
 pnpm typecheck
 # Run format and lint for only files modified
-pnpm exec prettier --config .config/prettier.json --ignore-path .config/prettierignore --write src/App.tsx src/features/desk/systems/update-dragging.ts
-pnpm lint -- src/App.tsx src/features/desk/systems/update-dragging.ts
+pnpm exec prettier --config .config/prettier.json --ignore-path .config/prettierignore --write src/App.tsx src/core/systems/move-entity.ts
+pnpm lint -- src/App.tsx src/core/systems/move-entity.ts
 ```
 
 ❌ Avoid unless explicitly approved:
@@ -26,6 +23,7 @@ pnpm lint -- src/App.tsx src/features/desk/systems/update-dragging.ts
 pnpm format
 pnpm lint
 ```
+<!-- managed:end -->
 
 ## Architecture
 
