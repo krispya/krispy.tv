@@ -12,7 +12,8 @@ import { Spinner } from './spinner.js';
 export function LoadingScreen() {
   const phase = useSyncExternalStore(loadingControl.subscribe, loadingControl.get);
   const ready = phase === 'ready';
-  const [done, setDone] = useState(false);
+  // Mounting already-ready means the feature booted earlier.
+  const [done, setDone] = useState(() => loadingControl.get() === 'ready');
 
   if (done) return null;
 
