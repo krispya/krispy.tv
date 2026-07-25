@@ -92,13 +92,7 @@ export type DeskQuadrant = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-ri
  * which scatters uniformly across the whole desk.
  */
 export type DeskThrowTarget =
-  | DeskQuadrant
-  | 'left'
-  | 'right'
-  | 'top'
-  | 'bottom'
-  | 'center'
-  | 'spread';
+  DeskQuadrant | 'left' | 'right' | 'top' | 'bottom' | 'center' | 'spread';
 
 type ThrowOntoDeskConfig = {
   centered?: boolean;
@@ -108,6 +102,7 @@ type ThrowOntoDeskConfig = {
 export type PaperConfig = {
   id: string;
   openable?: boolean;
+  sketchable?: boolean;
   color?: string;
   lineColor?: string;
   width?: number;
@@ -358,6 +353,7 @@ export const actions = createActions((world) => ({
       Paper({
         id: config.id,
         ...(config.openable !== undefined && { openable: config.openable }),
+        ...(config.sketchable !== undefined && { sketchable: config.sketchable }),
         color:
           config.color ??
           (config.openable === false ? color.surface.paper : color.surface.articlePaper),
@@ -835,6 +831,22 @@ export const actions = createActions((world) => ({
       visibleRect.x + chosen * colWidth + colWidth * 0.2,
       visibleRect.x + (chosen + 1) * colWidth - colWidth * 0.2
     );
+  },
+
+  /**
+   * Settles in-flight pointer interactions the same way the renderers'
+   * pointer-cancel handlers do. Used when the view unmounts mid-interaction
+   * (e.g. going fullscreen while dragging) since pointer capture dies with
+   * the DOM and the release handlers will never fire.
+   */
+  releaseTransientInput: () => {
+    world.query(Pressed).forEach((entity) => entity.remove(Pressed));
+    world.query(Selected).forEach((entity) => entity.remove(Selected));
+    world.query(ItemFocusSpin).forEach((entity) => entity.remove(ItemFocusSpin));
+    world.query(Dragging).forEach((entity) => {
+      entity.add(IsDroppedFromDragging);
+      entity.remove(Dragging, IsControlled);
+    });
   },
 
   destroyPapers: () => {

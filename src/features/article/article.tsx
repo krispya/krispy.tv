@@ -1,5 +1,6 @@
 import { createElement, Suspense, use, type ComponentType } from 'react';
 import { Link } from 'wouter';
+import { ArticleControls } from './article-controls.js';
 import { getArticle } from './catalog.js';
 import { StandardArticle } from './styles/standard-article.js';
 import { TypewriterArticle } from './styles/typewriter-article.js';
@@ -24,6 +25,21 @@ export function Article({ slug }: { slug: string }) {
   }
 
   return <StandardArticle article={article}>{content}</StandardArticle>;
+}
+
+export function ArticleFullscreen({
+  onExitFullscreen,
+  slug,
+}: {
+  onExitFullscreen?: () => Promise<void> | void;
+  slug: string;
+}) {
+  return (
+    <div className="bg-article-paper min-h-screen">
+      <ArticleControls onExitFullscreen={onExitFullscreen} slug={slug} variant="fullscreen" />
+      <Article slug={slug} />
+    </div>
+  );
 }
 
 function ArticleContent({ article }: { article: ArticleRecord }) {
@@ -58,7 +74,7 @@ export function ArticleNotFound() {
       </p>
       <Link
         className="text-primary-700 decoration-primary-200 hover:text-primary-800 hover:decoration-primary-400 underline"
-        href={routes.home.href()}
+        href={routes.desk.href()}
       >
         Return to the desk
       </Link>

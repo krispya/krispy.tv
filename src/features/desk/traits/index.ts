@@ -36,6 +36,8 @@ export const Desk = trait({
 export const Paper = trait({
   id: '',
   openable: true,
+  /** Blank pages open into the sketch surface instead of an article. */
+  sketchable: false,
   color: color.surface.paper,
   lineColor: color.line.ink,
   /** Pixels. */
@@ -135,6 +137,13 @@ export const Velocity = trait({ x: 0, y: 0, z: 0 });
 export const AngularVelocity = trait({ x: 0, y: 0, z: 0 });
 
 export const ArticleMotion = trait({
+  /** Normalized sheet translation where 0 = open and 1 = below viewport. */
+  progress: 0,
+  /** Normalized progress per second. */
+  velocity: 0,
+});
+
+export const SketchMotion = trait({
   /** Normalized sheet translation where 0 = open and 1 = below viewport. */
   progress: 0,
   /** Normalized progress per second. */
@@ -246,5 +255,6 @@ export const IsResting = trait();
 export const IsBoundary = trait();
 export const ActiveSlug = trait({ slug: '' });
 export const ArticleOf = relation({ exclusive: true, autoDestroy: 'orphan' });
+export const SketchOf = relation({ exclusive: true, autoDestroy: 'orphan' });
 export const StackIndex = trait({ value: 0 });
 export const Ref = trait(() => null! as HTMLElement);

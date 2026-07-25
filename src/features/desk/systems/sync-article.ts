@@ -36,10 +36,11 @@ export function syncArticle(world: World) {
   });
   if (hasArticle) return;
 
-  // Find the paper as soon as it opens so React can begin rendering while hidden.
+  // Find the paper as soon as it opens so React can begin rendering while
+  // hidden. Sketchable pages open into the sketch sheet instead (syncSketch).
   let targetPaper: Entity | undefined;
   world.query(Paper, IsOpen).readEach(([paper], entity) => {
-    if (paper.id === slug) targetPaper = entity;
+    if (paper.id === slug && paper.openable) targetPaper = entity;
   });
   if (!targetPaper) return;
 

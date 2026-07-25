@@ -1,15 +1,15 @@
 import { Not, type World } from 'koota';
-import { ArticleMotion, ArticleOf, IsOpen, IsPreloading, Time } from '../traits/index.js';
+import { IsOpen, IsPreloading, SketchMotion, SketchOf, Time } from '../traits/index.js';
 import { stepSheetMotion } from '../utils/sheet-motion.js';
 
-export function updateArticleMotion(world: World) {
+export function updateSketchMotion(world: World) {
   const time = world.get(Time);
   if (!time) return;
 
   const dt = time.delta;
 
-  world.query(ArticleOf('*'), ArticleMotion, Not(IsPreloading)).updateEach(([motion], entity) => {
-    const paper = entity.targetFor(ArticleOf);
+  world.query(SketchOf('*'), SketchMotion, Not(IsPreloading)).updateEach(([motion], entity) => {
+    const paper = entity.targetFor(SketchOf);
     const isOpen = paper?.has(IsOpen) ?? false;
 
     if (stepSheetMotion(motion, isOpen, dt) === 'closed') {

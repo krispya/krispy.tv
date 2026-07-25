@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-export function useFrame(callback: () => void) {
+export function useFrame(callback: () => void, active = true) {
   const callbackRef = useRef(callback);
 
   useEffect(() => {
@@ -8,6 +8,8 @@ export function useFrame(callback: () => void) {
   }, [callback]);
 
   useEffect(() => {
+    if (!active) return;
+
     let rafId: number;
 
     const loop = () => {
@@ -18,5 +20,5 @@ export function useFrame(callback: () => void) {
     rafId = requestAnimationFrame(loop);
 
     return () => cancelAnimationFrame(rafId);
-  }, []);
+  }, [active]);
 }

@@ -1,20 +1,28 @@
-import { lazy, Suspense } from 'react';
-import { Route, Router, Switch } from 'wouter';
-import { DebugProvider } from './features/debug/index.js';
-import { LoadingScreen } from './features/loading/index.js';
+import { lazy } from 'react';
+import { Router, Route, Switch } from './features/router';
+import { LoadingScreen, RouteLoading } from './features/loading';
 import { routes } from './routes.js';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
-const Desk = lazy(() => {
-  // Start image fetch + decode in parallel with the main desk chunk.
-  void import('./features/desk/utils/preload-assets.js').then((module) => module.preloadDeskAssets());
-
-  return import('./features/desk/desk.js').then((module) => ({ default: module.Desk }));
-});
-
 const About = lazy(() =>
   import('./features/about/about.js').then((module) => ({ default: module.About }))
+);
+
+const Desk = lazy(() =>
+  import('./features/desk/desk.js').then((module) => ({ default: module.Desk }))
+);
+
+const ArticleRoute = lazy(() =>
+  import('./features/article/article-route.js').then((module) => ({
+    default: module.ArticleRoute,
+  }))
+);
+
+const SketchRoute = lazy(() =>
+  import('./features/sketch/sketch-route.js').then((module) => ({
+    default: module.SketchRoute,
+  }))
 );
 
 const ArticleNotFound = lazy(() =>
@@ -24,50 +32,32 @@ const ArticleNotFound = lazy(() =>
 );
 
 export function App() {
-  const debugEnabled = getDebugEnabled();
-
   return (
-    <DebugProvider enabled={debugEnabled}>
-      <Router base={base}>
-        <main className="min-h-screen">
-          <Switch>
-            <Route path={routes.about.path}>
-              <Suspense fallback={<RoutePending />}>
-                <About />
-              </Suspense>
-            </Route>
+    <Router base={base}>
+      <main className="min-h-screen">
+        <Switch>
+          <Route path={routes.desk.path} cache fallback={null}>
+            <Desk />
+            <LoadingScreen />
+          </Route>
 
-            <Route path={routes.deskGroup.path}>
-              {/* The loading screen covers the whole waterfall: chunk load, asset
-                  decode (Desk suspends) and GPU warmup. No fallback handoff. */}
-              <Suspense fallback={null}>
-                <Desk />
-              </Suspense>
-              <LoadingScreen />
-            </Route>
+          <Route path={routes.about.path} fallback={<RouteLoading />}>
+            <About />
+          </Route>
 
-            <Route>
-              <Suspense fallback={<RoutePending />}>
-                <ArticleNotFound />
-              </Suspense>
-            </Route>
-          </Switch>
-        </main>
-      </Router>
-    </DebugProvider>
+          <Route path={routes.article.path} fallback={<RouteLoading />}>
+            {({ slug }) => <ArticleRoute slug={slug} />}
+          </Route>
+
+          <Route path={routes.sketch.path} fallback={<RouteLoading />}>
+            {({ id }) => <SketchRoute id={id} />}
+          </Route>
+
+          <Route fallback={<RouteLoading />}>
+            <ArticleNotFound />
+          </Route>
+        </Switch>
+      </main>
+    </Router>
   );
-}
-
-function getDebugEnabled() {
-  if (typeof window === 'undefined') return false;
-
-  const params = new URLSearchParams(window.location.search);
-  if (!params.has('debug')) return false;
-
-  const value = params.get('debug')?.toLowerCase() ?? '';
-  return value === '' || !['0', 'false', 'off'].includes(value);
-}
-
-function RoutePending() {
-  return <p className="px-4 py-16 text-sm text-gray-500">Loading...</p>;
 }

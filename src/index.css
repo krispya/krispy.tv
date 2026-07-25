@@ -393,6 +393,18 @@
     }
   }
 
+  /* Centers a US letter page inside the stage, scaled down by whichever axis
+     runs out first. Container units let the page's width follow the stage's
+     height. Keep the ratio in sync with the sketch canvas. */
+  .paper-stage {
+    container-type: size;
+  }
+
+  .paper-page {
+    width: min(100cqw, calc(100cqh * 8.5 / 11));
+    aspect-ratio: 8.5 / 11;
+  }
+
   .article-sheet-viewport {
     bottom: calc(0px - env(safe-area-inset-bottom, 0px));
   }

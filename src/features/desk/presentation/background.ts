@@ -4,7 +4,7 @@ import { color } from '../../../color.js';
 /** Public asset path (under `public/`). */
 export const DESK_FOAM_IMAGE = 'foam-splash.jpg';
 export const DESK_FOAM_TILE_SIZE_PX = 1480;
-export const DESK_GEOMETRIC_GRUNGE_IMAGE = 'geometric_grunge_line_pattern.jpg';
+export const DESK_GEOMETRIC_GRUNGE_IMAGE = 'geometric_grunge_line_pattern-2x.webp';
 export const DESK_GEOMETRIC_GRUNGE_TILE_SIZE_PX = {
   width: 1024,
   height: 512,
@@ -58,12 +58,12 @@ export const deskBackground: {
   },
 };
 
-function getPublicAssetUrl(path: string) {
+export function getDeskPublicAssetUrl(path: string) {
   return `${import.meta.env.BASE_URL}${path}`;
 }
 
 function getDeskFoamUrl() {
-  return getPublicAssetUrl(DESK_FOAM_IMAGE);
+  return getDeskPublicAssetUrl(DESK_FOAM_IMAGE);
 }
 
 function getColorWithOpacity(colorValue: string, opacityPercent: number) {
@@ -103,7 +103,7 @@ export function getDeskBaseStyle(): CSSProperties {
   }
 
   if (base.type === 'image') {
-    const imageUrl = `url(${getPublicAssetUrl(base.value)})`;
+    const imageUrl = `url(${getDeskPublicAssetUrl(base.value)})`;
 
     if (base.tint) {
       const tint = getColorWithOpacity(base.tint.color, base.tint.opacityPercent);

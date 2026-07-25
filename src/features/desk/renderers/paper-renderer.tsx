@@ -1,13 +1,12 @@
 import type { Entity } from 'koota';
 import { useActions, useHas, useQuery, useTrait, useWorld } from 'koota/react';
 import { useCallback, type CSSProperties } from 'react';
-import { useLocation } from 'wouter';
-import { routes } from '../../../routes.js';
 import { color } from '../../../color.js';
 import { BoundingBoxDebug, useDebug } from '../../debug/index.js';
 import { actions } from '../actions.js';
 import {
   AngularVelocity,
+  ActiveSlug,
   Dragging,
   IsControlled,
   IsDroppedFromDragging,
@@ -28,6 +27,8 @@ import {
 } from '../presentation/shadow.js';
 import { ITEM_PERSPECTIVE_PX } from '../presentation/stage.js';
 import { PaperLinesOverlay } from './paper-lines-overlay.js';
+// Import the store module directly so the sketch surface stays lazy-loaded.
+import { useSketchTexture } from '../../sketch/store.js';
 
 const DRAG_THRESHOLD_PX = 5;
 type PaperStyle = CSSProperties & Record<`--${string}`, string>;
@@ -85,11 +86,12 @@ function PaperView({ entity }: { entity: Entity }) {
   const world = useWorld();
   const isDragging = useHas(entity, Dragging);
   const { raiseDeskItem } = useActions(actions);
-  const [, navigate] = useLocation();
 
   const { enabled: isDebug } = useDebug();
 
   const isOpenable = paper?.openable ?? true;
+  const isSketchable = paper?.sketchable ?? false;
+  const sketchTexture = useSketchTexture(paper?.id ?? '');
 
   const handleInit = useCallback(
     (element: HTMLDivElement | null) => {
@@ -176,8 +178,8 @@ function PaperView({ entity }: { entity: Entity }) {
         entity.remove(Pressed);
         entity.remove(Selected);
 
-        if (paper?.openable) {
-          navigate(routes.article.href({ slug: paper.id }));
+        if (paper?.openable || paper?.sketchable) {
+          world.set(ActiveSlug, { slug: paper.id });
         }
       }
 
@@ -190,7 +192,7 @@ function PaperView({ entity }: { entity: Entity }) {
         event.currentTarget.releasePointerCapture(event.pointerId);
       }
     },
-    [entity, navigate, paper]
+    [entity, paper, world]
   );
 
   const handlePointerCancel = useCallback(() => {
@@ -229,9 +231,9 @@ function PaperView({ entity }: { entity: Entity }) {
       {isDebug && <BoundingBoxDebug entity={entity} />}
       <PaperShadow paperId={paper.id} />
       <div
-        role={isOpenable ? 'button' : undefined}
-        tabIndex={isOpenable ? 0 : undefined}
-        aria-label={isOpenable ? 'Open article' : 'Blank sheet'}
+        role={isOpenable || isSketchable ? 'button' : undefined}
+        tabIndex={isOpenable || isSketchable ? 0 : undefined}
+        aria-label={isOpenable ? 'Open article' : isSketchable ? 'Draw on page' : 'Blank sheet'}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
@@ -270,6 +272,14 @@ function PaperView({ entity }: { entity: Entity }) {
                   backgroundPosition: 'center, center, top center',
                   backgroundRepeat: 'no-repeat, no-repeat, no-repeat',
                 }),
+                ...(!paper.openable &&
+                  sketchTexture && {
+                    backgroundImage: `${getPaperTextureOverlay(paper.id)}, url(${sketchTexture})`,
+                    backgroundBlendMode: 'multiply, normal',
+                    backgroundSize: 'cover, cover',
+                    backgroundPosition: 'center, center',
+                    backgroundRepeat: 'no-repeat, no-repeat',
+                  }),
               }}
             />
             <PaperLinesOverlay paperId={paper.id} lineColor={paper.lineColor} paused={isDragging} />

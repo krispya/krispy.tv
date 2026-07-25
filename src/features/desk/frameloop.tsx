@@ -1,7 +1,5 @@
 import { useWorld } from 'koota/react';
 import { useEffect } from 'react';
-import { useRoute } from 'wouter';
-import { routes } from '../../routes.js';
 import {
   activateVisibleDeskBarrier,
   applyAngularVelocity,
@@ -21,20 +19,20 @@ import {
   syncOpenState,
   syncPaperToDOM,
   syncPolaroidToDOM,
+  syncSketch,
   updateArticleMotion,
   updateDragging,
   updateItemFocus,
   updateRotation,
+  updateSketchMotion,
   updateTime,
 } from './systems/index.js';
-import { ActiveSlug, Camera, Pointer, Viewport } from './traits/index.js';
+import { Camera, Pointer, Viewport } from './traits/index.js';
 import { DEFAULT_CAMERA, getResponsiveDeskZoom } from './utils/camera.js';
 import { useFrame } from '../frameloop/use-frame.js';
 
 export function Frameloop() {
   const world = useWorld();
-  const [isArticle, params] = useRoute<{ slug: string }>(routes.article.path);
-  const slug = isArticle ? (params?.slug ?? '') : '';
 
   useFrame(() => {
     // Time
@@ -65,6 +63,8 @@ export function Frameloop() {
     detectPastVisibleDesk(world);
     syncArticle(world);
     updateArticleMotion(world);
+    syncSketch(world);
+    updateSketchMotion(world);
     updateItemFocus(world);
 
     // View
@@ -74,10 +74,6 @@ export function Frameloop() {
     syncBookToDOM(world);
     syncHeadphonesToDOM(world);
   });
-
-  useEffect(() => {
-    world.set(ActiveSlug, { slug });
-  }, [world, slug]);
 
   useEffect(() => {
     const updateViewport = () => {

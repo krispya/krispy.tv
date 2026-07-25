@@ -1,9 +1,8 @@
 import type { Entity } from 'koota';
-import { useHas, useQuery, useTarget, useTrait, useTraitEffect } from 'koota/react';
+import { useHas, useQuery, useTarget, useTrait, useTraitEffect, useWorld } from 'koota/react';
 import { lazy, Suspense, useRef, type ReactNode, type Ref } from 'react';
-import { Link, useLocation } from 'wouter';
-import { routes } from '../../../routes.js';
-import { ArticleMotion, ArticleOf, IsPreloading, Paper } from '../traits/index.js';
+import { ArticleControls } from '../../article/article-controls.js';
+import { ActiveSlug, ArticleMotion, ArticleOf, IsPreloading, Paper } from '../traits/index.js';
 import { useDismissibleSheet } from '../utils/use-dismissible-sheet.js';
 
 const Article = lazy(() =>
@@ -16,11 +15,11 @@ export function ArticleRenderer() {
 }
 
 function ArticleView({ entity }: { entity: Entity }) {
-  const backdropRef = useRef<HTMLAnchorElement>(null);
+  const backdropRef = useRef<HTMLButtonElement>(null);
   const articleRef = useRef<HTMLDivElement>(null);
+  const world = useWorld();
 
-  const [, navigate] = useLocation();
-  const onDismiss = () => navigate(routes.home.href());
+  const onDismiss = () => world.set(ActiveSlug, { slug: '' });
   const { sheetRef, handleRef, scrollRef } = useDismissibleSheet({ onDismiss, wheelDismiss: false });
 
   useTraitEffect(entity, ArticleMotion, (motion) => {
@@ -48,24 +47,25 @@ function ArticleView({ entity }: { entity: Entity }) {
       }}
       aria-hidden={preloading ? true : undefined}
     >
-      <Link
+      <button
+        type="button"
         ref={backdropRef}
-        href={routes.home.href()}
         className="absolute inset-0 bg-black/30"
         style={{ opacity: 0, willChange: 'opacity' }}
         aria-label="Close"
+        onClick={onDismiss}
       />
 
       <div
         ref={articleRef}
-        className="article-sheet-viewport pointer-events-none absolute inset-x-0 top-0 mx-auto flex max-w-7xl items-end justify-center"
+        className="article-sheet-viewport pointer-events-none absolute inset-x-0 top-0 mx-auto flex items-end justify-center"
         style={{ transform: 'translateY(100%)', willChange: 'transform' }}
       >
         <div
           ref={sheetRef}
-          className="article-sheet bg-article-paper pointer-events-auto relative mt-4 flex w-full flex-col rounded-t-lg border-stone-200 sm:mt-6 sm:mr-6 sm:ml-6 sm:border sm:border-b-0"
+          className="article-sheet bg-article-paper pointer-events-auto relative mt-4 flex w-full max-w-3xl flex-col rounded-t-lg border-stone-200 sm:mt-6 sm:mr-6 sm:ml-6 sm:border sm:border-b-0"
         >
-          <CloseButton />
+          <ArticleControls onClose={onDismiss} slug={slug} />
           <DragHandle ref={handleRef} />
           <Suspense fallback={null}>
             <ArticleSheetScroll ref={scrollRef}>
@@ -99,24 +99,5 @@ function DragHandle({ ref }: { ref?: DivRef }) {
     >
       <div className="h-1 w-10 rounded-full bg-stone-300" />
     </div>
-  );
-}
-
-function CloseButton() {
-  return (
-    <Link
-      href={routes.home.href()}
-      className="pointer-events-auto absolute top-4 right-4 z-2001 hidden h-10 w-10 items-center justify-center rounded-full bg-white/90 text-gray-700 shadow-lg backdrop-blur hover:bg-white hover:text-gray-950 sm:flex"
-      aria-label="Back to desk"
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 20 20"
-        fill="currentColor"
-        className="h-5 w-5"
-      >
-        <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
-      </svg>
-    </Link>
   );
 }
