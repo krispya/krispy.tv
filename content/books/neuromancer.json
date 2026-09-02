@@ -1,0 +1,17 @@
+{
+  "title": "Neuromancer",
+  "author": "William Gibson",
+  "coverImages": {
+    "front": "images/books/neuromancer-cover-front.webp",
+    "back": "images/books/neuromancer-cover-back.webp",
+    "spine": "images/books/neuromancer-spine.webp"
+  },
+  "color": "#ece4d2",
+  "pageCount": 271,
+  "dimensions": {
+    "width": 4.12,
+    "height": 6.87,
+    "unit": "in"
+  },
+  "order": 1
+}
