@@ -5,6 +5,7 @@ import { books as booksCatalog } from '../book/index.js';
 import { polaroids as polaroidsCatalog } from '../polaroid/index.js';
 import { actions, type DeskThrowTarget } from './actions.js';
 import { ActiveSlug, Camera, Pointer, Scene, Time, Viewport } from './traits/index.js';
+import { syncViewportToWindow } from './utils/camera.js';
 import {
   DEFAULT_BOOK_COVER_THICKNESS_INCHES,
   DEFAULT_BOOK_PAGE_THICKNESS_INCHES,
@@ -34,8 +35,13 @@ function getPolaroidCaptionConfig(caption: (typeof polaroidsCatalog)[number]['ca
 
 export function createDeskWorld() {
   const world = createWorld(Time, Pointer, Viewport, Camera, ActiveSlug, Scene);
-  const { spawnBook, spawnDesk, spawnHeadphones, spawnPaper, spawnPolaroid } = actions(world);
+  const { spawnBook, spawnDesk, spawnHeadphones, spawnMousePad, spawnPaper, spawnPolaroid } =
+    actions(world);
   const pendingThrows: PendingThrow[] = [];
+
+  // Size the visible desk before spawning so corner-anchored items land against
+  // the real viewport edges instead of the default camera's.
+  syncViewportToWindow(world);
 
   spawnDesk();
 
@@ -96,6 +102,7 @@ export function createDeskWorld() {
   }
 
   spawnHeadphones({ width: 500, rotation: -34 });
+  spawnMousePad({ rotation: 4 });
 
   return { pendingThrows, world };
 }

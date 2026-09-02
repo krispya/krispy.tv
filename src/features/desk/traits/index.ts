@@ -96,6 +96,19 @@ export const Headphones = trait({
   thickness: 0.004,
 });
 
+export const MousePad = trait({
+  id: 'desk-mouse-pad',
+  fillColor: color.surface.mousePad,
+  /** Pixels. */
+  width: inchesToDeskPixels(9.5),
+  /** Pixels. */
+  height: inchesToDeskPixels(8),
+  /** Pixels. */
+  cornerRadius: inchesToDeskPixels(0.4),
+  /** Meters. */
+  thickness: 0.003,
+});
+
 export const Polaroid = trait({
   id: '',
   imageSrc: '',

@@ -19,7 +19,13 @@ export const palette = {
 } as const;
 
 type ColorTokens = {
-  surface: { desk: string; paper: string; articlePaper: string; paperEdge: string };
+  surface: {
+    desk: string;
+    mousePad: string;
+    paper: string;
+    articlePaper: string;
+    paperEdge: string;
+  };
   line: { ink: string; inkSoft: string; typewriter: string; blankPaper: string };
   accent: { gold: string; coral: string; sage: string; sky: string; wood: string };
   image: { blackConform: string };
@@ -31,6 +37,8 @@ export const color: ColorTokens = {
     // Neutral desktop surface (not a brand accent) — a light, cool ground
     // that lets the warm paper + accents read like the illustrated reference.
     desk: '#DFDDD9',
+    // Light, slightly warm gray cloth so the pad reads as fabric on the wood.
+    mousePad: '#D6D4CF',
     paper: palette.promenade,
     articlePaper: palette.folio,
     paperEdge: shade(palette.promenade, -30),

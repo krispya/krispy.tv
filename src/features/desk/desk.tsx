@@ -8,6 +8,7 @@ import { BookRenderer } from './renderers/book-renderer.js';
 import { DeskRenderer } from './renderers/desk-renderer.js';
 import { HeadphonesRenderer } from './renderers/headphones-renderer.js';
 import { ItemFocusBackdrop } from './renderers/item-focus-backdrop.js';
+import { MousePadRenderer } from './renderers/mouse-pad-renderer.js';
 import { PaperRenderer } from './renderers/paper-renderer.js';
 import { PolaroidFocusBody } from './renderers/polaroid-focus-body.js';
 import { PolaroidRenderer } from './renderers/polaroid-renderer.js';
@@ -28,6 +29,7 @@ export function Desk() {
 
       <DeskProjection>
         <DeskRenderer />
+        <MousePadRenderer />
         <HeadphonesRenderer />
         <PaperRenderer />
         <ItemFocusBackdrop />

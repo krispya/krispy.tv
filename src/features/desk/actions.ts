@@ -22,6 +22,7 @@ import {
   ItemFocusMotion,
   ItemFocusSpin,
   KinematicBody,
+  MousePad,
   Paper,
   Polaroid,
   Position,
@@ -50,6 +51,9 @@ import { getDeskBarrierOverflow } from './utils/visible-desk-barrier.js';
 const HEADPHONES_CORNER_OVERLAP_X_PX = 62;
 const HEADPHONES_CORNER_OVERLAP_Y_PX = 26;
 const HEADPHONES_MASS = 120;
+/** How far the mouse pad tucks past the bottom-right corner of the visible desk. */
+const MOUSE_PAD_CORNER_OVERLAP_X_PX = 40;
+const MOUSE_PAD_CORNER_OVERLAP_Y_PX = 48;
 /**
  * Cluster radius for a constrained axis, as a fraction of the visible
  * dimension. Smaller = tighter grouping around the target anchor. Sampling is
@@ -143,6 +147,19 @@ export type HeadphonesConfig = {
   cornerOverlapX?: number;
   cornerOverlapY?: number;
   physics?: KinematicBodyConfig;
+};
+
+export type MousePadConfig = {
+  id?: string;
+  fillColor?: string;
+  width?: number;
+  height?: number;
+  cornerRadius?: number;
+  thickness?: number;
+  /** Degrees. */
+  rotation?: number;
+  cornerOverlapX?: number;
+  cornerOverlapY?: number;
 };
 
 export type PolaroidConfig = {
@@ -479,6 +496,41 @@ export const actions = createActions((world) => ({
         stopSpeed: 0,
         ...config.physics,
         depth: headphones.thickness,
+      })
+    );
+
+    return entity;
+  },
+
+  /**
+   * Inert decoration: no kinematic body or stack index, so items slide over it
+   * and it never joins collisions or restacking. Anchored to the bottom-right
+   * corner of the visible desk at spawn.
+   */
+  spawnMousePad: (config: MousePadConfig = {}) => {
+    const visibleRect = getVisibleDeskRectForWorld(world);
+
+    const entity = world.spawn(
+      MousePad({
+        ...(config.id !== undefined && { id: config.id }),
+        ...(config.fillColor !== undefined && { fillColor: config.fillColor }),
+        ...(config.width !== undefined && { width: config.width }),
+        ...(config.height !== undefined && { height: config.height }),
+        ...(config.cornerRadius !== undefined && { cornerRadius: config.cornerRadius }),
+        ...(config.thickness !== undefined && { thickness: config.thickness }),
+      }),
+      Rotation({ x: 0, y: 0, z: config.rotation ?? 4 })
+    );
+
+    const mousePad = entity.get(MousePad)!;
+    const cornerOverlapX = config.cornerOverlapX ?? MOUSE_PAD_CORNER_OVERLAP_X_PX;
+    const cornerOverlapY = config.cornerOverlapY ?? MOUSE_PAD_CORNER_OVERLAP_Y_PX;
+    entity.add(BoundingBox({ width: mousePad.width, height: mousePad.height }));
+    entity.add(
+      Position({
+        x: cssPixelsToMeters(visibleRect.right - mousePad.width / 2 + cornerOverlapX),
+        y: cssPixelsToMeters(visibleRect.bottom - mousePad.height / 2 + cornerOverlapY),
+        z: 0,
       })
     );
 

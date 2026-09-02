@@ -34,14 +34,47 @@ export function hashSeed(value: string): number {
   return Math.abs(hash) + 1;
 }
 
-function getSketchOutlinePaths(width: number, height: number, seed: number, options?: Options) {
-  const drawable = roughGenerator.rectangle(
-    SKETCH_INSET,
-    SKETCH_INSET,
-    Math.max(width - SKETCH_INSET * 2, 0),
-    Math.max(height - SKETCH_INSET * 2, 0),
-    { ...DEFAULT_OPTIONS, ...options, seed }
-  );
+/** SVG path for a rectangle with rounded corners (radius clamped to fit). */
+function getRoundedRectPath(x: number, y: number, width: number, height: number, radius: number) {
+  const r = Math.min(radius, width / 2, height / 2);
+
+  return [
+    `M${x + r},${y}`,
+    `H${x + width - r}`,
+    `A${r},${r} 0 0 1 ${x + width},${y + r}`,
+    `V${y + height - r}`,
+    `A${r},${r} 0 0 1 ${x + width - r},${y + height}`,
+    `H${x + r}`,
+    `A${r},${r} 0 0 1 ${x},${y + height - r}`,
+    `V${y + r}`,
+    `A${r},${r} 0 0 1 ${x + r},${y}`,
+    'Z',
+  ].join(' ');
+}
+
+function getSketchOutlinePaths(
+  width: number,
+  height: number,
+  seed: number,
+  radius: number,
+  options?: Options
+) {
+  const innerWidth = Math.max(width - SKETCH_INSET * 2, 0);
+  const innerHeight = Math.max(height - SKETCH_INSET * 2, 0);
+  const resolvedOptions = { ...DEFAULT_OPTIONS, ...options, seed };
+  const drawable =
+    radius > 0
+      ? roughGenerator.path(
+          getRoundedRectPath(SKETCH_INSET, SKETCH_INSET, innerWidth, innerHeight, radius),
+          resolvedOptions
+        )
+      : roughGenerator.rectangle(
+          SKETCH_INSET,
+          SKETCH_INSET,
+          innerWidth,
+          innerHeight,
+          resolvedOptions
+        );
 
   return roughGenerator.toPaths(drawable);
 }
@@ -51,13 +84,14 @@ function getBoilPhaseOffset(seed: number) {
   return -((seed % 997) / 997) * BOIL_CYCLE_SECONDS;
 }
 
-function SketchPaths({ paths }: { paths: SketchPath[] }) {
+function SketchPaths({ paths, dashArray }: { paths: SketchPath[]; dashArray?: string }) {
   return paths.map((path, index) => (
     <path
       key={index}
       d={path.d}
       stroke={path.stroke}
       strokeWidth={path.strokeWidth}
+      strokeDasharray={dashArray}
       fill="none"
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -69,6 +103,7 @@ export function SketchOutline({
   width,
   height,
   seed,
+  radius = 0,
   options,
   animate = true,
   paused = false,
@@ -76,6 +111,8 @@ export function SketchOutline({
   width: number;
   height: number;
   seed: number;
+  /** Corner radius in px; 0 draws a sharp rectangle. */
+  radius?: number;
   options?: Options;
   /** Cycle rough.js seeds for a line-boil effect (CSS-driven). */
   animate?: boolean;
@@ -83,11 +120,13 @@ export function SketchOutline({
   paused?: boolean;
 }) {
   const phaseOffset = getBoilPhaseOffset(seed);
+  // rough.js only carries dashes onto elements it draws itself; toPaths drops them.
+  const dashArray = options?.strokeLineDash?.join(' ');
   const variants = animate
     ? Array.from({ length: BOIL_VARIANT_COUNT }, (_, index) =>
-        getSketchOutlinePaths(width, height, seed + index, options)
+        getSketchOutlinePaths(width, height, seed + index, radius, options)
       )
-    : [getSketchOutlinePaths(width, height, seed, options)];
+    : [getSketchOutlinePaths(width, height, seed, radius, options)];
 
   return (
     <svg
@@ -101,7 +140,7 @@ export function SketchOutline({
     >
       {variants.map((paths, frameIndex) => (
         <g key={frameIndex} className={`sketch-boil-frame sketch-boil-frame--${frameIndex}`}>
-          <SketchPaths paths={paths} />
+          <SketchPaths paths={paths} dashArray={dashArray} />
         </g>
       ))}
     </svg>

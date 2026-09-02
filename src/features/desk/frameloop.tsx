@@ -16,6 +16,7 @@ import {
   syncBookToDOM,
   syncDeskItemToDOM,
   syncHeadphonesToDOM,
+  syncMousePadToDOM,
   syncOpenState,
   syncPaperToDOM,
   syncPolaroidToDOM,
@@ -27,8 +28,8 @@ import {
   updateSketchMotion,
   updateTime,
 } from './systems/index.js';
-import { Camera, Pointer, Viewport } from './traits/index.js';
-import { DEFAULT_CAMERA, getResponsiveDeskZoom } from './utils/camera.js';
+import { Pointer } from './traits/index.js';
+import { syncViewportToWindow } from './utils/camera.js';
 import { useFrame } from '../frameloop/use-frame.js';
 
 export function Frameloop() {
@@ -73,21 +74,11 @@ export function Frameloop() {
     syncPolaroidToDOM(world);
     syncBookToDOM(world);
     syncHeadphonesToDOM(world);
+    syncMousePadToDOM(world);
   });
 
   useEffect(() => {
-    const updateViewport = () => {
-      const width = window.innerWidth;
-      const height = window.innerHeight;
-      const camera = world.get(Camera) ?? DEFAULT_CAMERA;
-
-      world.set(Viewport, { width, height });
-      world.set(Camera, {
-        x: camera.x,
-        y: camera.y,
-        zoom: getResponsiveDeskZoom(width),
-      });
-    };
+    const updateViewport = () => syncViewportToWindow(world);
 
     updateViewport();
     window.addEventListener('resize', updateViewport);

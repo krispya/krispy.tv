@@ -42,6 +42,21 @@ export function getResponsiveDeskZoom(viewportWidth: number) {
   return lerp(DESK_CAMERA_MIN_ZOOM, DESK_CAMERA_MAX_ZOOM, amount);
 }
 
+/**
+ * Mirrors the window size into the world and picks the responsive zoom for it.
+ * Used on boot (before corner-anchored items spawn) and on every resize.
+ */
+export function syncViewportToWindow(world: World) {
+  if (typeof window === 'undefined') return;
+
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+  const camera = world.get(Camera) ?? DEFAULT_CAMERA;
+
+  world.set(Viewport, { width, height });
+  world.set(Camera, { x: camera.x, y: camera.y, zoom: getResponsiveDeskZoom(width) });
+}
+
 export function getVisibleDeskRect(
   viewport: ViewportRecord | undefined,
   camera: CameraRecord | undefined = DEFAULT_CAMERA

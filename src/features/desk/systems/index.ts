@@ -13,6 +13,7 @@ export { syncArticle } from './sync-article.js';
 export { syncBookToDOM } from './sync-book-to-dom.js';
 export { syncDeskItemToDOM } from './sync-desk-item-to-dom.js';
 export { syncHeadphonesToDOM } from './sync-headphones-to-dom.js';
+export { syncMousePadToDOM } from './sync-mouse-pad-to-dom.js';
 export { syncOpenState } from './sync-open-state.js';
 export { syncPaperToDOM } from './sync-paper-to-dom.js';
 export { syncPolaroidToDOM } from './sync-polaroid-to-dom.js';
