@@ -24,6 +24,7 @@ export const books: Book[] = Object.entries(bookModules)
     coverImageSrc: toImageSrc(book.coverImages.front),
     ...(book.coverImages.back && { backCoverImageSrc: toImageSrc(book.coverImages.back) }),
     ...(book.coverImages.spine && { spineImageSrc: toImageSrc(book.coverImages.spine) }),
+    ...(book.stickyNote?.image && { stickyNoteImageSrc: toImageSrc(book.stickyNote.image) }),
   }))
   .sort(
     (first, second) =>

@@ -19,6 +19,7 @@ function getDeskImageSources() {
     ...books.map((book) => book.coverImageSrc),
     ...books.map((book) => book.backCoverImageSrc),
     ...books.map((book) => book.spineImageSrc),
+    ...books.map((book) => book.stickyNoteImageSrc),
     ...polaroids.map((polaroid) => polaroid.imageSrc),
     ...polaroids.map((polaroid) =>
       polaroid.caption?.kind === 'image' ? polaroid.caption.imageSrc : undefined

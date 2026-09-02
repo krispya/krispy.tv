@@ -23,6 +23,11 @@ const POLAROID_THROW_TARGETS: Partial<Record<string, DeskThrowTarget>> = {
   me: 'top-right',
 };
 
+/** One book always caroms off the left wall; the rest cluster at the center. */
+const BOOK_THROW_TARGETS: Partial<Record<string, DeskThrowTarget>> = {
+  bloodchild: 'left-wall',
+};
+
 function getPolaroidCaptionConfig(caption: (typeof polaroidsCatalog)[number]['caption']) {
   if (!caption) return {};
 
@@ -85,10 +90,14 @@ export function createDeskWorld() {
       pageCount: contentBook.pageCount,
       pageThickness: inchesToDeskMeters(DEFAULT_BOOK_PAGE_THICKNESS_INCHES),
       coverThickness: inchesToDeskMeters(DEFAULT_BOOK_COVER_THICKNESS_INCHES),
-      stickyNote: contentBook.stickyNote,
+      stickyNote: contentBook.stickyNote && {
+        ...contentBook.stickyNote,
+        image: contentBook.stickyNoteImageSrc,
+      },
+      foldedPaper: contentBook.foldedPaper,
     });
 
-    pendingThrows.push({ entity: book, target: 'center' });
+    pendingThrows.push({ entity: book, target: BOOK_THROW_TARGETS[contentBook.slug] ?? 'center' });
   }
 
   for (const polaroid of polaroidsCatalog) {

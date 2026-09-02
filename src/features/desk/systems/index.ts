@@ -20,6 +20,7 @@ export { syncPolaroidToDOM } from './sync-polaroid-to-dom.js';
 export { syncSketch } from './sync-sketch.js';
 export { updateArticleMotion } from './update-article-motion.js';
 export { updateDragging } from './update-dragging.js';
+export { updateFoldedPaper } from './update-folded-paper.js';
 export { updateItemFocus } from './update-item-focus.js';
 export { updateRotation } from './update-rotation.js';
 export { updateSketchMotion } from './update-sketch-motion.js';

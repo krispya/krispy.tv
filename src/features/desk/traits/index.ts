@@ -52,9 +52,23 @@ export const Paper = trait({
 
 export type BookStickyNote = {
   text?: string;
+  /** Resolved src of handwritten note art, used as a mask tinted with the ink color. */
+  image?: string;
   color?: string;
   /** Degrees. */
   rotation?: number;
+};
+
+export type BookFoldedPaper = {
+  color?: string;
+  /** 0 = just under the front cover, 1 = just above the back cover. */
+  pageFraction?: number;
+  /** Pixels past the fore-edge. */
+  overhang?: number;
+  /** Degrees. */
+  rotation?: number;
+  /** Paragraphs written on the unfolded sheet. */
+  text?: string[];
 };
 
 export const Book = trait({
@@ -76,9 +90,34 @@ export const Book = trait({
   coverThickness: 0.002,
   hasStickyNote: false,
   stickyNoteText: '',
+  stickyNoteImage: '',
   stickyNoteColor: '',
   /** Degrees. */
   stickyNoteRotation: 0,
+  hasFoldedPaper: false,
+  foldedPaperColor: '',
+  /** 0 = just under the front cover, 1 = just above the back cover. */
+  foldedPaperPageFraction: 0.5,
+  /** Pixels past the fore-edge. */
+  foldedPaperOverhang: 4,
+  /** Degrees. */
+  foldedPaperRotation: 0,
+  /** Newline-separated paragraphs. */
+  foldedPaperText: '',
+});
+
+export type FoldedPaperPhase = 'opening' | 'closing';
+
+/**
+ * Slide-out and unfold of a book's tucked sheet. Lives on the book entity while
+ * the sheet is out; removed once a close settles.
+ */
+export const FoldedPaperMotion = trait({
+  phase: 'opening' as FoldedPaperPhase,
+  /** 0 = tucked between the pages, 1 = slid out, lifted and unfolded. */
+  progress: 0,
+  /** Progress per second. */
+  progressVelocity: 0,
 });
 
 export const HEADPHONES_ASPECT_RATIO = 1646 / 731;

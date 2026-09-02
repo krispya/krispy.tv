@@ -3,12 +3,14 @@ import { color } from '../../color.js';
 import {
   AngularVelocity,
   Book,
+  type BookFoldedPaper,
   type BookStickyNote,
   BoundingBox,
   Desk,
   DeskConfig,
   Dragging,
   FocusableItem,
+  FoldedPaperMotion,
   HEADPHONES_ASPECT_RATIO,
   Headphones,
   IsBoundary,
@@ -47,6 +49,7 @@ import {
   metersToCssPixels,
 } from './utils/physics-units.js';
 import { getDeskBarrierOverflow } from './utils/visible-desk-barrier.js';
+import { isFoldedPaperOut } from './utils/folded-paper.js';
 
 const HEADPHONES_CORNER_OVERLAP_X_PX = 62;
 const HEADPHONES_CORNER_OVERLAP_Y_PX = 26;
@@ -60,11 +63,25 @@ const MOUSE_PAD_CORNER_OVERLAP_Y_PX = 48;
  * center-biased, so landings concentrate well inside this radius.
  */
 const TARGET_RADIUS_RATIO = 0.1;
+/**
+ * Window aspect the base cluster radius is tuned for. A `'center'` target
+ * widens along whichever axis the window is longer than this, so the toss
+ * covers a wide or tall window instead of bunching at its midpoint.
+ */
+const TARGET_REFERENCE_ASPECT = 1440 / 900;
 const QUADRANT_CORNER_TARGET_INSET_PX = 28;
 /** Fraction of the visible width the entry point is offset toward center for a diagonal arc. */
 const QUADRANT_ENTRY_OFFSET_RATIO = 0.1;
 /** Friction fallback when a body's coefficient is unavailable. */
 const DEFAULT_THROW_FRICTION = 0.2;
+/**
+ * Fraction of the visible width a `'left-wall'` toss aims past the wall. The
+ * slide would stop this far beyond the barrier, so the item always reaches it
+ * with speed to spare and bounces off. Larger = harder hit.
+ */
+const WALL_HIT_OVERSHOOT_RATIO = 0.15;
+/** Fraction of the visible width a `'left-wall'` toss enters from, so it approaches diagonally. */
+const WALL_HIT_ENTRY_OFFSET_RATIO = 0.3;
 
 /**
  * Triangular random in [-1, 1] peaked at 0 (sum of two uniforms). Used to bias
@@ -73,6 +90,24 @@ const DEFAULT_THROW_FRICTION = 0.2;
  */
 function centerBiasedUnit() {
   return Math.random() + Math.random() - 1;
+}
+
+/**
+ * Cluster radius for a `'center'` target. Starts from the base ratio of the
+ * visible size, then grows by half of whatever the window extends past the
+ * reference aspect on that axis, so the cluster stretches to cover the extra
+ * width of a wide window (or the extra height of a tall one).
+ */
+function getCenterClusterRadius(visibleRect: VisibleDeskRect) {
+  const referenceWidth = visibleRect.height * TARGET_REFERENCE_ASPECT;
+  const referenceHeight = visibleRect.width / TARGET_REFERENCE_ASPECT;
+  const excessWidth = Math.max(0, visibleRect.width - referenceWidth);
+  const excessHeight = Math.max(0, visibleRect.height - referenceHeight);
+
+  return {
+    x: (visibleRect.width - excessWidth) * TARGET_RADIUS_RATIO + excessWidth / 2,
+    y: (visibleRect.height - excessHeight) * TARGET_RADIUS_RATIO + excessHeight / 2,
+  };
 }
 
 type DeskConfigOverrides = Partial<{
@@ -92,11 +127,12 @@ export type DeskQuadrant = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-ri
 
 /**
  * A quadrant corner, a half-side where the cross-axis spans the full desk,
- * `'center'` which clusters at the desk midpoint on both axes, or `'spread'`
- * which scatters uniformly across the whole desk.
+ * `'center'` which clusters at the desk midpoint on both axes, `'spread'`
+ * which scatters uniformly across the whole desk, or `'left-wall'` which aims
+ * past the left barrier so the item hits it and bounces back.
  */
 export type DeskThrowTarget =
-  DeskQuadrant | 'left' | 'right' | 'top' | 'bottom' | 'center' | 'spread';
+  DeskQuadrant | 'left' | 'right' | 'top' | 'bottom' | 'center' | 'spread' | 'left-wall';
 
 type ThrowOntoDeskConfig = {
   centered?: boolean;
@@ -133,6 +169,7 @@ export type BookConfig = {
   pageThickness?: number;
   coverThickness?: number;
   stickyNote?: BookStickyNote;
+  foldedPaper?: BookFoldedPaper;
   physics?: KinematicBodyConfig;
 };
 
@@ -217,6 +254,10 @@ function getThrowRotation(centered?: boolean) {
  * consistent no matter where it spawned horizontally. A target that omits a
  * horizontal or vertical edge (e.g. `'right'`) spans that axis fully, so the
  * landing varies freely along it.
+ *
+ * `'left-wall'` aims at a point past the left barrier from an entry well to
+ * its right, so the solved speed carries the item into the wall on a diagonal
+ * and it rebounds toward the vertical middle.
  */
 function getTargetedThrow(
   position: { x: number; y: number; z: number },
@@ -229,12 +270,12 @@ function getTargetedThrow(
   const halfHeight = (box?.height ?? 0) / 2;
   const insetX = Math.max(QUADRANT_CORNER_TARGET_INSET_PX, halfWidth);
   const insetY = Math.max(QUADRANT_CORNER_TARGET_INSET_PX, halfHeight);
-  const radiusX = visibleRect.width * TARGET_RADIUS_RATIO;
-  const radiusY = visibleRect.height * TARGET_RADIUS_RATIO;
+  const centerRadius = getCenterClusterRadius(visibleRect);
   const minVisibleX = visibleRect.x + insetX;
   const maxVisibleX = visibleRect.right - insetX;
   const minVisibleY = visibleRect.y + insetY;
   const maxVisibleY = visibleRect.bottom - insetY;
+  const aimsAtWall = target === 'left-wall';
   const horizontal =
     target === 'center'
       ? 'center'
@@ -244,7 +285,7 @@ function getTargetedThrow(
           ? 'right'
           : 'full';
   const vertical =
-    target === 'center'
+    target === 'center' || aimsAtWall
       ? 'center'
       : target.includes('top')
         ? 'top'
@@ -254,6 +295,10 @@ function getTargetedThrow(
 
   // A constrained axis clusters within a radius around its anchor (an edge or
   // the midpoint); a `full` axis spreads uniformly so its landing varies freely.
+  // Edge anchors keep the base radius so corners stay tight; the midpoint uses
+  // the aspect-aware radius so a wide or tall window still gets covered.
+  const radiusX = horizontal === 'center' ? centerRadius.x : visibleRect.width * TARGET_RADIUS_RATIO;
+  const radiusY = vertical === 'center' ? centerRadius.y : visibleRect.height * TARGET_RADIUS_RATIO;
   const anchorX =
     horizontal === 'left'
       ? minVisibleX + radiusX
@@ -266,8 +311,9 @@ function getTargetedThrow(
       : vertical === 'bottom'
         ? maxVisibleY - radiusY
         : (minVisibleY + maxVisibleY) / 2;
-  const targetXpx =
-    horizontal === 'full'
+  const targetXpx = aimsAtWall
+    ? minVisibleX - visibleRect.width * WALL_HIT_OVERSHOOT_RATIO
+    : horizontal === 'full'
       ? randomInRange(minVisibleX, maxVisibleX)
       : clamp(anchorX + centerBiasedUnit() * radiusX, minVisibleX, maxVisibleX);
   const targetYpx =
@@ -278,7 +324,9 @@ function getTargetedThrow(
   const entryOffsetPx = visibleRect.width * QUADRANT_ENTRY_OFFSET_RATIO;
   const entryShiftPx =
     horizontal === 'right' ? -entryOffsetPx : horizontal === 'left' ? entryOffsetPx : 0;
-  const entryXpx = clamp(targetXpx + entryShiftPx, minVisibleX, maxVisibleX);
+  const entryXpx = aimsAtWall
+    ? clamp(minVisibleX + visibleRect.width * WALL_HIT_ENTRY_OFFSET_RATIO, minVisibleX, maxVisibleX)
+    : clamp(targetXpx + entryShiftPx, minVisibleX, maxVisibleX);
 
   const targetX = cssPixelsToMeters(targetXpx);
   const targetY = cssPixelsToMeters(targetYpx);
@@ -428,8 +476,17 @@ export const actions = createActions((world) => ({
         ...(config.stickyNote !== undefined && {
           hasStickyNote: true,
           stickyNoteText: config.stickyNote.text ?? '',
+          stickyNoteImage: config.stickyNote.image ?? '',
           stickyNoteColor: config.stickyNote.color ?? '',
           stickyNoteRotation: config.stickyNote.rotation ?? -7,
+        }),
+        ...(config.foldedPaper !== undefined && {
+          hasFoldedPaper: true,
+          foldedPaperColor: config.foldedPaper.color ?? '',
+          foldedPaperPageFraction: clamp(config.foldedPaper.pageFraction ?? 0.5, 0, 1),
+          foldedPaperOverhang: config.foldedPaper.overhang ?? 4,
+          foldedPaperRotation: config.foldedPaper.rotation ?? 0,
+          foldedPaperText: (config.foldedPaper.text ?? []).join('\n'),
         }),
       }),
       Rotation(getThrowRotation(config.centered)),
@@ -653,7 +710,7 @@ export const actions = createActions((world) => ({
         });
       }
 
-      candidate.remove(IsFocused, IsControlled, ItemFocusMotion, ItemFocusSpin);
+      candidate.remove(IsFocused, IsControlled, ItemFocusMotion, ItemFocusSpin, FoldedPaperMotion);
     });
 
     const target = getItemFocusTarget(entity, getVisibleDeskRectForWorld(world));
@@ -694,6 +751,11 @@ export const actions = createActions((world) => ({
     const motion = entity.get(ItemFocusMotion);
     const position = entity.get(Position);
     const rotation = entity.get(Rotation);
+
+    // A sheet pulled out of the book folds back in as the book returns.
+    if (entity.get(FoldedPaperMotion)?.phase === 'opening') {
+      entity.set(FoldedPaperMotion, { phase: 'closing' });
+    }
 
     if (!focusable || !motion || !position || !rotation) {
       entity.remove(IsFocused, IsControlled, ItemFocusMotion, ItemFocusSpin);
@@ -744,6 +806,8 @@ export const actions = createActions((world) => ({
     pointerType: string
   ) => {
     if (!entity.has(IsFocused)) return;
+    // Rotation is locked while the folded letter is out.
+    if (isFoldedPaperOut(entity)) return;
 
     const focusable = entity.get(FocusableItem);
     const rotation = entity.get(Rotation);
@@ -836,6 +900,47 @@ export const actions = createActions((world) => ({
     if (!spin || spin.pointerId !== pointerId) return;
 
     entity.remove(ItemFocusSpin);
+  },
+
+  /**
+   * Pulls the tucked sheet out of a book (focusing the book so it can be read)
+   * or folds it back in if it is already out.
+   */
+  toggleFoldedPaper: (entity: Entity) => {
+    const book = entity.get(Book);
+    if (!book?.hasFoldedPaper) return;
+
+    const motion = entity.get(FoldedPaperMotion);
+
+    if (motion?.phase === 'opening') {
+      entity.set(FoldedPaperMotion, { phase: 'closing' });
+      return;
+    }
+
+    if (!entity.has(IsFocused)) actions(world).focusItem(entity);
+
+    // Spinning is locked while the letter is out, and a spun book squares back
+    // up to its neutral focus pose so the letter reads the right way round.
+    const focusable = entity.get(FocusableItem);
+    const focusMotion = entity.get(ItemFocusMotion);
+    if (focusable && focusMotion && focusMotion.phase === 'opening') {
+      entity.remove(ItemFocusSpin);
+      entity.set(ItemFocusMotion, {
+        ...focusMotion,
+        toRotation: {
+          x: focusable.targetRotationX,
+          y: focusMotion.sideTilt,
+          z: focusable.targetRotationZ * getStableFocusSign(getFocusItemId(entity)),
+        },
+      });
+    }
+
+    if (motion) {
+      entity.set(FoldedPaperMotion, { phase: 'opening' });
+      return;
+    }
+
+    entity.add(FoldedPaperMotion({ phase: 'opening', progress: 0, progressVelocity: 0 }));
   },
 
   closeFocusedItems: () => {

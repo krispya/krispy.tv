@@ -14,8 +14,19 @@
     "unit": "in"
   },
   "stickyNote": {
-    "text": "",
+    "text": "Dense and careful and uncomfortable. What does it mean to be a short? Octavia is hiding.",
+    "image": "images/books/bloodchild-note.webp",
     "rotation": -9
+  },
+  "foldedPaper": {
+    "pageFraction": 0.52,
+    "overhang": 6,
+    "rotation": -2.5,
+    "text": [
+      "It has been a long year.",
+      "The Katamari OST came on and within a whim was the impossibly clean room of my high school friend and my high school self. You can draw a straight line from here to there and find my musical taste along the way. Was this the first time I heard Japanese children sing?",
+      "There is always a new emotion."
+    ]
   },
   "order": 0
 }

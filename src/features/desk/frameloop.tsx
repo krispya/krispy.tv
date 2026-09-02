@@ -23,6 +23,7 @@ import {
   syncSketch,
   updateArticleMotion,
   updateDragging,
+  updateFoldedPaper,
   updateItemFocus,
   updateRotation,
   updateSketchMotion,
@@ -67,6 +68,7 @@ export function Frameloop() {
     syncSketch(world);
     updateSketchMotion(world);
     updateItemFocus(world);
+    updateFoldedPaper(world);
 
     // View
     syncDeskItemToDOM(world);
